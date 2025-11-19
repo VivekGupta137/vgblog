@@ -7,6 +7,7 @@ import starlightThemeRapide from "starlight-theme-rapide";
 import plantuml from "astro-plantuml";
 import starlightImageZoom from "starlight-image-zoom";
 import starlightPageActions from "starlight-page-actions";
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 
 import d2 from "astro-d2";
 import { pluginLanguageBadge } from "expressive-code-language-badge";
@@ -42,7 +43,16 @@ export default defineConfig({
         }),
       ],
       expressiveCode: {
-        plugins: [pluginLanguageBadge()],
+        plugins: [pluginLanguageBadge(), pluginLineNumbers()],
+        defaultProps: {
+          showLineNumbers: false,
+          overridesByLang: {
+            'js,ts,html,java': {
+              showLineNumbers: true,
+            },
+          },
+
+        }
       },
       title: "VG",
       favicon: "/favicon.ico",
@@ -61,6 +71,12 @@ export default defineConfig({
               label: "Usage example",
               autogenerate: {
                 directory: "guides",
+              },
+            },
+            {
+              label: "Coding",
+              autogenerate: {
+                directory: "coding",
               },
             },
             {

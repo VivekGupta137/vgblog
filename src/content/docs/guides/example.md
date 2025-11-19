@@ -14,6 +14,7 @@ Writing a good guide requires thinking about what your users are trying to do.
 ```d2
 direction: right
 installation -> configuration
+
 ```
 
 

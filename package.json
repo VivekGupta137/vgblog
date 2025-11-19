@@ -7,11 +7,24 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "gd:prod": "astro-plantuml generate --format svg",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.36.2",
     "astro": "^5.6.1",
-    "sharp": "^0.34.2"
+    "astro-d2": "^0.8.1",
+    "astro-plantuml": "^0.1.4",
+    "expressive-code-language-badge": "^1.1.0",
+    "sharp": "^0.34.2",
+    "starlight-giscus": "^0.8.1",
+    "starlight-image-zoom": "^0.13.2",
+    "starlight-links-validator": "^0.19.1",
+    "starlight-page-actions": "^0.1.1",
+    "starlight-site-graph": "^0.5.0",
+    "starlight-theme-rapide": "^0.5.2"
+  },
+  "overrides": {
+    "picomatch": "^4.0.3"
   }
 }

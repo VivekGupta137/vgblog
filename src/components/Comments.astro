@@ -1,0 +1,48 @@
+---
+// Import the default giscus comments component
+import GiscusComments from 'starlight-giscus/components/Comments.astro';
+---
+
+<div id="giscus-container">
+  <GiscusComments />
+</div>
+
+<script>
+  // Function to update giscus theme based on Starlight's current theme
+  function updateGiscusTheme() {
+    const htmlElement = document.documentElement;
+    // Check if Starlight is in dark mode by checking for dark class or data attribute
+    const isDark = htmlElement.classList.contains('dark') || 
+                   htmlElement.getAttribute('data-theme') === 'dark';
+    
+    const theme = isDark ? 'dark' : 'light';
+    
+    // Send message to giscus iframe to change theme
+    const iframes = document.querySelectorAll('iframe.giscus-frame');
+    iframes.forEach((iframe) => {
+      const iframeElement = iframe as HTMLIFrameElement;
+      if (iframeElement?.contentWindow) {
+        iframeElement.contentWindow.postMessage(
+          { giscus: { setConfig: { theme } } },
+          'https://giscus.app'
+        );
+      }
+    });
+  }
+
+  // Update giscus theme when page loads
+  document.addEventListener('DOMContentLoaded', updateGiscusTheme);
+
+  // Watch for theme changes (Starlight's theme switcher)
+  const observer = new MutationObserver(() => {
+    updateGiscusTheme();
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme'],
+  });
+
+  // Also listen for theme toggle events if Starlight emits them
+  window.addEventListener('sl-theme-change', updateGiscusTheme);
+</script>

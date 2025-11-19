@@ -8,7 +8,6 @@ import plantuml from "astro-plantuml";
 import starlightImageZoom from "starlight-image-zoom";
 import starlightPageActions from "starlight-page-actions";
 
-import d2 from "astro-d2";
 import { pluginLanguageBadge } from "expressive-code-language-badge";
 import starlightGiscus from "starlight-giscus";
 
@@ -90,7 +89,6 @@ export default defineConfig({
       serverUrl: process.env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
       addWrapperClasses: true,
     }),
-    d2(),
   ],
   experimental: {
     contentIntellisense: true,

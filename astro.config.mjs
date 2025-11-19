@@ -14,6 +14,7 @@ import starlightGiscus from "starlight-giscus";
 
 // https://astro.build/config
 export default defineConfig({
+  site: process.env.PUBLIC_DOMAIN || "http://localhost:3000/",
   integrations: [
     starlight({
       components: {
@@ -36,6 +37,7 @@ export default defineConfig({
           theme: "preferred_color_scheme"
         }),
         starlightPageActions({
+          baseUrl: process.env.PUBLIC_DOMAIN || "",
           prompt: "Read {url} and explain its main points briefly."
         }),
       ],

@@ -14,7 +14,7 @@ import starlightGiscus from "starlight-giscus";
 
 // https://astro.build/config
 export default defineConfig({
-  site: process.env.PUBLIC_DOMAIN || "http://localhost:3000/",
+  site: process.env.PUBLIC_DOMAIN || "http://localhost:4321/",
   integrations: [
     starlight({
       components: {

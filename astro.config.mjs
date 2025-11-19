@@ -24,9 +24,6 @@ export default defineConfig({
         starlightLinksValidator(),
         starlightThemeRapide(),
         starlightImageZoom(),
-        starlightPageActions({
-          baseUrl: process.env.PUBLIC_DOMAIN || "",
-        }),
         starlightGiscus({
           repo: process.env.PUBLIC_GISCUS_REPO || "",
           repoId: process.env.PUBLIC_GISCUS_REPO_ID || "",
@@ -37,6 +34,9 @@ export default defineConfig({
           inputPosition: "top",
           lazy: false,
           theme: "preferred_color_scheme"
+        }),
+        starlightPageActions({
+          prompt: "Read {url} and explain its main points briefly."
         }),
       ],
       expressiveCode: {

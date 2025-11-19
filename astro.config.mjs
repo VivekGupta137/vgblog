@@ -24,7 +24,9 @@ export default defineConfig({
         starlightLinksValidator(),
         starlightThemeRapide(),
         starlightImageZoom(),
-        starlightPageActions(),
+        starlightPageActions({
+          baseUrl: process.env.PUBLIC_DOMAIN || "",
+        }),
         starlightGiscus({
           repo: process.env.PUBLIC_GISCUS_REPO || "",
           repoId: process.env.PUBLIC_GISCUS_REPO_ID || "",

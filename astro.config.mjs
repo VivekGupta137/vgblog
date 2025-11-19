@@ -26,10 +26,10 @@ export default defineConfig({
         starlightImageZoom(),
         // starlightPageActions(),
         starlightGiscus({
-          repo: import.meta.env.PUBLIC_GISCUS_REPO,
-          repoId: import.meta.env.PUBLIC_GISCUS_REPO_ID,
-          category: import.meta.env.PUBLIC_GISCUS_CATEGORY,
-          categoryId: import.meta.env.PUBLIC_GISCUS_CATEGORY_ID,
+          repo: process.env.PUBLIC_GISCUS_REPO || "",
+          repoId: process.env.PUBLIC_GISCUS_REPO_ID || "",
+          category: process.env.PUBLIC_GISCUS_CATEGORY || "",
+          categoryId: process.env.PUBLIC_GISCUS_CATEGORY_ID || "",
           mapping: "pathname",
           reactions: true,
           inputPosition: "top",
@@ -87,7 +87,7 @@ export default defineConfig({
       ],
     }),
     plantuml({
-      serverUrl: import.meta.env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
+      serverUrl: process.env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
       addWrapperClasses: true,
     }),
     d2(),

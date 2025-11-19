@@ -7,7 +7,6 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "gd:prod": "astro-plantuml generate --format svg",
     "astro": "astro"
   },
   "dependencies": {

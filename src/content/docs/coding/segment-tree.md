@@ -7,6 +7,8 @@ description: a binary-tree data structure for efficient range queries and update
 
 Need to be used in scenarios where we require to perform fast range-max(or min|sum) queries with point updates.
 
+Can also check [Square root decomposition technique](/coding/square-root-decomposition/)
+
 ## Datastructure design & operations
 
 The segment tree, contains actual array data in the leaf nodes, and the internal nodes stores the value of specific operation performed on it's children (segment of the array). This design allows efficient computation of range queries.

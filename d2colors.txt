@@ -1,0 +1,19 @@
+Fill Colors:
+- Yellow/Gold: #ffd97d
+- Light Green: #90ee90
+- Coral/Pink: #ffb3ba or #ffb6c1
+- Plum/Purple: #dda0dd
+- Sky Blue: #87ceeb
+- Light Blue: #5dade2
+- Aquamarine: #7fffd4
+- Gray (for unused): #a9a9a9
+
+Stroke Colors (Darker variants):
+- Orange: #ff8c00
+- Forest Green: #2e8b57
+- Crimson: #dc143c or #c71585
+- Purple: #9370db
+- Royal Blue: #4169e1
+- Dark Blue: #2874a6
+- Teal: #20b2aa
+- Dark Gray: #696969

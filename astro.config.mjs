@@ -8,6 +8,9 @@ import plantuml from "astro-plantuml";
 import starlightImageZoom from "starlight-image-zoom";
 import starlightPageActions from "starlight-page-actions";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
 
 import d2 from "astro-d2";
 import { pluginLanguageBadge } from "expressive-code-language-badge";
@@ -16,8 +19,15 @@ import starlightGiscus from "starlight-giscus";
 // https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_DOMAIN || "http://localhost:4321/",
+  markdown: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  },
   integrations: [
     starlight({
+      customCss: [
+        './src/global.css',
+      ],
       components: {
         Pagination: './src/components/Pagination.astro',
       },

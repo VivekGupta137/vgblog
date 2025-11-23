@@ -20,7 +20,6 @@ import node from "@astrojs/node";
 
 // https://astro.build/config
 export default defineConfig({
-  output: "static",
   site: process.env.PUBLIC_DOMAIN || "http://localhost:4321/",
 
   markdown: {
@@ -132,7 +131,4 @@ export default defineConfig({
     contentIntellisense: true,
   },
 
-  adapter: node({
-    mode: "standalone",
-  }),
 });

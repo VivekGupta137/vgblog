@@ -6,6 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "4321:80"
     container_name: vgblog-app
     restart: unless-stopped

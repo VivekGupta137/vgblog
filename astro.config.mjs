@@ -16,13 +16,18 @@ import d2 from "astro-d2";
 import { pluginLanguageBadge } from "expressive-code-language-badge";
 import starlightGiscus from "starlight-giscus";
 
+import node from "@astrojs/node";
+
 // https://astro.build/config
 export default defineConfig({
+  output: "static",
   site: process.env.PUBLIC_DOMAIN || "http://localhost:4321/",
+
   markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex],
   },
+
   integrations: [
     starlight({
       customCss: [
@@ -122,7 +127,12 @@ export default defineConfig({
     }),
     d2(),
   ],
+
   experimental: {
     contentIntellisense: true,
   },
+
+  adapter: node({
+    mode: "standalone",
+  }),
 });

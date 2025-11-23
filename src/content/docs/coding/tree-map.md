@@ -62,4 +62,23 @@ TreeMap -> NavigableMap: implements {
 |get|log(n)|finds a key|
 |put|log(n)|updates a key|
 |remove|log(n)|remove a key|
+|floorKey|log(n)|returns greatest key less than or equal to given key|
+|floorEntry|log(n)|returns entry with greatest key less than or equal to given key|
+|ceilingKey|log(n)|returns least key greater than or equal to given key|
+|ceilingEntry|log(n)|returns entry with least key greater than or equal to given key|
+|lowerKey|log(n)|returns greatest key strictly less than given key|
+|lowerEntry|log(n)|returns entry with greatest key strictly less than given key|
+|higherKey|log(n)|returns least key strictly greater than given key|
+|higherEntry|log(n)|returns entry with least key strictly greater than given key|
+|subMap|log(n)|returns view of portion of map (view creation)|
+|headMap|log(n)|returns view of map with keys less than given key (view creation)|
+|tailMap|log(n)|returns view of map with keys greater than or equal to given key (view creation)|
+|firstKey|log(n)|returns first (lowest) key|
+|firstEntry|log(n)|returns entry with first (lowest) key|
+|lastKey|log(n)|returns last (highest) key|
+|lastEntry|log(n)|returns entry with last (highest) key|
+|pollFirstEntry|log(n)|removes and returns entry with first (lowest) key|
+|pollLastEntry|log(n)|removes and returns entry with last (highest) key|
+|descendingMap|log(n)|returns reverse order view of map (view creation)|
+|descendingKeySet|log(n)|returns reverse order view of keys (view creation)|
 

@@ -17,7 +17,7 @@ Singleton Pattern is a creational design pattern that guarantees a class has onl
 - **Single Instance**: Ensures only one instance exists throughout the application
 - **Reduced Memory Footprint**: Avoids creating multiple instances of resource-heavy objects
 :::
-:::warn[Disadvantages]
+:::caution[Disadvantages]
 - **Global State**: Introduces shared global state which can be difficult to debug
 - **Testing Difficulty**: Makes unit testing more complex due to shared state
 - **Thread Safety Concerns**: Requires special handling in multi-threaded environments
@@ -50,7 +50,7 @@ Ways to implement the singleton pattern -
 This approach creates the singleton instance only when it is needed, saving resources if the singleton is never used in the application.
 
 #### Code
-:::info
+:::note
 1. Checks if an instance already exists `(instance == null)`.
 2. If not, it creates a new instance.
 3. If an instance already exists, it skips the creation step.
@@ -78,7 +78,7 @@ public class Singleton {
 - Global point of access
 :::
 
-:::warn
+:::caution
 - Not thread-safe; requires synchronization for multi-threaded applications
 :::
 
@@ -100,7 +100,7 @@ Lazy Initialization -> Thread-Safe: + synchronization
 → [Lazy Initialization](#1-lazy-initialization) | [Thread-Safe Singleton](#2-thread-safe-singleton)
 
 #### Code
-:::info
+:::note
 This is achieved by making the `getInstance()` method synchronized ensuring only one thread can execute this method at a time.
 When a thread enters the synchronized method, it acquires a lock on the class object. Other threads must wait until the method is executed.
 
@@ -132,7 +132,7 @@ public class Singleton {
 - Global point of access
 :::
 
-:::warn
+:::caution
 - Performance overhead due to synchronization
 - Can lead to contention* in multi-threaded applications
 :::
@@ -161,7 +161,7 @@ This approach minimizes performance overhead from synchronization by only synchr
 It uses the `volatile` keyword to ensure that changes to the instance variable are immediately visible to other threads.
 
 #### Code
-:::info
+:::note
 - If the first check `(instance == null)` passes, we synchronize on the class object.
 
 - We check the same condition one more time because multiple threads may have passed the first check.
@@ -195,7 +195,7 @@ public class Singleton {
 - Reduced performance overhead compared to synchronized method
 :::
 
-:::warn
+:::caution
 - More complex implementation
 - Still has some performance overhead due to synchronization
 :::
@@ -209,7 +209,7 @@ In this method, we rely on the `JVM` to create the singleton instance when the c
 This implementation is one of the simplest and inherently thread-safe without needing explicit synchronization.
 
 #### Code
-:::info
+:::note
 * The `static variable` ensures there's only one instance shared across all instances of the class.
 * `final` prevents the instance from being reassigned after initialization
 :::
@@ -234,7 +234,7 @@ public class Singleton {
 - Instance is created at class loading time, ensuring it's always available
 :::
 
-:::warn
+:::caution
 - Instance is created even if it's never used, which can lead to unnecessary resource consumption
 - We cannot catch exceptions during instance creation
 :::
@@ -266,7 +266,7 @@ It is thread-safe without requiring explicit synchronization.
 The Bill Pugh Singleton implementation, while more complex than Eager Initialization provides a perfect balance of lazy initialization, thread safety, and performance, without the complexities of some other patterns like double-checked locking.
 
 #### Code
-:::info
+:::note
 - When the `getInstance()` method is called for the first time, it triggers the loading of the SingletonHelper class.
 
 - When the inner class is loaded, it creates the `INSTANCE` of BillPughSingleton.
@@ -296,7 +296,7 @@ public class BillPughSingleton {
 - No performance overhead from synchronization
 :::
 
-:::warn
+:::caution
 - More complex implementation
 :::
 
@@ -329,7 +329,7 @@ public class Main {
 - No need for synchronization
 :::
 
-:::warn
+:::caution
 - Cannot extend the enum class, limiting flexibility
 - Serialization can be tricky as enums are inherently serializable
 - Potential issues with serialization/deserialization breaking singleton property
@@ -376,7 +376,7 @@ public class StaticBlockSingleton {
 - Allows exception handling during instance creation
 :::
 
-:::warn
+:::caution
 - More complex implementation
 - Instance is created at class loading time, which can lead to unnecessary resource consumption if the instance is never used
 :::
@@ -405,7 +405,7 @@ public class ThreadLocalSingleton {
 - Useful in multi-threaded applications where each thread needs its own instance
 :::
 
-:::warn
+:::caution
 - Increased complexity
 - Not suitable for scenarios where a single instance is needed across all threads
 :::
@@ -437,7 +437,7 @@ public class RegistrySingleton {
 - Can be useful in scenarios where different configurations are needed for different instances
 :::
 
-:::warn
+:::caution
 - Increased complexity
 - Potential memory overhead due to storing multiple instances
 - Synchronization may be needed if accessed by multiple threads

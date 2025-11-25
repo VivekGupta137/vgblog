@@ -5,7 +5,7 @@ sidebar:
 ---
 Structural design patterns explain how to assemble objects and classes into larger structures, while keeping these structures flexible and efficient.
 
-:::info
+:::note
 Common structural patterns include:
 1. **Adapter** - allows objects with incompatible interfaces to work together.
 2. **Bridge** - Let's you separate a large class or set of closely related classes into two separate hierarchies: abstraction and implementation -- which can be developed independently.
@@ -81,7 +81,7 @@ This approach allows you to:
 2. Reuse existing code without modification.
 3. Maintain a clean separation of concerns, making your system easier to understand and modify.
 
-:::info
+:::note
 We use `method translation` in the adapter class:
 1. Each method in `PaymentProcessor` is translated into equivalent calls to the legacy API. This often includes:
 
@@ -197,7 +197,7 @@ This design pattern belongs to the structural category.
 
 In the Bridge Pattern, "**abstraction has-a implementation**" — the abstraction delegates work to an implementor object.
 
-:::info
+:::note
 The Bridge Pattern splits a class into two separate hierarchies:
 
 1. One for the `abstraction` (e.g., shape, UI control) = the part that the client interacts with (the high-level concept).
@@ -341,7 +341,7 @@ class RasterRectangle extends Shape {
     }
 }
 ```
-:::warn
+:::caution
 1. **Class Explosion** - Every new combination of shape and rendering method requires a new subclass:
   - 2 shapes x 2 renderers = 4 classes
   - Add a third renderer (e.g., OpenGL)? Now you need 6 classes
@@ -354,7 +354,7 @@ class RasterRectangle extends Shape {
 :::
 
 ### Solution 
-:::info
+:::note
 We need a solution that:
 
 1. Separates the abstraction (`Shape`) from its implementation (`Renderer`)
@@ -554,7 +554,7 @@ class Folder {
 }
 ```
 
-:::warn
+:::caution
 As the structure grows more complex, this solution introduces several critical problems:
 
 1. **Repetitive Type Checks**
@@ -813,7 +813,7 @@ class ItalicTextView extends TextView {
 }
 ```
 
-:::warn
+:::caution
 1. Class Explosion
 For every new combination of features, you need to create a new subclass:
 
@@ -1094,7 +1094,7 @@ end note
 
 For example, deploying a new version of your app might require calls to a build system, a container service, a monitoring tool, and a notification system — all in a specific sequence.
 
-:::info
+:::note
 The Facade Pattern solves this by introducing a single entry point — a facade — that wraps the complex interactions behind a clean and easy-to-use interface.
 
 The Facade pattern is simply a way to provide a simplified interface to a complex subsystem.
@@ -1294,7 +1294,7 @@ class DeploymentOrchestrator {
 }
 ```
 
-:::warn
+:::caution
 1. **High Client Complexity**
 
 The `DeploymentOrchestrator` — which essentially acts as your "`client`" — must be aware of every subsystem:
@@ -1470,7 +1470,7 @@ Now imagine rendering a 10-page document with 500,000 characters. Even if most c
 ## Flyweight
 > The Flyweight Design Pattern is a structural pattern that focuses on efficiently sharing common parts of object state across many objects to reduce memory usage and boost performance.
 
-:::info
+:::note
 The Flyweight Pattern minimizes memory usage by sharing as much data as possible between similar objects.
 :::
 
@@ -1480,7 +1480,7 @@ It's particularly useful in situations where:
 - Storing all object data individually would result in high memory consumption.
 - You want to separate intrinsic state (shared, reusable data) from extrinsic state (context-specific, passed in at runtime).
 
-:::info
+:::note
 When building high-volume systems like text editors (with thousands of character glyphs), map applications (with repeated icons or tiles), or game engines (with many similar objects like trees or particles), developers often instantiate huge numbers of objects many of which are functionally identical.
 
 But this can lead to significant performance issues, excessive memory allocation, and poor scalability especially when most of these objects differ only by a few small, context-specific values.
@@ -1613,7 +1613,7 @@ class CharacterGlyph {
 }
 ```
 
-:::warn
+:::caution
 1. High Memory Usage
 Each character glyph holds repeated data (font, size, color) — even though these are shared across thousands of characters. You're wasting memory by storing the same values over and over.
 
@@ -2081,7 +2081,7 @@ class Application is
 
 ### Proxy vs Decorator
 #### Proxy pattern
-:::info
+:::note
 **Intent**: Control access to the object.
 
 **Why use it**: When you want to add a level of indirection before the actual object is used.
@@ -2098,7 +2098,7 @@ class Application is
 
 
 #### Decorator Pattern
-:::info
+:::note
 **Intent**: Add new behavior or responsibilities to an object dynamically.
 
 **Why use it**: When you want to enhance or extend functionality without modifying the original class.

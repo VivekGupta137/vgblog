@@ -1,5 +1,6 @@
 ---
 title: Behavioural Patterns
+description: Design patterns for effective communication and responsibility assignment between objects
 sidebar:
   order: 4
 ---
@@ -8,18 +9,26 @@ Behavioral patterns take care of effective communication and the assignment of r
 
 ## Overview of Behavioral Patterns
 
-1. **Strategy** - Lets you define a family of algorithms, put each of them in a separate class and make their objects interchangeable.
-2. **Observer** - Lets you define a subscription mechanism to notify multiple objects if any events happens to objects they're observing.
-3. **Command** - Turns a request into a stand-alone object that contains all information about the request. This transformation lets us pass the requests as arguments, delay or queue execution, and support undo operations.
-4. **Iterator** - Lets us traverse elements of a collection without exposing the underlying representation (List, stack, tree, etc.).
-5. **State** - Lets an object alter its behavior when its internal state changes, it appears as if the object changed its class.
-6. **Chain of Responsibility** - Lets you pass the requests along the chain of handlers; on receiving the request, each handler decides either to process the request or to pass it to the next handler in the chain.
-7. **Template Method** - Defines the skeleton of an algorithm in the superclass but lets the subclasses override specific steps of the algorithm without changing its structure.
-8. **Visitor** - Lets you separate the algorithms from the objects on which they operate.
-9. **Mediator** - Lets you reduce the chaotic dependencies between objects. The pattern restricts direct communication between objects and forces them to collaborate only through the mediator object.
-10. **Memento** - Lets you store and restore the previous state of the object without revealing the details of its implementation.
+| Pattern | Purpose |
+|---------|---------|
+| **Strategy** | Define a family of algorithms, put each in a separate class, and make their objects interchangeable |
+| **Observer** | Define a subscription mechanism to notify multiple objects about events happening to observed objects |
+| **Command** | Turn requests into stand-alone objects containing all request information |
+| **Iterator** | Traverse elements of a collection without exposing the underlying representation |
+| **State** | Let an object alter its behavior when its internal state changes |
+| **Chain of Responsibility** | Pass requests along a chain of handlers where each decides to process or forward |
+| **Template Method** | Define the skeleton of an algorithm in a superclass, letting subclasses override specific steps |
+| **Visitor** | Separate algorithms from the objects on which they operate |
+| **Mediator** | Reduce chaotic dependencies by forcing objects to collaborate through a mediator |
+| **Memento** | Store and restore the previous state of an object without revealing implementation details |
+
+---
 
 ## Strategy Pattern
+
+:::tip[Intent]
+Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.
+:::
 
 ```plantuml
 @startuml
@@ -95,27 +104,36 @@ end note
 @enduml
 ```
 
-The Strategy pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable. Strategy lets the algorithm vary independently from clients that use it.
-
-### Key Components:
+### Key Components
 
 - **Context**: Maintains a reference to a Strategy object and delegates it to execute the algorithm
 - **Strategy**: Common interface for all concrete strategies
 - **ConcreteStrategy**: Implements the algorithm using the Strategy interface
 
-### When to Use:
+### When to Use
 
-- When you need different variants of an algorithm
-- When you want to isolate algorithm implementation details from the code that uses it
-- When you have many related classes that differ only in their behavior
-- When you need to switch algorithms at runtime
-- When an algorithm uses data that clients shouldn't know about
+:::note[Use Strategy Pattern When]
+- You need different variants of an algorithm
+- You want to isolate algorithm implementation details from the code that uses it
+- You have many related classes that differ only in their behavior
+- You need to switch algorithms at runtime
+- An algorithm uses data that clients shouldn't know about
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Navigation apps that can calculate a route using different strategies: fastest route, shortest distance, avoiding highways, public transport, etc.
+- **Navigation Apps** - Calculate routes using different strategies (fastest, shortest, avoid highways, public transport)
+- **Payment Processing** - Different payment methods (credit card, PayPal, cryptocurrency)
+- **Compression Algorithms** - Various compression strategies (ZIP, RAR, 7z)
+- **Sorting Algorithms** - Different sorting implementations based on data characteristics
+
+---
 
 ## Observer Pattern
+
+:::tip[Intent]
+Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
+:::
 
 ```plantuml
 @startuml
@@ -194,27 +212,36 @@ end note
 @enduml
 ```
 
-The Observer pattern lets you define a subscription mechanism to notify multiple objects about any events that happen to the object they're observing.
-
-### Key Components:
+### Key Components
 
 - **Subject**: Maintains a list of observers and notifies them of state changes
 - **Observer**: Interface that defines the update method for objects that should be notified
 - **ConcreteObserver**: Implements the Observer interface to respond to updates
 
-### When to Use:
+### When to Use
 
-- When changes to one object require changing others, and you don't know how many objects need to change
-- When an object should be able to notify other objects without making assumptions about who these objects are
-- When you need a one-to-many dependency between objects that is loosely coupled
-- When you need a publish-subscribe communication pattern
-- When the set of objects that need to be notified can change dynamically
+:::note[Use Observer Pattern When]
+- Changes to one object require changing others, and you don't know how many objects need to change
+- An object should notify others without making assumptions about who they are
+- You need a one-to-many dependency between objects that is loosely coupled
+- You need a publish-subscribe communication pattern
+- The set of objects that need to be notified can change dynamically
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Event listeners in user interfaces, subscription systems (like YouTube channel subscriptions), or financial market data feeds.
+- **UI Event Listeners** - Button clicks, form submissions, keyboard events
+- **Subscription Systems** - YouTube channels, newsletters, RSS feeds
+- **Stock Market Feeds** - Real-time price updates to multiple traders
+- **Social Media** - Notification systems for likes, comments, and shares
+
+---
 
 ## Command Pattern
+
+:::tip[Intent]
+Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.
+:::
 
 ```plantuml
 @startuml
@@ -285,28 +312,38 @@ note "Commands encapsulate actions\nand their parameters" as N1
 @enduml
 ```
 
-The Command pattern turns a request into a stand-alone object containing all information about the request, allowing you to parameterize clients with queues, requests, and operations.
+### Key Components
 
-### Key Components:
+- **Command** - Interface with an execute method
+- **ConcreteCommand** - Implements Command and links to a Receiver
+- **Invoker** - Asks the command to carry out the action
+- **Receiver** - Knows how to perform the operations
 
-- **Command**: Interface with an execute method
-- **ConcreteCommand**: Implements Command and links to a Receiver
-- **Invoker**: Asks the command to carry out the action
+### When to Use
 
-### When to Use:
+:::note[Use Command Pattern When]
+- You want to parameterize objects with operations
+- You want to queue operations, schedule their execution, or execute them remotely
+- You need to implement reversible operations (undo/redo functionality)
+- You want to structure a system around high-level operations built on primitive operations
+- You need to decouple objects that execute commands from objects that issue commands
+:::
 
-- When you want to parameterize objects with operations
-- When you want to queue operations, schedule their execution, or execute them remotely
-- When you need to implement reversible operations (undo/redo functionality)
-- When you want to structure a system around high-level operations built on primitive operations
-- When you need to decouple objects that execute commands from objects that issue commands
-- **Receiver**: Knows how to perform the operations
+### Real-World Examples
 
-### Real-World Example:
+- **Remote Controls** - TV remotes, smart home devices
+- **Text Editors** - Undo/redo functionality
+- **Game Commands** - Action queues, replay systems
+- **Task Schedulers** - Job queues, batch processing
+- **Transactional Systems** - Database transactions with rollback
 
-Remote controls, command queues in game engines, transactional systems with undo capability, or task schedulers.
+---
 
 ## Iterator Pattern
+
+:::tip[Intent]
+Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
+:::
 
 ```plantuml
 @startuml
@@ -377,28 +414,37 @@ note "Iterator provides a way to access\nelements sequentially without\nexposing
 @enduml
 ```
 
-The Iterator pattern provides a way to access elements of a collection sequentially without exposing its underlying representation.
-
-### Key Components:
+### Key Components
 
 - **Iterator**: Interface with methods for traversing a collection
 - **ConcreteIterator**: Implements the Iterator interface
 - **Collection**: Interface that creates an Iterator
 - **ConcreteCollection**: Implements Collection and returns ConcreteIterator
 
-### When to Use:
+### When to Use
 
-- When you need to access a collection's contents without exposing its internal structure
-- When you need multiple traversal algorithms for a collection
-- When you want to provide a uniform interface for traversing different collection types
-- When you need to decouple algorithms from the data structures they operate on
-- When you want to hide the complexity of navigation from client code
+:::note[Use Iterator Pattern When]
+- You need to access a collection's contents without exposing its internal structure
+- You need multiple traversal algorithms for a collection
+- You want to provide a uniform interface for traversing different collection types
+- You need to decouple algorithms from the data structures they operate on
+- You want to hide the complexity of navigation from client code
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Java's Iterator and Iterable interfaces, database result sets, or custom collection traversal implementations.
+- **Java Collections** - Iterator and Iterable interfaces
+- **Database Result Sets** - Cursor-based record traversal
+- **File Systems** - Directory tree traversal
+- **Social Media Feeds** - Infinite scroll pagination
+
+---
 
 ## State Pattern
+
+:::tip[Intent]
+Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.
+:::
 
 ```plantuml
 @startuml
@@ -470,27 +516,37 @@ note "State transitions are controlled\nby the concrete state classes" as N1
 @enduml
 ```
 
-The State pattern allows an object to alter its behavior when its internal state changes, making it appear as if the object changed its class.
-
-### Key Components:
+### Key Components
 
 - **Context**: Maintains a reference to a State object and delegates state-specific behavior
 - **State**: Interface defining state-specific behavior
 - **ConcreteState**: Classes that implement specific states' behavior
 
-### When to Use:
+### When to Use
 
-- When an object's behavior depends on its state, and it must change behavior at runtime
-- When operations have large, multipart conditional statements that depend on the object's state
-- When state transitions are complex and need to be represented explicitly
-- When you want to avoid massive conditional logic in one class
-- When you want state transitions to be explicit and controlled by the state objects themselves
+:::note[Use State Pattern When]
+- An object's behavior depends on its state, and it must change behavior at runtime
+- Operations have large, multipart conditional statements that depend on the object's state
+- State transitions are complex and need to be represented explicitly
+- You want to avoid massive conditional logic in one class
+- You want state transitions to be explicit and controlled by the state objects themselves
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Order processing systems (ordered, shipped, delivered), document editing (editing, formatting, reviewing), or media players (playing, paused, stopped).
+- **Order Processing** - States: ordered → paid → shipped → delivered
+- **Document Workflow** - States: draft → review → approved → published
+- **Media Players** - States: playing, paused, stopped, buffering
+- **TCP Connections** - States: closed, listen, established, closing
+- **Vending Machines** - States: idle, selecting, dispensing, out of stock
+
+---
 
 ## Chain of Responsibility Pattern
+
+:::tip[Intent]
+Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.
+:::
 
 ```plantuml
 @startuml
@@ -574,26 +630,36 @@ note "Each handler decides either to\nprocess the request or pass\nit to the nex
 @enduml
 ```
 
-The Chain of Responsibility pattern passes a request along a chain of handlers, with each handler deciding either to process the request or pass it to the next handler in the chain.
-
-### Key Components:
+### Key Components
 
 - **Handler**: Abstract class/interface defining the request handling method and successor link
 - **ConcreteHandler**: Implements the request handling behavior
 
-### When to Use:
+### When to Use
 
-- When more than one object may handle a request, and the handler isn't known in advance
-- When you want to issue a request to one of several objects without specifying the receiver explicitly
-- When the set of objects that can handle a request should be specified dynamically
-- When you want to decouple the sender and receiver of a request
-- When you need to process different requests in different ways but don't know the sequence in advance
+:::note[Use Chain of Responsibility When]
+- More than one object may handle a request, and the handler isn't known in advance
+- You want to issue a request to one of several objects without specifying the receiver explicitly
+- The set of objects that can handle a request should be specified dynamically
+- You want to decouple the sender and receiver of a request
+- You need to process different requests in different ways but don't know the sequence in advance
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-HTTP request middleware, event propagation in UI frameworks, or approval workflows with multiple levels of authority.
+- **HTTP Middleware** - Authentication → logging → compression → response
+- **Event Propagation** - UI event bubbling in DOM hierarchy
+- **Approval Workflows** - Employee → manager → director → VP
+- **Exception Handling** - Try-catch chains in error processing
+- **Logging Frameworks** - Different log levels (debug, info, warn, error)
+
+---
 
 ## Template Method Pattern
+
+:::tip[Intent]
+Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure.
+:::
 
 ```plantuml
 @startuml
@@ -663,26 +729,36 @@ note "Template Method defines the skeleton\nof an algorithm, with concrete steps
 @enduml
 ```
 
-The Template Method pattern defines the skeleton of an algorithm in a base class, with specific steps implemented by subclasses without changing the algorithm's structure.
-
-### Key Components:
+### Key Components
 
 - **AbstractClass**: Defines template methods and abstract operations
 - **ConcreteClass**: Implements the primitive operations required by the template method
 
-### When to Use:
+### When to Use
 
-- When you want to implement the invariant parts of an algorithm once and leave the variant parts to subclasses
-- When you want to control the extension points available to subclasses
-- When common behavior among subclasses should be factored into a common class
-- When you want to avoid code duplication in related classes
-- When you need a way to refactor for better code reuse while maintaining algorithm structure
+:::note[Use Template Method When]
+- You want to implement the invariant parts of an algorithm once and leave the variant parts to subclasses
+- You want to control the extension points available to subclasses
+- Common behavior among subclasses should be factored into a common class
+- You want to avoid code duplication in related classes
+- You need a way to refactor for better code reuse while maintaining algorithm structure
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Framework lifecycle methods, data processing pipelines, or document generation systems.
+- **Framework Lifecycle** - React component lifecycle, Spring bean lifecycle
+- **Data Processing** - ETL pipelines (extract → transform → load)
+- **Document Generation** - Report templates with customizable sections
+- **Testing Frameworks** - setUp → test → tearDown
+- **Game Development** - Game loop: initialize → update → render
+
+---
 
 ## Visitor Pattern
+
+:::tip[Intent]
+Represent an operation to be performed on elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates.
+:::
 
 ```plantuml
 @startuml
@@ -777,28 +853,38 @@ note "Visitor separates algorithms\nfrom the objects they operate on" as N1
 @enduml
 ```
 
-The Visitor pattern separates algorithms from the objects on which they operate, allowing you to add new operations to existing object structures without modifying those structures.
-
-### Key Components:
+### Key Components
 
 - **Visitor**: Interface declaring visit methods for each element type
 - **ConcreteVisitor**: Implements the visitor interface with specific behavior
 - **Element**: Interface declaring an accept method
 - **ConcreteElement**: Implements the element interface
 
-### When to Use:
+### When to Use
 
-- When you need to perform operations on objects of a composite structure
-- When you want to add new operations to a class hierarchy without modifying the hierarchy
-- When you have many distinct operations to perform on objects, but don't want to pollute their classes
-- When the object structure classes rarely change but you often need to define new operations on them
-- When you want to collect related operations into a single class rather than spreading them across multiple classes
+:::note[Use Visitor Pattern When]
+- You need to perform operations on objects of a composite structure
+- You want to add new operations to a class hierarchy without modifying the hierarchy
+- You have many distinct operations to perform on objects, but don't want to pollute their classes
+- The object structure classes rarely change but you often need to define new operations on them
+- You want to collect related operations into a single class rather than spreading them across multiple classes
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Document object model (DOM) operations, abstract syntax tree (AST) processing, or report generation from complex data structures.
+- **Compiler Design** - Abstract syntax tree (AST) traversal and analysis
+- **Document Processing** - XML/HTML DOM operations (rendering, validation, transformation)
+- **Report Generation** - Different export formats (PDF, HTML, JSON) from same data structure
+- **Tax Calculation** - Computing taxes for different product types
+- **Graphics Rendering** - Rendering different shape types
+
+---
 
 ## Mediator Pattern
+
+:::tip[Intent]
+Define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently.
+:::
 
 ```plantuml
 @startuml
@@ -888,28 +974,38 @@ note "Mediator centralizes complex\ncommunication between objects" as N1
 @enduml
 ```
 
-The Mediator pattern reduces chaotic dependencies between objects by restricting direct communications and forcing collaborations through a mediator object.
-
-### Key Components:
+### Key Components
 
 - **Mediator**: Interface defining communication method between colleagues
 - **ConcreteMediator**: Implements Mediator and coordinates between colleague objects
 - **Colleague**: Abstract class for objects that communicate through the mediator
 - **ConcreteColleague**: Implements Colleague with specific behavior
 
-### When to Use:
+### When to Use
 
-- When a set of objects communicate in well-defined but complex ways
-- When reusing an object is difficult because it communicates with many other objects
-- When you want to customize how objects interact without subclassing
-- When you have many classes that are tightly coupled making the system hard to maintain
-- When you want to avoid a "many-to-many" relationship between communicating objects
+:::note[Use Mediator Pattern When]
+- A set of objects communicate in well-defined but complex ways
+- Reusing an object is difficult because it communicates with many other objects
+- You want to customize how objects interact without subclassing
+- You have many classes that are tightly coupled making the system hard to maintain
+- You want to avoid a "many-to-many" relationship between communicating objects
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Air traffic control systems, chat room servers, or UI components coordination.
+- **Air Traffic Control** - Centralized coordination of aircraft communication
+- **Chat Rooms** - Server mediates messages between users
+- **UI Dialog Boxes** - Coordinating interactions between form elements
+- **Stock Exchange** - Mediating trades between buyers and sellers
+- **Smart Home Systems** - Central hub coordinating device interactions
+
+---
 
 ## Memento Pattern
+
+:::tip[Intent]
+Without violating encapsulation, capture and externalize an object's internal state so that the object can be restored to this state later.
+:::
 
 ```plantuml
 @startuml
@@ -999,22 +1095,27 @@ note "Memento captures and externalizes\nan object's state for later restoration
 @enduml
 ```
 
-The Memento pattern lets you capture and externalize an object's internal state so it can be restored to this state later without violating encapsulation.
-
-### Key Components:
+### Key Components
 
 - **Originator**: Creates a memento containing its state and uses it to restore state
 - **Memento**: Stores the internal state of the Originator
 - **Caretaker**: Keeps track of multiple mementos
 
-### When to Use:
+### When to Use
 
-- When you need to create snapshots of an object's state for later restoration
-- When direct access to an object's fields/getters/setters would expose implementation details
-- When you need to implement undo/redo functionality
-- When you want to provide a rollback mechanism for operations
-- When you need to maintain history states while preserving encapsulation
+:::note[Use Memento Pattern When]
+- You need to create snapshots of an object's state for later restoration
+- Direct access to an object's fields/getters/setters would expose implementation details
+- You need to implement undo/redo functionality
+- You want to provide a rollback mechanism for operations
+- You need to maintain history states while preserving encapsulation
+:::
 
-### Real-World Example:
+### Real-World Examples
 
-Undo/redo functionality, save game systems, or transaction rollbacks in databases.
+- **Text Editors** - Undo/redo functionality for document changes
+- **Video Games** - Save game states, checkpoints
+- **Database Systems** - Transaction rollback mechanisms
+- **Version Control** - Saving and restoring file states
+- **Drawing Applications** - History of drawing operations
+- **Form Wizards** - Saving progress across multiple steps

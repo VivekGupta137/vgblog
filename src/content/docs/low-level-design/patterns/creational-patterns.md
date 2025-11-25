@@ -17,7 +17,7 @@ Popular ones-
 
 > The Factory Method Design Pattern is a creational pattern that provides an interface for creating objects in a **superclass**, but allows **subclasses** to alter the type of objects that will be created.
 
-:::info
+:::note
 meaning there will be a **superclass** with a *abstract method* for creating some **Product(interface)** object which it will use for setting a **Product** instance in it's local variable, and then it will be responsibility of **subclasses** to implement this method and return an instance of the appropriate **Product** subclass.
 :::
 
@@ -160,7 +160,7 @@ class EmailNotification implements Notification {
 }
 ```
 
-:::info
+:::note
 **Why two different solutions?**
 
 **Factory Method Pattern** is an official GoF pattern — it emphasizes inheritance and polymorphism, where subclasses determine the object type.
@@ -389,7 +389,7 @@ class NotificationService {
 3. **Scalability** - Easy to introduce new product types without changing client code.
 :::
 
-:::warn
+:::caution
 1. **Complexity Overhead** - Introduces extra classes/interfaces that may be unnecessary for simple cases.
 
 2. **Open/Closed Violation (in Simple Factory)** - Adding new types often requires modifying the factory.

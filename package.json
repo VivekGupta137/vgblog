@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/node": "^9.5.1",
     "@astrojs/starlight": "^0.36.2",
+    "@expressive-code/plugin-collapsible-sections": "^0.41.3",
     "@expressive-code/plugin-line-numbers": "^0.41.3",
     "astro": "^5.6.1",
     "astro-d2": "^0.8.1",
@@ -21,6 +22,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "sharp": "^0.34.2",
+    "starlight-fullview-mode": "^0.2.6",
     "starlight-giscus": "^0.8.1",
     "starlight-image-zoom": "^0.13.2",
     "starlight-links-validator": "^0.19.1",

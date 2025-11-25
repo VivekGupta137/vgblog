@@ -18,6 +18,8 @@ import starlightGiscus from "starlight-giscus";
 
 import node from "@astrojs/node";
 import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
+import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
+import starlightFullViewMode from "starlight-fullview-mode";
 
 // https://astro.build/config
 export default defineConfig({
@@ -63,10 +65,11 @@ export default defineConfig({
             info: Aside({ label: 'Info', color: 'blue',  }),
           },
         }),
+        
 
       ],
       expressiveCode: {
-        plugins: [pluginLanguageBadge(), pluginLineNumbers()],
+        plugins: [pluginLanguageBadge(), pluginLineNumbers(), pluginCollapsibleSections()],
         defaultProps: {
           showLineNumbers: false,
           overridesByLang: {
@@ -74,7 +77,6 @@ export default defineConfig({
               showLineNumbers: true,
             },
           },
-
         }
       },
       title: "VG",

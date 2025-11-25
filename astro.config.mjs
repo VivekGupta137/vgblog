@@ -17,6 +17,7 @@ import { pluginLanguageBadge } from "expressive-code-language-badge";
 import starlightGiscus from "starlight-giscus";
 
 import node from "@astrojs/node";
+import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
 
 // https://astro.build/config
 export default defineConfig({
@@ -55,6 +56,14 @@ export default defineConfig({
           baseUrl: process.env.PUBLIC_DOMAIN || "",
           prompt: "Read {url} and explain its main points briefly."
         }),
+        starlightMarkdownBlocks({
+          blocks: {
+            success: Aside({ label: 'Advantages', color: 'green',  }),
+            warn: Aside({ label: 'Disadvantages', color: 'orange', }),
+            info: Aside({ label: 'Info', color: 'blue',  }),
+          },
+        }),
+
       ],
       expressiveCode: {
         plugins: [pluginLanguageBadge(), pluginLineNumbers()],
@@ -97,6 +106,12 @@ export default defineConfig({
               label: "High Level Design",
               autogenerate: {
                 directory: "high-level-design",
+              },
+            },
+            {
+              label: "Low Level Design",
+              autogenerate: {
+                directory: "low-level-design",
               },
             },
           ],

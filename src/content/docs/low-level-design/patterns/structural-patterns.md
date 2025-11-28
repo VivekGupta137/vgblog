@@ -90,8 +90,8 @@ We use `method translation` in the adapter class:
 4. Converting return types — e.g., converting a long transaction reference into a formatted String ID
 :::
 
-```java
-// LegacyGatewayAdapter.java highlight=2
+```java {3}
+// LegacyGatewayAdapter.java
 class LegacyGatewayAdapter implements PaymentProcessor {
     private final LegacyGateway legacyGateway; // instance of adaptee is needed
     private long currentRef;

@@ -10,6 +10,7 @@ import starlightPageActions from "starlight-page-actions";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import starlightSidebarSwipe from 'starlight-sidebar-swipe'
 
 
 import d2 from "astro-d2";
@@ -20,23 +21,26 @@ import node from "@astrojs/node";
 import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import starlightFullViewMode from "starlight-fullview-mode";
+import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 
 // https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_DOMAIN || "http://localhost:4321/",
-
+  
   markdown: {
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex],
+    rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
   },
 
   integrations: [
     starlight({
       customCss: [
         './src/global.css',
+        './src/styles/custom.css',
       ],
       components: {
         Pagination: './src/components/Pagination.astro',
+        Header: './src/components/Header.astro',
       },
       plugins: [
         starlightSiteGraph(),
@@ -66,7 +70,7 @@ export default defineConfig({
           },
         }),
         
-
+        starlightSidebarSwipe()
       ],
       expressiveCode: {
         plugins: [pluginLanguageBadge(), pluginLineNumbers(), pluginCollapsibleSections()],

@@ -7,7 +7,7 @@ description: a binary-tree data structure for efficient range queries and update
 
 Need to be used in scenarios where we require to perform fast range-max(or min|sum) queries with point updates.
 
-Can also check [Square root decomposition technique](/coding/square-root-decomposition/)
+Can also check [Square root decomposition technique](/coding/competitive/square-root-decomposition/)
 
 ## Datastructure design & operations
 

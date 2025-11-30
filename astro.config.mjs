@@ -77,7 +77,7 @@ export default defineConfig({
         defaultProps: {
           showLineNumbers: false,
           overridesByLang: {
-            'js,ts,html,java': {
+            'js,ts,html,java,python': {
               showLineNumbers: true,
             },
           },

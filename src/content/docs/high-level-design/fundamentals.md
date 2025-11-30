@@ -14,8 +14,7 @@ sidebar:
 
 ## DNS
 
-it's internet phone book, translates human-friendly domain names to IP addresses.
-Client find the server via DNS
+DNS (Domain Name System) is the internet's phone book. It translates human-friendly domain names into IP addresses, allowing clients to find servers on the internet.
 
 ```plantuml
 @startuml
@@ -30,35 +29,213 @@ skinparam sequenceParticipantBackgroundColor #f8fafc
 skinparam noteBackgroundColor #f8fafc
 skinparam noteBorderColor #94a3b8
 hide footbox
-actor C as Client
-participant R as Resolver
-participant Root as "Root DNS"
-participant TLD as ".com TLD"
-participant Auth as "Authoritative DNS"
-participant S as Server
-C ->> R: Query example.com
-R ->> Root: Ask for .com
-Root -->> R: Refer to .com TLD
-R ->> TLD: Ask for example.com
-TLD -->> R: Refer to authoritative
-R ->> Auth: Ask for example.com
-Auth -->> R: Return IP
-R -->> C: IP
-C ->> S: Request to IP
+actor Client
+participant Browser as "Browser Cache"
+participant OS as "OS Cache"
+participant Resolver as "DNS Resolver\n(ISP)"
+participant Root as "Root DNS\nServer"
+participant TLD as "TLD DNS\nServer (.com)"
+participant Auth as "Authoritative\nDNS Server"
+participant Web as "Web Server\n(example.com)"
+Client -> Browser: Type example.com
+Browser -> Browser: Check cache
+alt Cache Hit
+	Browser --> Client: Return cached IP
+else Cache Miss
+	Browser -> OS: Query example.com
+	OS -> OS: Check cache
+	alt OS Cache Hit
+		OS --> Browser: Return cached IP
+	else OS Cache Miss
+		OS -> Resolver: Query example.com
+		Resolver -> Resolver: Check cache
+		alt Resolver Cache Hit
+			Resolver --> OS: Return cached IP
+		else Resolver Cache Miss
+			Resolver -> Root: Where is .com?
+			Root --> Resolver: Ask TLD server at X.X.X.X
+			Resolver -> TLD: Where is example.com?
+			TLD --> Resolver: Ask authoritative at Y.Y.Y.Y
+			Resolver -> Auth: What's IP of example.com?
+			Auth --> Resolver: IP is 93.184.216.34
+			Resolver -> Resolver: Cache result (TTL)
+			Resolver --> OS: IP is 93.184.216.34
+		end
+		OS -> OS: Cache result
+		OS --> Browser: IP is 93.184.216.34
+	end
+	Browser -> Browser: Cache result
+	Browser --> Client: IP is 93.184.216.34
+end
+Client -> Web: HTTP request to 93.184.216.34
+Web --> Client: Web page response
+legend right
+DNS resolution process with caching at multiple levels.
+Root servers (13 sets) direct to TLD servers.
+TLD servers direct to authoritative name servers.
+TTL (Time To Live) controls cache duration.
+endlegend
 @enduml
 ```
 
+:::note[OS Cache Explained]
+The **OS Cache** (Operating System Cache) is a DNS caching layer maintained by your operating system (Windows, macOS, or Linux).
+
+When you visit a website, your computer first checks the OS-level DNS cache before querying external DNS servers. This cache stores recent DNS lookups, mapping domain names to IP addresses. If you revisit the same site, your OS can instantly return the IP address without contacting any DNS servers.
+:::
+
 ## API
-its a contract, set of rules, it defines one piece of software can ask for services from another piece of software.
+
+An **API** (Application Programming Interface) is a contract or set of rules that defines how one piece of software can request services from another.
 
 ### Types
-types -
-REST - treat everything as resources, like userProfile, each resource get unique URL. And it's stateless, meaning each request from client contains all the information server needs to fulfill that request. This helps with it's scalability. it's usually used fro public web APIs.
-RPC - it's like calling a function on a remote server, almost as if you were calling a local function. it's less about resources and more about actions, often with a focus on specific operations or commands. usually used for internal service communication within a larger system. so the tight coupling might be ok or even desirable in this context.
-Graphql - it gives the client way more control over the data it receives. instead of fixed endpoints in REST, client can specify exactly what data it needs in a single request. this flexibility is great for mobile apps. minimizing the data transfer is the key here. it uses a strong type system to define the data that can be queried, making it easier for clients to understand and work with the API. 
+
+#### REST (Representational State Transfer)
+
+Treats everything as resources (e.g., `userProfile`), with each resource having a unique URL. REST is stateless—each request contains all information the server needs to fulfill it, enhancing scalability. Commonly used for public web APIs.
+
+```plantuml
+@startuml
+title REST API Pattern
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant Client
+participant "API Server" as API
+database "Database" as DB
+Client -> API: GET /users/123
+note right
+  Stateless request
+  Contains all needed info
+end note
+API -> DB: Query user 123
+DB --> API: User data
+API --> Client: 200 OK\n{"id": 123, "name": "John"}
+Client -> API: PUT /users/123\n{"name": "Jane"}
+API -> DB: Update user 123
+DB --> API: Success
+API --> Client: 200 OK
+legend right
+REST: Resources via HTTP methods
+GET (read), POST (create)
+PUT (update), DELETE (remove)
+endlegend
+@enduml
+```
+
+#### RPC (Remote Procedure Call)
+
+Enables calling functions on a remote server as if they were local. Focuses on actions and operations rather than resources. Typically used for internal service communication where tight coupling is acceptable or desirable.
+
+**How it works**: Client uses generated code (stub) that serializes the function call and parameters into binary format (Protocol Buffers), sends it over HTTP/2, and the server deserializes it to execute the function.
+
+```plantuml
+@startuml
+title RPC Pattern (gRPC Example)
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant "Client\n(gRPC stub)" as Client
+participant "Service A\n(gRPC server)" as ServiceA
+participant "Service B\n(gRPC server)" as ServiceB
+Client -> ServiceA: HTTP/2 POST\ngetUserById(id=123)\n[protobuf binary]
+note right of Client
+  1. Client calls method
+  2. Stub serializes to protobuf
+  3. Sends via HTTP/2
+end note
+ServiceA -> ServiceA: Deserialize protobuf\nExecute getUserById()
+ServiceA --> Client: HTTP/2 Response\nUser{id:123, name:"John"}\n[protobuf binary]
+note left of ServiceA
+  Server deserializes request
+  Executes function
+  Serializes response
+end note
+Client -> ServiceA: HTTP/2 POST\ncalculateOrderTotal(orderId)\n[protobuf binary]
+ServiceA -> ServiceB: HTTP/2 POST\ngetOrderItems(orderId)\n[protobuf binary]
+note right of ServiceA
+  Service-to-service RPC
+  Also over HTTP/2
+end note
+ServiceB --> ServiceA: Items list [protobuf]
+ServiceA -> ServiceA: Calculate total
+ServiceA --> Client: Total amount [protobuf]
+legend right
+gRPC Details:
+- Transport: HTTP/2 (multiplexing, streaming)
+- Serialization: Protocol Buffers (binary, compact)
+- Code generation: Stubs for type-safe calls
+- Common for internal microservices
+endlegend
+@enduml
+```
+
+#### GraphQL
+
+Gives clients fine-grained control over data retrieval. Instead of fixed REST endpoints, clients specify exactly what data they need in a single request. Uses a strong type system, making it ideal for mobile apps where minimizing data transfer is crucial.
+
+```plantuml
+@startuml
+title GraphQL Query Pattern
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant "Mobile App" as Client
+participant "GraphQL Server" as GQL
+database "Database" as DB
+Client -> GQL: POST /graphql
+note right
+  query {
+    user(id: 123) {
+      name
+      email
+      posts(limit: 5) {
+        title
+      }
+    }
+  }
+end note
+GQL -> DB: Resolve user fields
+DB --> GQL: User data
+GQL -> DB: Resolve posts
+DB --> GQL: Posts data
+GQL --> Client: Exact fields requested\n(no over-fetching)
+legend right
+GraphQL: Client specifies exact data
+Single endpoint, flexible queries
+Strong type system
+endlegend
+@enduml
+``` 
 
 ### Summary
-in summary, when designing APIs, REST is good for public APIs it's simple and easy to scale, RPC is great for internal efficient calls, and GraphQL is ideal for scenarios where clients need flexibility in data retrieval.
+
+:::tip[API Selection Guide]
+- **REST**: Best for public APIs—simple, scalable, and widely adopted
+- **RPC**: Ideal for internal, efficient service-to-service calls
+- **GraphQL**: Perfect when clients need flexible data retrieval (mobile apps)
+:::
 
 ```plantuml
 @startuml
@@ -84,30 +261,63 @@ Start --> GQL
 
 ## Database
 
-it stores the data that APIs use.
-There are two main types of databases: SQL and NoSQL.
+Databases store the data that APIs use and serve. There are two main categories: **SQL** (relational) and **NoSQL** (non-relational).
 
 ### SQL (Relational DB)
-SQL or relational DB - are the google sheets on steroids. They store data in tables with rows and columns, and we define the structured schema upfront. They also have the ACID properties.
-A - Atomicity - ensures either all the transactions succeeds or none do.
-C - Consistency - ensures all data is in a valid state before and after the transaction by enforcing constraints.
-I - Isolation - concurrent transactions don't mess each other up.
-D - Durability - ensures that once a transaction is committed, it remains so, even in the event of an application crash.
 
-examples - MySQL, PostgreSQL, OracleDB, MS SQL Server(MSSQL)
+SQL databases are like spreadsheets on steroids. They store data in tables with rows and columns using a predefined schema. They guarantee **ACID** properties:
+
+- **A**tomicity: Ensures all transactions succeed or none do
+- **C**onsistency: Validates all data before and after transactions by enforcing constraints
+- **I**solation: Prevents concurrent transactions from interfering with each other
+- **D**urability: Guarantees committed transactions persist even after crashes
+
+**Examples**: MySQL, PostgreSQL, Oracle DB, MS SQL Server (MSSQL)
 
 ### NoSQL
-NoSQL -
-these are more flexible. They break away from the rigid and predefined structure of SQL tables, they are designed to work with data that is semi-structured or unstructured. It's more like storing collections of data, key-value pairs or other structures without forcing everything into a table.
-types
-- Document databases (e.g., MongoDB, CouchDB) - store data in JSON-like documents.
-- Key-value stores (e.g., Redis, DynamoDB, memcached) - store data as a collection of key-value pairs. caching and session management are common use cases or the things that need speed.
-- Column-family stores (e.g., Cassandra, HBase) - store data in columns rather than rows. This is optimized for handling massive amounts of writes and read data based on specific keys. activity feeds, time series data, big data stuff.
-- Graph databases (e.g., Neo4j, ArangoDB) - store data in graph structures with nodes and edges. These are needed in cases where the relationships between the data points are just as important as the data itself. the nodes contains the data and the edges represent the relationships. social networks, friends connections, recommendation systems, and fraud detection, or anywhere the connection matter.
+
+NoSQL databases offer flexibility beyond rigid table structures. They handle semi-structured or unstructured data efficiently.
+
+#### Types
+
+**Document Databases** (MongoDB, CouchDB)
+- Store data in JSON-like documents
+- Flexible schema for evolving data models
+
+**Key-Value Stores** ([Redis](/high-level-design/tools/redis), DynamoDB, Memcached)
+- Simple key-value pair storage
+- Ideal for caching, session management, and high-speed operations
+
+**Column-Family Stores** (Cassandra, HBase)
+- Store data in columns rather than rows
+- Optimized for massive write/read workloads
+- Use cases: activity feeds, time-series data, big data analytics
+
+**Graph Databases** (Neo4j, ArangoDB)
+- Store data as nodes (entities) and edges (relationships)
+- Perfect when relationships are as important as the data itself
+- Use cases: social networks, recommendation systems, fraud detection
 
 
 ### Summary
-in summary, think of the social media feed, tons of likes and comments. each interaction is a piece of data that needs to be stored and retrieved efficiently. A relational database might struggle with this due to sheer volume of writes and lack of rigid structure, this is where cassandra which is designed to handle high write and read throughput comes in handy. But there's a tradeoff - with many nosql systems built for massive scale, we might lose some of the ACID properties, for higher availability and partition tolerance (CAP theorem). So, if we need strong consistency and complex queries, SQL is the way to go. But if we need flexibility and scalability, NoSQL is the better choice.
+
+:::note[Real-World Example: Social Media Feed]
+Consider a social media platform with millions of likes and comments. Each interaction requires efficient storage and retrieval.
+
+A relational database might struggle with:
+- High volume of concurrent writes
+- Semi-structured interaction data
+
+Cassandra (column-family NoSQL) excels here with massive write/read throughput.
+:::
+
+:::caution[The Trade-off: CAP Theorem]
+Many NoSQL systems sacrifice some **ACID** properties for higher availability and partition tolerance.
+
+**Choose SQL when**: You need strong consistency and complex queries
+
+**Choose NoSQL when**: You need flexibility, horizontal scalability, and can tolerate eventual consistency
+:::
 
 ```plantuml
 @startuml
@@ -139,9 +349,14 @@ NoSQL --> Graph
 ```
 
 
-### KV Stores
+### Key-Value Stores
 
-the key value databases like redis and memcached primarily operate from the computer's main memory for storage, allowing extremely fast read and write operations. this is why they are popular choices for the caching needs, keeping the frequently used data readily available in the memory and also used for managing the user sessions.
+Key-value databases like Redis and Memcached operate primarily in main memory (RAM), enabling extremely fast read and write operations.
+
+**Primary Use Cases**:
+- **Caching**: Keep frequently accessed data in memory
+- **Session Management**: Store user session data for quick retrieval
+- **Real-time Analytics**: Process high-velocity data streams
 
 ```plantuml
 @startuml
@@ -164,9 +379,74 @@ Cache --> App
 ## Scalability
 
 ### Approaches
-When application gets popular, to handle more load we need to scale the system. There are two main approaches to scaling:
-1. Vertical Scaling - basically upgrading the existing hardware to handle more load (e.g., adding more CPU, RAM, faster disks). this is simpler, but there's a limit coz we can only add so much power to a single machine. and it also becomes a single point of failure. which is not good for high availability.
-2. Horizontal Scaling - adding more machines to distribute the load (e.g., sharding the database, using load balancers). Most of the large applications today uses horizontal scaling to ensure high availability and reliability. we simply add more servers to handle the increased traffic and data. This helps with much better fault tolerance, as if one server goes down, others can still handle the requests. however it introduces more complexity, now we have to manage all these machines, keeping data consistent across them, and coordinate the tasks in way ensuring that the load is balanced properly. Load balancers are used to distribute the incoming traffic evenly to the individual servers, it sits in front of the application servers and smartly routes the requests to the appropriate server based on the some strategy which usually uses current load and health of the servers. Load balancers helps with preventing bottlenecks and improving availability ( if one server goes down, the load balancer knows not to send traffic to it).
+
+As applications grow in popularity, they need to scale to handle increased load. There are two fundamental approaches:
+
+#### Vertical Scaling (Scale Up)
+
+Upgrade existing hardware: add more CPU, RAM, or faster storage.
+
+**Pros**:
+- Simpler to implement
+- No application changes needed
+
+**Cons**:
+- Physical hardware limits
+- Single point of failure
+- Limited high availability
+
+#### Horizontal Scaling (Scale Out)
+
+Add more machines to distribute the load across multiple servers.
+
+**Pros**:
+- Nearly unlimited scaling potential
+- Better fault tolerance
+- High availability (if one server fails, others continue)
+
+**Cons**:
+- Increased complexity
+- Data consistency challenges
+- Requires load balancing and coordination
+
+:::tip[Modern Approach]
+Most large-scale applications use **horizontal scaling** with load balancers to distribute traffic intelligently across multiple servers based on current load and health status.
+:::
+
+```plantuml
+@startuml
+title Vertical vs Horizontal Scaling
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam rectangleBorderColor #94a3b8
+skinparam rectangleBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+skinparam noteBackgroundColor #fef3c7
+left to right direction
+package "Vertical Scaling" {
+  rectangle "Small Server\n2 CPU, 4GB RAM" as V1 #e0f2fe
+  note bottom of V1
+    Upgrade to bigger machine
+  end note
+  rectangle "Large Server\n16 CPU, 64GB RAM" as V2 #dbeafe
+  V1 -down-> V2 : Upgrade
+}
+package "Horizontal Scaling" {
+  rectangle "Server 1\n4 CPU, 8GB" as H1 #fce7f3
+  rectangle "Server 2\n4 CPU, 8GB" as H2 #fce7f3
+  rectangle "Server 3\n4 CPU, 8GB" as H3 #fce7f3
+  rectangle "Load\nBalancer" as LB #f3e8ff
+  note bottom of H3
+    Add more machines
+  end note
+  LB -down-> H1
+  LB -down-> H2
+  LB -down-> H3
+}
+@enduml
+```
 
 ```plantuml
 @startuml
@@ -188,19 +468,40 @@ Horizontal --> LoadBalancerScalability
 @enduml
 ```
 
-## Load balancers
+## Load Balancers
 
 ### Algorithms
-Algorithms used by load balancers to distribute the traffic:
-1. Round Robin - distributes requests to servers in circular order sequence like server 1, server 2, server 3, server 1, server 2, server 3 and so on.
-2. Least Connections - sends the requests to the server with the fewest active connections, trying to keep everyone equally busy.
-3. IP Hash - uses the client's IP address to determine which server will handle the request consistently. this could be important for some applications which maintains the state on the server ( session stickiness).
 
-### High availability
-We also need redundant load balancers to ensure high availability. If one load balancer fails, another can take over without disrupting the service.
+Load balancers use various algorithms to distribute traffic:
+
+**Round Robin**
+- Distributes requests in circular sequence: Server 1 → Server 2 → Server 3 → Server 1...
+- Simple and fair distribution
+
+**Least Connections**
+- Routes to the server with fewest active connections
+- Keeps all servers equally busy
+
+**IP Hash**
+- Uses client IP address to consistently route to the same server
+- Enables session stickiness for stateful applications
+
+### High Availability
+
+:::caution[Redundancy Required]
+Deploy **redundant load balancers** to avoid single points of failure. If one fails, another takes over seamlessly.
+:::
 
 ### Tools
-we can use software load balancers like HAProxy or NGINX to achieve this. or managed service from cloud ones like AWS Elastic Load Balancing (AWS ELB) or Google Cloud Load Balancing or Azure Load Balancer.
+
+**Self-Managed**:
+- HAProxy
+- NGINX
+
+**Cloud-Managed**:
+- AWS Elastic Load Balancing (ELB)
+- Google Cloud Load Balancing
+- Azure Load Balancer
 
 ```plantuml
 @startuml
@@ -227,28 +528,217 @@ LoadBalancer --> Server3 : IP hash
 
 ## Caching
 
-Caching creates a high speed storage layer that stores the frequently accessed data. It reduces latency and improves overall performance. It's like keeping the most used work tools close at hand for quick access.
+Caching creates a high-speed storage layer for frequently accessed data, reducing latency and improving performance—like keeping your most-used tools within arm's reach.
 
-### Levels
-Caching can happen at lots of levels:
-1. Browser level - browsers cache static assets like images, CSS, and JavaScript files to reduce load times on subsequent visits.
-2. DNS level - DNS servers cache IP address mappings for domain names, speeding up the resolution process for frequently accessed domains.
-3. Application level - applications can implement their own caching mechanisms to store frequently accessed data in memory.
-4. Database level - databases can cache query results to speed up response times for repeated queries.
-5. CDN level - Content Delivery Networks (CDNs) cache static assets at edge locations closer (geographically closer) to users, reducing latency.
+### Caching Levels
 
-### Strategies
-Caching strategies:
-1. Cache Aside - the application code is required to check the data from the cache if it's available there before querying the database, otherwise it will fetch the data from the database and store it in the cache for future requests.
-2. Write Through - when application is writing data, data is written to the cache and database at the same time, it guarantees the consistency between the cache and database, this might make the write operations a bit slower as we are waiting for both writes to complete.
-3. Write Back - data is written to the cache first and then asynchronously (or in batches) written to database. This prioritizes the write speed. in case the cache fails then there is risk of losing data, here we are trading off consistency for performance.
-4. Write Around - writes are sent directly to the database, bypassing the cache. This can be useful for infrequently accessed data. The cache is only updated when the data is read following the cache aside pattern usually.
+Caching occurs at multiple layers:
 
-### Eviction policies
-Cache eviction policies: when cache is full and new data has to come in, then something has to go.
-1. Least Recently Used (LRU) - removes the least recently accessed items first.
-2. First In First Out (FIFO) - removes the oldest items first, regardless of how often they are accessed. simply but not always optimal. (optimal when the access pattern is strictly sequential, eg. video streaming, live sports, online gaming)
-3. Least Frequently Used (LFU) - removes the least frequently accessed items first. it evicts the data which have been accessed the least number of times, ensuring the hottest data stays in the cache.
+**Browser Cache**
+- Stores static assets (images, CSS, JavaScript)
+- Reduces load times on repeat visits
+
+**DNS Cache**
+- Caches IP address mappings for domain names
+- Speeds up DNS resolution
+
+**Application Cache**
+- In-memory storage for frequently accessed data
+- Reduces database queries
+
+**Database Cache**
+- Caches query results
+- Speeds up repeated queries
+
+**CDN (Content Delivery Network)**
+- Caches static assets at edge locations globally
+- Delivers content from geographically closest servers
+
+### Caching Strategies
+
+#### Cache Aside (Lazy Loading)
+
+Application checks cache first. On miss, fetch from database and populate cache.
+
+**Pros**: Simple, only caches what's needed
+**Cons**: Cache miss penalty, potential stale data
+
+#### Write Through
+
+Writes go to both cache and database simultaneously.
+
+**Pros**: Strong consistency between cache and database
+**Cons**: Slower writes (waiting for both operations)
+
+#### Write Back (Write Behind)
+
+Writes go to cache first, then asynchronously to database.
+
+**Pros**: Fast writes, reduced database load
+**Cons**: Risk of data loss if cache fails before database sync
+
+:::caution[Trade-off]
+Write Back prioritizes **performance** over **consistency**
+:::
+
+#### Write Around
+
+Writes bypass cache, going directly to database. Cache populated only on reads.
+
+**Pros**: Prevents cache pollution with infrequently accessed data
+**Cons**: Cache misses on recently written data
+
+```plantuml
+@startuml
+title Cache Aside (Lazy Loading)
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant App as "Application"
+participant Cache
+participant DB as "Database"
+App -> Cache: Read key
+alt Cache Hit
+	Cache --> App: Return value
+else Cache Miss
+	Cache --> App: <miss>
+	App -> DB: Query key
+	DB --> App: Return value
+	App -> Cache: Set key=value
+	Cache --> App: OK
+end
+legend right
+Cache Aside: Application manages cache.
+Read from cache first, on miss read from DB
+and populate cache.
+endlegend
+@enduml
+```
+
+```plantuml
+@startuml
+title Write Through
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant App as "Application"
+participant Cache
+participant DB as "Database"
+App -> Cache: Write key=value
+Cache -> DB: Write key=value
+DB --> Cache: Write confirmed
+Cache --> App: Write confirmed
+note right of Cache
+	Both cache and database
+	updated synchronously.
+	Guarantees consistency.
+end note
+legend right
+Write Through: Data written to cache and DB together.
+Slower writes but ensures consistency.
+endlegend
+@enduml
+```
+
+```plantuml
+@startuml
+title Write Back (Write Behind)
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant App as "Application"
+participant Cache
+participant DB as "Database"
+App -> Cache: Write key=value
+Cache --> App: Write confirmed (fast)
+note right of Cache
+	Data written to cache immediately.
+	DB write happens later asynchronously.
+end note
+... async batch write ...
+Cache -> DB: Batch write key=value
+DB --> Cache: Write confirmed
+legend right
+Write Back: Fast writes to cache, async DB updates.
+Risk of data loss if cache fails before DB sync.
+endlegend
+@enduml
+```
+
+```plantuml
+@startuml
+title Write Around
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant App as "Application"
+participant Cache
+participant DB as "Database"
+App -> DB: Write key=value
+DB --> App: Write confirmed
+note right of DB
+	Writes bypass cache.
+	Cache only populated on reads.
+end note
+... later ...
+App -> Cache: Read key
+Cache --> App: <miss>
+App -> DB: Query key
+DB --> App: Return value
+App -> Cache: Set key=value
+legend right
+Write Around: Writes go directly to DB, bypassing cache.
+Useful for infrequently accessed data.
+endlegend
+@enduml
+```
+
+### Cache Eviction Policies
+
+When cache is full, eviction policies determine what gets removed:
+
+**LRU (Least Recently Used)**
+- Removes least recently accessed items
+- Good general-purpose strategy
+- Assumes recent access predicts future access
+
+**FIFO (First In First Out)**
+- Removes oldest items regardless of access frequency
+- Simple but not always optimal
+- Best for sequential access patterns (video streaming, live sports)
+
+**LFU (Least Frequently Used)**
+- Removes items with lowest access count
+- Keeps "hottest" data in cache
+- Good for workloads with clear access patterns
 
 ```plantuml
 @startuml
@@ -333,41 +823,16 @@ endlegend
 @enduml
 ```
 
-```plantuml
-@startuml
-title Caching — Cache-aside pattern
-skinparam backgroundColor #ffffff
-skinparam Shadowing false
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 13
-skinparam sequenceArrowColor #334155
-skinparam sequenceParticipantBorderColor #94a3b8
-skinparam sequenceParticipantBackgroundColor #f8fafc
-skinparam noteBackgroundColor #f8fafc
-skinparam noteBorderColor #94a3b8
-hide footbox
-participant C as Client
-participant A as Application
-participant Cache
-participant DB as Database
-C ->> A: GET key
-A ->> Cache: Read key
-alt Hit (Cache Aside)
-	Cache -->> A: value
-	A -->> C: value
-else Miss (Cache Aside)
-	Cache -->> A: <miss>
-	A ->> DB: Query key
-	DB -->> A: value
-	A ->> Cache: Set key=value
-	A -->> C: value
-end
-@enduml
-```
 
-### CDN
+### CDN (Content Delivery Network)
 
-it is basically a geographically distributed network of servers which specialize in storing static content images, videos, and other web assets. CDNs cache content at edge locations closer to users, reducing latency and improving load times.
+A geographically distributed network of servers that cache static content (images, videos, web assets) at edge locations worldwide.
+
+**Benefits**:
+- Reduced latency by serving from geographically closest server
+- Improved load times
+- Reduced load on origin server
+- Better global user experience
 
 ```plantuml
 @startuml
@@ -390,14 +855,25 @@ Origin --> Edge : Cache + respond
 @enduml
 ```
 
-## Data partitioning and sharding
+## Data Partitioning and Sharding
 
-in cases where the sheer volume of data becomes very huge, like when databases become huge like GBs or terabytes, eventually a single database cannot hold it all, storage limits, query performance takes a hit. This is where data partitioning and sharding comes in, basically dividing the massive data into smaller independent chunks called shards and spread those shards across multiple databases or servers. so now each server only handles the portion of overall data. 
+When databases grow to terabytes, a single database can't handle it all. Storage limits are reached and query performance degrades.
 
-to divide the data we can use different strategies like:
+**Solution**: Divide data into smaller independent chunks (**shards**) distributed across multiple servers.
 
-1. Horizontal Partitioning - splits the data by rows, eg. users from A-M in one shard, N-Z in another. it uses some key like username of id.
-2. Vertical Partitioning - splits the data by columns, eg. frequently accessed user profile information in one shard, less accessed text blobs in another. common for general scaling.
+### Partitioning Strategies
+
+**Horizontal Partitioning (Sharding)**
+- Splits data by **rows**
+- Example: Users A-M in Shard 1, N-Z in Shard 2
+- Uses partition key (user ID, username)
+- Most common scaling approach
+
+**Vertical Partitioning**
+- Splits data by **columns**
+- Example: User profiles in Shard 1, user activity logs in Shard 2
+- Separates frequently vs infrequently accessed data
+- Optimizes for different access patterns
 
 ```plantuml
 @startuml
@@ -425,13 +901,103 @@ Hash --> ShardC
 
 ## Replication
 
-Sharding helps manage huge datasets, but to manage availability and reliability we need to maintain multiple identical copies of the data servers. so that if one server fails, others can take over without data loss or downtime.
+Sharding handles large datasets, but **replication** ensures availability and reliability by maintaining multiple identical copies of data. If one server fails, others take over without data loss or downtime.
 
-By having redundancy we improve the overall system reliability and availability. also it can improve the read performance as we can distribute the read requests across multiple servers.
+**Benefits**:
+- Improved system reliability and availability
+- Better read performance (distribute reads across replicas)
+- Fault tolerance
 
-Common replication strategies:
-1. Single leader (master-slave) - there's one main database which handles all the writes(master) and there will be multiple replicas of it (slaves) which can handle read requests. the changes made to the master are asynchronously replicated to the slaves. writes go to one place and reads can be distributed.
-2. Multi leader - here writes can be made to any replica, this improves the write availability but can lead to conflicts if same data is modified concurrently. Avoiding conflicts becomes more complex in this setup. replication can be synchronous where the primary waits for confirmation from all replicas before marking write as done - very safe but slower. Asynchronous where the primary sends the update but doesn't wait for confirmation, here there's a small window where data can be inconsistent. the primary might also choose to wait for confirmation from atleast one replica it's balance of safety and performance. 
+### Replication Strategies
+
+#### Single Leader (Master-Slave)
+
+**Architecture**:
+- One primary (master) handles all writes
+- Multiple replicas (slaves) handle reads
+- Changes replicated asynchronously to replicas
+
+**Pros**: Simple, writes centralized
+**Cons**: Write bottleneck at primary
+
+#### Multi-Leader
+
+**Architecture**:
+- Writes accepted by any replica
+- Changes replicated to other replicas
+
+**Pros**: Higher write availability
+**Cons**: Complex conflict resolution for concurrent writes
+
+### Synchronization Modes
+
+**Synchronous**
+- Primary waits for all replicas to confirm
+- Very safe, but slower
+
+**Asynchronous**
+- Primary doesn't wait for confirmation
+- Fast, but small window of potential inconsistency
+
+**Semi-Synchronous**
+- Wait for at least one replica
+- Balances safety and performance
+
+```plantuml
+@startuml
+title Replication Synchronization Modes
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant Client
+participant Primary
+participant "Replica 1" as R1
+participant "Replica 2" as R2
+== Synchronous Replication ==
+Client -> Primary: Write data
+Primary -> R1: Replicate
+Primary -> R2: Replicate
+R1 --> Primary: ACK
+R2 --> Primary: ACK
+note right of Primary
+  Wait for ALL replicas
+  Safe but SLOW
+end note
+Primary --> Client: Write confirmed
+== Asynchronous Replication ==
+Client -> Primary: Write data
+Primary --> Client: Write confirmed (fast)
+note right of Primary
+  Don't wait for replicas
+  Fast but RISKY
+end note
+Primary ->> R1: Replicate (async)
+Primary ->> R2: Replicate (async)
+== Semi-Synchronous ==
+Client -> Primary: Write data
+Primary -> R1: Replicate
+Primary ->> R2: Replicate (async)
+R1 --> Primary: ACK
+note right of Primary
+  Wait for ONE replica
+  Balanced approach
+end note
+Primary --> Client: Write confirmed
+legend right
+Trade-off: Safety vs Performance
+Synchronous: Most safe, slowest
+Async: Fastest, least safe
+Semi-sync: Balanced
+endlegend
+@enduml
+```
 
 ```plantuml
 @startuml
@@ -457,10 +1023,24 @@ Replica2 --> ReadsSink
 @enduml
 ```
 
-## Reverse proxy
+## Reverse Proxy
 
-It acts as an intermediary between clients and servers, they act as an gateway for requests coming into the system. They can perform key functions like load balancing, SSL encryption and decryption, cache static content, layer of security, filtering requests, and hiding the infrastructure details from clients.
-Tools like Nginx, HAProxy, and Apache HTTP Server are commonly used as reverse proxies.
+A reverse proxy acts as an intermediary gateway between clients and backend servers.
+
+### Key Functions
+
+- **Load Balancing**: Distribute requests across servers
+- **SSL/TLS Termination**: Handle encryption/decryption [TLS-Termination](/high-level-design/protocols/http/#tls-termination)
+- **Caching**: Cache static content
+- **Security**: Filter malicious requests, hide infrastructure
+- **Compression**: Compress responses before sending to clients
+
+### Popular Tools
+
+- NGINX
+- HAProxy
+- Apache HTTP Server
+- Envoy
 
 ```plantuml
 @startuml
@@ -484,10 +1064,79 @@ ReverseProxy --> Service2
 ```
 
 
-## Distributed messaging
+## Distributed Messaging
 
-How do services communicate with each other in a microservices architecture, especially if they don't need immediate answers. eg. sending a order confirmation email. This is where distributed messaging systems like Kafka, RabbitMQ, and AWS SQS come into play. They provide reliable asynchronous channels, they can publish a message like `order 123 confirmed` in the queue or topic, without knowing or caring which service is gonna consume it. This decouples the services and allows them to scale independently. 
-This makes the system more resilient, as if serviceB (which usually consumes the message from the queue) is down, serviceA can still publish the message and it will be processed later when serviceB is back up. or also in cases if serviceB is slower then also serviceA can continue to publish messages without waiting for serviceB to process them immediately.
+Enables asynchronous communication between services in microservices architectures when immediate responses aren't required.
+
+**Example**: Sending order confirmation emails
+
+### How It Works
+
+Services publish messages (e.g., `order 123 confirmed`) to queues/topics without knowing which service consumes them. This **decouples** services, allowing independent scaling.
+
+### Benefits
+
+**Resilience**
+- If consumer service is down, producer continues publishing
+- Messages processed when consumer recovers
+
+**Asynchronous Processing**
+- Producer doesn't wait for consumer
+- Handles different processing speeds
+
+**Scalability**
+- Add more consumers to handle load
+- Services scale independently
+
+### Popular Tools
+
+- **Apache Kafka**: High-throughput, distributed streaming
+- **RabbitMQ**: Feature-rich message broker
+- **AWS SQS**: Managed cloud queue service
+- **Redis Streams**: Lightweight pub/sub
+
+```plantuml
+@startuml
+title Message Queue Patterns
+left to right direction
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam rectangleBorderColor #94a3b8
+skinparam rectangleBackgroundColor #f8fafc
+skinparam queueBorderColor #10b981
+skinparam queueBackgroundColor #ecfdf5
+package "Point-to-Point (Queue)" {
+  rectangle "Producer" as P1
+  queue "Task Queue" as Q1
+  rectangle "Consumer 1" as C1
+  rectangle "Consumer 2" as C2
+  P1 --> Q1 : Send task
+  Q1 --> C1 : One consumer
+  Q1 --> C2 : gets message
+  note bottom of Q1
+    Each message consumed once
+    Load balancing
+  end note
+}
+package "Pub/Sub (Topic)" {
+  rectangle "Publisher" as P2
+  queue "Topic" as T1
+  rectangle "Subscriber A" as S1
+  rectangle "Subscriber B" as S2
+  rectangle "Subscriber C" as S3
+  P2 --> T1 : Publish event
+  T1 --> S1 : All subscribers
+  T1 --> S2 : receive copy
+  T1 --> S3 : of message
+  note bottom of T1
+    Broadcast to all
+    Event distribution
+  end note
+}
+@enduml
+```
 
 ```plantuml
 @startuml
@@ -515,11 +1164,38 @@ ServiceB -> ServiceB: Process / send email
 
 ## Microservices
 
-Microservices is a architectural style where we break a large application into smaller and independent services. Each service focusses on one specific business capability like inventory service, user management service, payment service, etc. they also communicate with each other over the network often using APIs (RPCs or REST) or for asynchronous communication they rely on messaging system.
+An architectural style that breaks large applications into smaller, independent services, each focused on a specific business capability.
 
-This architectural style helps with modularity, we can develop, deploy and scale each service independently. eg. a change to payment service dosen't require the deployment of user management service. This also helps with the fault isolation, suppose if the user service has a bug, it is less likely to bring down the entire application, only the user related functionality will be affected.
+**Examples**: Inventory service, user management service, payment service
 
-This architectural style also adds complexity in managing all these different pieces, as we need to monitor and manage inter-service communication, data consistency, and deployment orchestration.
+### Communication
+
+**Synchronous**: REST APIs, gRPC
+**Asynchronous**: Message queues (Kafka, RabbitMQ)
+
+### Advantages
+
+**Modularity**
+- Develop, deploy, and scale services independently
+- Changes to one service don't require redeploying others
+
+**Fault Isolation**
+- Bugs in one service don't crash the entire application
+- Graceful degradation of functionality
+
+**Technology Diversity**
+- Each service can use different tech stacks
+- Choose best tool for each job
+
+### Trade-offs
+
+:::caution[Increased Complexity]
+Microservices introduce operational overhead:
+- Inter-service communication management
+- Distributed data consistency
+- Deployment orchestration (Kubernetes, Docker Swarm)
+- Monitoring and observability across services
+:::
 
 ```plantuml
 @startuml
@@ -550,32 +1226,96 @@ APIGW --> [Payment Service]
 @enduml
 ```
 
-## Related building blocks and operational concepts
-### Notification systems
- Notification systems - Systems specifically needeed to send notifications or alerts to users or other systems. eg. push notifications, emails, or sms are often built using messaging queues intenally.
+## Related Building Blocks and Operational Concepts
 
-### Full text search
- Full text search - things like Elasticsearch or Apache Solr are often used to provide full text search capabilities. They index the content and allow for fast and flexible search queries. they are specialized databases to quickly search through the large amounts of text data, like product description or articles. Much faster than performing LIKE queries in relational databases.
+### Notification Systems
 
-### Distributed coordination services
- Distributed coordination services - They are critical to manage the state and agreement between distributed system. Examples include Apache ZooKeeper and etcd. They help with 
-1. service discovery - finding out which services are running
-2. distributed locking - ensuring only one service performs a critical operation at a time
-3. leader election - deciding which server is incharge
-4. managing configuration - storing and distributing configuration data across services providing reliable source of truth
-5. heartbeats - simpler mechanism to check if services are alive and healthy. This periodically sends out the pulse or heartbeat signals, if the monitoring systems stops receiving the heartbeats from a service, then that service triggers the alerts or failover actions.
-6. checksums - are digital fingerprints of data, they are used to verify the integrity of data. it works by calculating a value based on the content of the data, and after the transmission the checksum of the received data is compared to the original checksum to ensure they match. if they don't match means the data got corrupted during transmission. This is used in distributed systems to ensure data consistency and integrity across different nodes.
+Systems for sending alerts to users or other systems.
+
+**Types**: Push notifications, emails, SMS
+**Implementation**: Often built using message queues internally
+**Tools**: Firebase Cloud Messaging, AWS SNS, Twilio
+
+### Full-Text Search
+
+Specialized search engines for querying large text datasets.
+
+**Purpose**: Fast, flexible search through product descriptions, articles, logs
+**Advantage**: Much faster than SQL `LIKE` queries
+**Tools**: Elasticsearch, Apache Solr, Algolia
+
+### Distributed Coordination Services
+
+Critical for managing state and agreement in distributed systems.
+
+**Tools**: Apache ZooKeeper, etcd, Consul
+
+#### Key Functions
+
+**Service Discovery**
+- Track which services are running and where
+
+**Distributed Locking**
+- Ensure only one service performs critical operations
+- Prevent race conditions
+
+**Leader Election**
+- Determine which server is primary/coordinator
+
+**Configuration Management**
+- Centralized, reliable source of truth
+- Distribute config changes to all services
+
+**Heartbeats**
+- Periodic health checks
+- Detect service failures
+- Trigger alerts or failover
+
+**Checksums**
+- Digital fingerprints for data integrity
+- Verify data hasn't been corrupted during transmission
+- Compare checksums before and after transfer
 ### CAP Theorem
- 7. CAP Theorem - CAP stands for Consistency, availability, and Partition Tolerance. It states that in any distributed system that shares data we can only strongly guarantee only two of these properties at a time, especially when network partitions occur. 
- - Consistency - every one sees the same data at same time. meaning every read gets the absolute latest write.
- - Availability - every request receives a response, either success or failure. even if the data is not the absolute latest data and is slightly stale or inconsistent.
- - Partition Tolerance - the system continues to operate despite network breakdowns partially, and some servers can't communicate with others, but the overall system remains functional. network partitions can happen due to cable being cut, switches fail.
 
-In CAP, we can only choose two if the network is partitioned, and since in real world we can't avoid network partition as cables can be cut or switches can fail, we always have to design for network partition, we have to choose between consistency and availability.
+States that distributed systems can guarantee only **two of three** properties when network partitions occur:
 
-A CP system prioritizes consistency over availability, meaning it will ensure that all reads will get most recent data, if there's a partition then it might refuse to make a part of system unavailable to avoid returning inconsistent data. This is often seen in systems like traditional databases where strong consistency is required, but it might lead to downtime during network issues.
+**C — Consistency**
+- Every read gets the most recent write
+- All nodes see the same data simultaneously
 
-An AP system prioritizes availability, meaning even during a partition it will keep responding to requests even if it had to return slightly older data from the nodes it can reach. Many NoSQL databases lean towards this side, they aim for eventual consistency. Eventual consistency is an idea which says that if you stop making changes to data, then eventually all the replicas will converge to the same state. So it tradeoffs temporary inconsistency for higher availability.
+**A — Availability**
+- Every request receives a response (success or failure)
+- System remains operational even with stale data
+
+**P — Partition Tolerance**
+- System continues operating despite network failures
+- Some servers can't communicate, but system functions
+
+:::note[Real-World Reality]
+Network partitions are inevitable (cables cut, switches fail). Since **P** is mandatory, systems must choose between **C** and **A**.
+:::
+
+#### CP Systems (Consistency + Partition Tolerance)
+
+**Prioritize**: Strong consistency
+
+**Trade-off**: May become unavailable during partitions
+
+**Examples**: Traditional RDBMS, MongoDB (with strong consistency settings), HBase
+
+**Use case**: Financial transactions, inventory management
+
+#### AP Systems (Availability + Partition Tolerance)
+
+**Prioritize**: High availability
+
+**Trade-off**: May serve stale data during partitions
+
+**Examples**: Cassandra, DynamoDB, Couchbase
+
+**Concept**: **Eventual Consistency** — all replicas converge to the same state once updates stop
+
+**Use case**: Social media feeds, product catalogs, user profiles
 
 ```plantuml
 @startuml
@@ -613,25 +1353,344 @@ endlegend
 ```
 
 ### Failover
- 8. Failover - when things do fail like server crash and network partitions we need failover. Failover is the automatic process of switching to a redundant system or component when the primary one fails. Like switching to a standby database replica, or redirecting traffic via load balancers to healthy server to minimizing downtime and keep service running.
 
-### Consistent hashing
- 9. Consistent hashing - it is a technique often used in distributed cache and databases. especially when using horizontal scaling ( sharding ) it helps to distribute data or requests across a set of servers. the clever part is how it handles adding or removing servers without having to move all the data around. In simple hashing, adding one server might need to redistribute the data across all servers. In consistent hashing only small fraction of keys needs to be moved making scaling up or down smoother.
+Automatic switching to redundant systems when primary components fail.
 
-### API Idempotency
- 10. API Idempotency - Usually in distributed systems a network partition might cause to retry a request, we want to ensure that doing some thing multiple times has the same result as doing it once. eg. a submit payment button, if the network hiccups and the browser retries the request automatically then you don't want to accidentally charge more than once. so the payment processing operation on the server needs to be idempotent, it needs to recognize that it already processed that particular transaction and just return the original success response rather than processing it again. This is often achieved by using unique identifiers for each request, like a transaction ID, so the server can check if it has already processed that request. GET request in REST is naturally idempotent, but PUT POST and DELETE requests need to be designed to be idempotent if they are going to be retried safely.
+**Examples**:
+- Switch to standby database replica
+- Redirect traffic to healthy servers via load balancer
+- Promote backup to primary role
 
-### Rate limiting
- 11. Rate limiting - that is how a system controls the amount of incoming requests to prevent abuse or overloading. It helps to ensure fair usage and protect the system from being overwhelmed by too many requests at once. often implemented at API gateway or load balancer level. Rate limiting can be implemented using various algorithms like:
+**Goal**: Minimize downtime and maintain service availability
 
-- Token Bucket
-- Leaky Bucket
-- Fixed Window
-- Sliding Window
+**Types**:
+- **Active-Passive**: Standby idles until needed. There will be sets of servers which are kept in standby mode until needed.
+- **Active-Active**: Multiple systems handle load simultaneously. All the servers will handle all requests, if one goes down the load balancer will redirect the requests to other servers. complex consistency strategies are needed here. 
+
+### Circuit Breaker Pattern
+
+A fault tolerance mechanism that prevents applications from repeatedly attempting operations likely to fail, protecting systems from cascading failures.
+
+**Analogy**: Like an electrical circuit breaker in your home—when something goes wrong, it "trips" to prevent further damage.
+
+#### How It Works
+
+The Circuit Breaker operates in three states:
+
+**1. Closed (Normal Operation)**
+- All requests flow through normally
+- System monitors for failures (error rates, timeouts, response times)
+- Tracks failure metrics against threshold
+
+**2. Open (Failure Mode)**
+- Threshold exceeded (e.g., 50% failure rate or 5 consecutive failures)
+- Circuit "trips open"
+- Requests **fail fast** without calling the downstream service
+- Prevents resource exhaustion (no blocked threads or connections)
+- Waits for timeout period (e.g., 30 seconds) before testing recovery
+
+**3. Half-Open (Testing Recovery)**
+- After timeout expires, circuit enters half-open state
+- Allows limited test requests through (e.g., 3 requests)
+- **If successful** → return to Closed state
+- **If still failing** → return to Open state
 
 ```plantuml
 @startuml
-title Rate limiting (Token Bucket)
+title Circuit Breaker Pattern
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam stateBorderColor #334155
+skinparam stateBackgroundColor #f8fafc
+skinparam stateArrowColor #334155
+[*] --> Closed : Initial state
+Closed : Requests flow normally
+Closed : Monitor failures
+Closed --> Open : Threshold exceeded\n(e.g., 5 failures)
+Open : Requests fail fast
+Open : No calls to service
+Open : Wait timeout period
+Open --> HalfOpen : After timeout\n(e.g., 30 seconds)
+HalfOpen : Allow limited requests
+HalfOpen : Test if service recovered
+HalfOpen --> Closed : Success threshold met\n(e.g., 3 successes)
+HalfOpen --> Open : Still failing
+note right of Open
+  Prevents cascading failures
+  Fast fail to protect system
+end note
+legend right
+Circuit Breaker protects against:
+- Cascading failures
+- Resource exhaustion
+- Slow degrading services
+endlegend
+@enduml
+```
+
+#### Real-World Example
+
+**Scenario**: E-commerce application calling Payment Service
+
+**Without Circuit Breaker**:
+```
+User → Service A → Payment Service (slow/failing)
+                 ↓
+            Threads blocked
+                 ↓
+         Resource exhaustion
+                 ↓
+         Service A crashes too
+```
+
+**With Circuit Breaker**:
+```
+User → Service A → Circuit Breaker → Payment Service
+                        ↓
+                 After 5 failures
+                        ↓
+                  Circuit OPENS
+                        ↓
+              Service A stays healthy
+              Returns fallback response
+```
+
+#### Key Benefits
+
+**Prevents Cascading Failures**
+- Isolates failing services from the rest of the system
+- Stops the domino effect across microservices
+
+**Fail Fast**
+- Immediate error response instead of waiting for timeouts
+- Better user experience (quick feedback vs hanging requests)
+
+**Resource Protection**
+- Frees up threads, connections, and memory
+- Prevents thread pool exhaustion
+
+**Automatic Recovery Testing**
+- Periodically checks if downstream service recovered
+- No manual intervention needed
+
+**Graceful Degradation**
+- System continues operating with reduced functionality
+- Can return cached data or default responses
+
+#### Configuration Parameters
+
+**Failure Threshold**: How many failures trigger opening?
+- Example: 5 consecutive failures or 50% error rate within a time window
+
+**Timeout Period**: How long to wait before testing recovery?
+- Example: 30 seconds, 1 minute
+- Gives downstream service time to recover
+
+**Success Threshold**: How many successes in half-open to close?
+- Example: 3 consecutive successful requests
+
+**Request Volume Threshold**: Minimum requests before calculating error rate
+- Example: Need at least 10 requests in window before opening circuit
+
+#### Common Use Cases
+
+**External API Calls**
+- Third-party payment gateways
+- Shipping APIs
+- Authentication services
+- Weather APIs
+
+**Database Connections**
+- Protecting against database outages
+- Preventing connection pool exhaustion
+
+**Microservice Communication**
+- Service-to-service calls
+- Preventing cascading failures across distributed systems
+
+#### Fallback Strategies
+
+When circuit is open, implement graceful degradation:
+
+**Cached Data**: Return last known good value
+```java
+return circuitBreaker.execute(
+    () -> paymentService.getBalance(),
+    fallback: () -> cache.getLastBalance()
+);
+```
+
+**Default Response**: Return sensible default
+```java
+return DEFAULT_SHIPPING_ESTIMATE; // "3-5 business days"
+```
+
+**Queue Request**: Store for later processing
+```java
+messageQueue.enqueue(paymentRequest);
+return "Your payment is being processed";
+```
+
+**Alternative Service**: Route to backup service
+```java
+if (primaryCircuit.isOpen()) {
+    return secondaryPaymentService.process();
+}
+```
+
+**User Message**: Clear error explaining temporary unavailability
+```java
+return "Payment service temporarily unavailable. Please try again in a moment.";
+```
+
+#### Implementation
+
+Popular libraries:
+
+**Java**: Resilience4j, Hystrix (maintenance mode)
+
+**.NET**: Polly
+
+**Node.js**: Opossum
+
+**Python**: pybreaker
+```python
+// paymentservice.py
+breaker = pybreaker.CircuitBreaker(
+    fail_max=5,
+    reset_timeout=30
+)
+
+@breaker
+def call_payment_service():
+    return payment_service.process()
+```
+
+:::tip[Best Practice: Combine Patterns]
+Circuit Breaker works best when combined with:
+- **Retry Logic**: For transient failures (with exponential backoff)
+- **Timeout**: Don't wait forever for responses
+- **Bulkhead**: Isolate resources for different services
+- **Rate Limiting**: Control request volume to prevent overload
+:::
+
+:::caution[Monitoring Required]
+Always monitor circuit breaker state changes and failures:
+- Log when circuit opens/closes
+- Alert on frequent state transitions
+- Track fallback execution rates
+- Monitor downstream service health
+:::
+
+### Consistent Hashing
+
+A technique for distributing data across servers that minimizes redistribution when servers are added or removed.
+
+**Problem with Simple Hashing**:
+- Adding/removing one server → rehash all keys → massive data movement
+
+**Consistent Hashing Solution**:
+- Only a small fraction of keys need rebalancing
+- Smoother scaling operations
+
+**Use Cases**:
+- Distributed caches (Memcached, Redis clusters)
+- Distributed databases (Cassandra, DynamoDB)
+- Load balancing
+
+:::tip[Key Benefit]
+Minimizes data movement during cluster topology changes
+:::
+
+```plantuml
+@startuml
+title Consistent Hashing Ring
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam noteBorderColor #94a3b8
+skinparam noteBackgroundColor #f8fafc
+circle "Hash Ring\n(0-360°)" as Ring
+rectangle "Server A\n(90°)" as SA #dbeafe
+rectangle "Server B\n(180°)" as SB #fce7f3
+rectangle "Server C\n(270°)" as SC #fef3c7
+rectangle "Key1 (45°)" as K1 #ecfdf5
+rectangle "Key2 (120°)" as K2 #ecfdf5
+rectangle "Key3 (200°)" as K3 #ecfdf5
+rectangle "Key4 (300°)" as K4 #ecfdf5
+Ring --> SA
+Ring --> SB
+Ring --> SC
+K1 --> SA : Clockwise\nnext server
+K2 --> SB
+K3 --> SC
+K4 --> SA
+note bottom of Ring
+  When adding Server D at 315°:
+  Only Key4 moves to D
+  Other keys stay on same servers
+end note
+legend right
+Consistent Hashing Benefits:
+- Minimal redistribution on add/remove
+- Balanced load distribution
+- Virtual nodes for uniformity
+endlegend
+@enduml
+```
+
+### API Idempotency
+
+Ensures performing an operation multiple times has the same effect as performing it once.
+
+**Why It Matters**:
+Network failures may cause automatic request retries. Without idempotency, duplicate requests could cause unintended effects.
+
+**Example**: Payment Processing
+- User clicks "Pay"
+- Network hiccup causes retry
+- Without idempotency: double charge ❌
+- With idempotency: same result ✅
+
+**Implementation**:
+- Use unique identifiers (transaction ID, idempotency key)
+- Server checks if request already processed
+- Return original response for duplicate requests
+
+**HTTP Method Idempotency**:
+- **Naturally Idempotent**: `GET`, `PUT`, `DELETE`
+- **Needs Design**: `POST` (use idempotency keys)
+
+:::tip[Best Practice]
+Include an `Idempotency-Key` header in requests that modify state
+:::
+
+### Rate Limiting
+
+Controls incoming request volume to prevent abuse and overload.
+
+**Benefits**:
+- Prevents DDoS attacks
+- Ensures fair usage
+- Protects backend resources
+- Maintains service quality
+
+**Implementation Level**: API Gateway or Load Balancer
+
+#### Algorithms
+
+**Token Bucket**
+- Bucket holds tokens (request capacity)
+- Tokens refill at constant rate
+- Request consumes token; rejected if bucket empty
+- Allows bursts up to bucket capacity
+
+```plantuml
+@startuml
+title Token Bucket Algorithm
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -643,31 +1702,330 @@ skinparam noteBackgroundColor #f8fafc
 skinparam noteBorderColor #94a3b8
 hide footbox
 participant Client
-participant Gateway as "API Gateway"
+participant "Token Bucket" as Bucket
 participant Service
-Client ->> Gateway: Request
-note right of Gateway
-Bucket: capacity=100, tokens=72
-Refill rate: 50/sec
-Cost per request: 1 token
+note over Bucket
+Bucket State:
+Capacity: 10 tokens
+Current: 7 tokens
+Refill: 2 tokens/sec
 end note
-alt Tokens available
-	Gateway ->> Service: Forward request
-	Service -->> Gateway: 200 OK
-	Gateway -->> Client: 200 OK
-else Bucket empty
-	Gateway -->> Client: 429 Too Many Requests
-end
+Client -> Bucket: Request 1 (costs 1 token)
+Bucket -> Bucket: Check tokens: 7 available
+note right of Bucket: Token available ✓
+Bucket -> Service: Forward request
+Service --> Bucket: 200 OK
+Bucket --> Client: 200 OK
+note over Bucket: Tokens: 7 → 6
+...Time passes (0.5 sec)...
+note over Bucket: Refill: +1 token\nTokens: 6 → 7
+Client -> Bucket: Burst of 8 requests
+Bucket -> Bucket: Check tokens: 7 available
+note right of Bucket
+First 7 requests: Pass ✓
+8th request: REJECT ❌
+end note
+Bucket -> Service: Forward 7 requests
+Service --> Bucket: 200 OK
+Bucket --> Client: 7× 200 OK
+Bucket --> Client: 1× 429 Too Many Requests
+note over Bucket: Tokens: 7 → 0
 legend right
-Token Bucket allows short bursts while keeping
-an average rate via refill over time.
+Token Bucket allows bursts up to capacity
+while maintaining average rate via refill.
+Good for: API rate limiting, traffic shaping
 endlegend
 @enduml
 ```
 
-### Monitoring and logging
- 12. Monitoring and logging - it involves gathering metrics about a system. health and performance, CPU usage, memory, request latency, error rates, and more. Prometheus usually collects these metrics and Grafana visualizes them. This helps in identifying issues, understanding system behavior, and making informed decisions about scaling or optimizing the system.
- Logging records of errors and events that can happen within the system, which is crucial for debugging and maintaining system reliability.
+**Leaky Bucket**
+- Requests added to queue (bucket)
+- Processed at constant rate (leak)
+- Overflow requests dropped
+- Smooths traffic spikes
+
+```plantuml
+@startuml
+title Leaky Bucket Algorithm
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant Client
+participant "Leaky Bucket\nQueue" as Queue
+participant "Rate Limiter" as Limiter
+participant Service
+note over Queue
+Queue State:
+Capacity: 5 requests
+Current: 2 queued
+Leak rate: 1 req/sec
+end note
+Client -> Queue: Request 1
+Queue -> Queue: Add to queue (2→3)
+note right of Queue: Queue size: 3/5 ✓
+Queue --> Client: Request queued
+Client -> Queue: Request 2
+Queue -> Queue: Add to queue (3→4)
+note right of Queue: Queue size: 4/5 ✓
+Queue --> Client: Request queued
+Client -> Queue: Request 3
+Queue -> Queue: Add to queue (4→5)
+note right of Queue: Queue size: 5/5 (FULL) ✓
+Queue --> Client: Request queued
+Client -> Queue: Request 4 (burst)
+Queue -> Queue: Queue full!
+note right of Queue: OVERFLOW ❌
+Queue --> Client: 429 Too Many Requests
+...Time: 1 second passes...
+Queue -> Limiter: Leak 1 request
+note right of Queue
+Process at constant rate
+Queue: 5 → 4
+end note
+Limiter -> Service: Forward request
+Service --> Limiter: 200 OK
+Limiter --> Queue: Processing complete
+...Time: 1 second passes...
+Queue -> Limiter: Leak 1 request
+note right of Queue: Queue: 4 → 3
+Limiter -> Service: Forward request
+Service --> Limiter: 200 OK
+legend right
+Leaky Bucket processes requests at constant rate.
+Smooths traffic bursts, enforces steady flow.
+Good for: Network traffic shaping, video streaming
+endlegend
+@enduml
+```
+
+**Fixed Window**
+- Count requests in fixed time windows (e.g., per minute)
+- Reset counter at window boundary
+- Simple but can allow traffic spikes at boundaries
+
+```plantuml
+@startuml
+title Fixed Window Algorithm
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant Client
+participant "Fixed Window\nCounter" as Counter
+participant Service
+note over Counter
+Window: 00:00:00 - 00:00:59
+Limit: 5 requests/minute
+Current count: 0
+end note
+== Window 1: 00:00:00 - 00:00:59 ==
+Client -> Counter: Request @ 00:00:10
+Counter -> Counter: Count: 0 → 1
+note right of Counter: 1/5 ✓
+Counter -> Service: Forward
+Service --> Counter: 200 OK
+Counter --> Client: 200 OK
+Client -> Counter: Request @ 00:00:20
+Counter -> Counter: Count: 1 → 2
+note right of Counter: 2/5 ✓
+Counter -> Service: Forward
+Service --> Counter: 200 OK
+Counter --> Client: 200 OK
+Client -> Counter: 3 more requests @ 00:00:30
+Counter -> Counter: Count: 2 → 5
+note right of Counter: 5/5 ✓ (LIMIT REACHED)
+Counter -> Service: Forward 3 requests
+Service --> Counter: 200 OK
+Counter --> Client: 3× 200 OK
+Client -> Counter: Request @ 00:00:50
+Counter -> Counter: Count: 5 (at limit)
+note right of Counter: LIMIT EXCEEDED ❌
+Counter --> Client: 429 Too Many Requests
+== Window 2: 00:01:00 - 00:01:59 ==
+note over Counter
+Window resets!
+Count: 5 → 0
+New window starts
+end note
+Client -> Counter: Request @ 00:01:00
+Counter -> Counter: Count: 0 → 1
+note right of Counter
+1/5 ✓
+Fresh window
+end note
+Counter -> Service: Forward
+Service --> Counter: 200 OK
+Counter --> Client: 200 OK
+note over Counter
+⚠️ Boundary Issue:
+5 requests @ 00:00:59
++ 5 requests @ 00:01:00
+= 10 requests in 1 second!
+end note
+legend right
+Fixed Window: Simple but allows boundary bursts.
+Window resets at fixed intervals.
+Good for: Simple rate limiting, low complexity
+endlegend
+@enduml
+```
+
+**Sliding Window**
+- Tracks requests over sliding time window
+- More accurate than fixed window
+- Prevents boundary spike issues
+
+```plantuml
+@startuml
+title Sliding Window Algorithm
+skinparam backgroundColor #ffffff
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+skinparam sequenceArrowColor #334155
+skinparam sequenceParticipantBorderColor #94a3b8
+skinparam sequenceParticipantBackgroundColor #f8fafc
+skinparam noteBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+hide footbox
+participant Client
+participant "Sliding Window\nLog" as Window
+participant Service
+note over Window
+Current time: 00:00:30
+Window size: 60 seconds
+Limit: 5 requests/minute
+Log: [timestamps of requests]
+end note
+Client -> Window: Request @ 00:00:30
+Window -> Window: Check last 60s\n(00:00:00 - 00:00:30)
+note right of Window
+Count in window: 0
+0 < 5 ✓
+end note
+Window -> Window: Add timestamp: 00:00:30
+Window -> Service: Forward request
+Service --> Window: 200 OK
+Window --> Client: 200 OK
+Client -> Window: 4 more requests\n@ 00:00:35, 00:00:40\n00:00:45, 00:00:50
+Window -> Window: Add timestamps
+note right of Window
+Requests in last 60s: 5
+5/5 ✓ (LIMIT REACHED)
+end note
+Window -> Service: Forward 4 requests
+Service --> Window: 200 OK
+Window --> Client: 4× 200 OK
+Client -> Window: Request @ 00:00:55
+Window -> Window: Check window\n(00:00:00 - 00:00:55)
+note right of Window
+Count: 5 requests
+00:00:30, 00:00:35,
+00:00:40, 00:00:45,
+00:00:50
+5 ≥ 5 ❌ LIMIT EXCEEDED
+end note
+Window --> Client: 429 Too Many Requests
+...Time passes: 30 seconds...
+Client -> Window: Request @ 00:01:20
+Window -> Window: Check window\n(00:00:20 - 00:01:20)
+note right of Window
+Old requests expired:
+× 00:00:30 (outside window)
+✓ 00:00:35, 00:00:40,
+  00:00:45, 00:00:50
+Count: 4/5 ✓
+end note
+Window -> Window: Add timestamp: 00:01:20
+Window -> Service: Forward request
+Service --> Window: 200 OK
+Window --> Client: 200 OK
+note over Window
+✓ No boundary issue
+Window slides continuously
+More accurate rate limiting
+end note
+legend right
+Sliding Window: Most accurate, prevents boundary bursts.
+Tracks exact timestamps within rolling window.
+Good for: Strict rate limiting, API quotas
+Trade-off: Higher memory (stores timestamps)
+endlegend
+@enduml
+```
+
+:::note[Rate Limit Response Headers]
+When rate limit is exceeded, return **HTTP 429 Too Many Requests** with these headers:
+
+**Standard Headers**:
+- `Retry-After`: Seconds until client can retry (e.g., `60`)
+- `X-RateLimit-Limit`: Maximum requests allowed in window (e.g., `100`)
+- `X-RateLimit-Remaining`: Requests remaining in current window (e.g., `0`)
+- `X-RateLimit-Reset`: Unix timestamp when limit resets (e.g., `1638360000`)
+
+**Example Response**:
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1638360000
+Content-Type: application/json
+
+{
+  "error": "Rate limit exceeded",
+  "message": "Too many requests. Please try again in 60 seconds."
+}
+```
+:::
+
+### Monitoring and Logging
+
+#### Monitoring
+
+Collects metrics about system health and performance.
+
+**Key Metrics**:
+- CPU and memory usage
+- Request latency (P50, P95, P99)
+- Error rates and types
+- Throughput (requests/sec)
+- Database connection pool stats
+
+**Popular Stack**:
+- **Prometheus**: Metrics collection and storage
+- **Grafana**: Visualization and dashboards
+- **AlertManager**: Alert routing and notification
+
+#### Logging
+
+Records events, errors, and system activities for debugging and auditing.
+
+**Log Levels**: DEBUG, INFO, WARN, ERROR, FATAL
+
+**Structured Logging**: Use JSON format for machine-readable logs
+
+**Popular Stack**:
+- **ELK Stack**: Elasticsearch, Logstash, Kibana
+- **EFK Stack**: Elasticsearch, Fluentd, Kibana
+- **OpenSearch**: Open-source alternative to Elasticsearch
+
+:::tip[Observability]
+Combine **metrics**, **logs**, and **traces** for complete system observability
+:::
 
 ```plantuml
 @startuml
@@ -712,57 +2070,196 @@ endlegend
 @enduml
 ```
 
-## Principles guiding design choices
-What are the key principles guiding the design choices in distributed systems?
+## Principles Guiding Design Choices
 
-### Core abilities
-There are core abilities
-1. scalability - can the system grow to handle increased load. This is achieved through horizontal scaling, load balancing, and efficient data partitioning.
-2. maintainability - how easy it is to understand, modify and operate over time.
-3. efficiency - is about making good use of resources.
-4. resilience - planning for failures and ensuring the system can recover gracefully.
+Key principles that guide distributed system design:
 
-Build systems that expect components to fail and can gracefully handle it, build not for perfection but for resilience. Build for failures not against it.
+### Core Abilities
 
-### How to measure
-How to measure against these goals ? what metrics matter ?
+**Scalability**
+- Can the system grow to handle increased load?
+- Achieved through horizontal scaling, load balancing, partitioning
 
-1. availability - what percentage of time the system is operational. it is usually measured in counts of nines like 99.9% uptime.
-2. reliability - does the system consistently do what it is supposed to do without failure.
-3. fault tolerance - how well does the system handle the component failures.
-4. redundancy - are the backup parts functioning and available when needed.
-5. throughput - how much work can it do per second.
-6. latency - how long it takes to process a request.
+**Maintainability**
+- How easy to understand, modify, and operate over time?
+- Clear code, documentation, modular architecture
 
-measuring these helps us to understand how close are we to our design goals.
+**Efficiency**
+- Optimal use of resources (CPU, memory, network, storage)
+- Cost-effectiveness at scale
 
-## API design principles
-API design principles:
+**Resilience**
+- Gracefully handle failures
+- Design for failures, not against them
 
-1. clarity on the operation over CRUD 
-2. choosing the right protocols - like HTTP for REST and GraphQL, gRPC for RPC
-3. data formats - json
-4. picking the right architectural style - REST, RPC, GraphQL
+:::caution[Design Philosophy]
+**Build for failure, not perfection**. Assume components will fail and design systems to handle failures gracefully.
+:::
 
-### Best practices
-best practices for API design:
+### Measurement Metrics
 
-1. pagination of results
-2. allowing filtering and sorting of results
-3. making sure the read operations(GET calls) are idempotent
-4. thinking about the backward compatibility so that we don't break the clients when we update the API.
-5. implementing rate limiting and solid security measures.
-6. good documentation
+Key metrics to evaluate system design:
 
-## Common trade-offs
-trade offs in system design:
+**Availability**
+- Percentage of time system is operational
+- Measured in "nines": 99.9% ("three nines"), 99.99% ("four nines")
+- 99.9% = ~8.76 hours downtime/year
+- 99.99% = ~52.56 minutes downtime/year
 
-1. consistency vs availability - the CAP theorem states that a distributed system can only guarantee two of the three: consistency, availability, and partition tolerance.
-2. SQL vs NoSQL - strong consistency vs flexiblity and scalability.
-3. caching strategies - perfomance vs consistency vs complexity vs potential data loss in write back.
-4. microservices - modularity and independent scaling vs operational complexity
-5. security choices - trade-offs between usability and protection against threats.
-6. performance choices - balancing speed and resource consumption.
+**Reliability**
+- System consistently performs as expected without failure
+- Mean Time Between Failures (MTBF)
+
+**Fault Tolerance**
+- System's ability to continue operating despite component failures
+
+**Redundancy**
+- Availability of backup components when needed
+
+**Throughput**
+- Amount of work processed per unit time (requests/sec, transactions/sec)
+
+**Latency**
+- Time to process a single request
+- Measured as percentiles: P50 (median), P95, P99
+
+:::tip[SLAs, SLOs, SLIs]
+- **SLA** (Service Level Agreement): Contract with customers
+- **SLO** (Service Level Objective): Internal target goals
+- **SLI** (Service Level Indicator): Actual measurements
+:::
+
+## API Design Principles
+
+### Core Principles
+
+**Operation Clarity**
+- Use clear, intent-revealing names over generic CRUD
+- Example: `POST /orders/123/cancel` vs `DELETE /orders/123`
+
+**Protocol Selection**
+- **HTTP/REST**: Browser-based, public APIs
+- **gRPC**: High-performance internal services
+- **GraphQL**: Flexible client-driven queries
+
+**Data Formats**
+- **JSON**: Human-readable, universal support
+- **Protocol Buffers**: Compact, efficient (gRPC)
+- **XML**: Legacy systems
+
+### Best Practices
+
+**Pagination**
+- Limit result sets for performance
+- Patterns: offset/limit, cursor-based, page numbers
+
+**Filtering and Sorting**
+- Allow clients to query specific data
+- Example: `/users?status=active&sort=created_at`
+
+**Idempotency**
+- Ensure safe request retries
+- `GET`, `PUT`, `DELETE` are naturally idempotent
+- Add idempotency keys for `POST`
+
+**Versioning**
+- Maintain backward compatibility
+- Strategies: URL versioning (`/v1/users`), header versioning
+
+**Security**
+- Authentication (OAuth 2.0, JWT)
+- Rate limiting
+- Input validation
+- HTTPS only
+
+**Documentation**
+- OpenAPI/Swagger specifications
+- Interactive API explorers
+- Code examples in multiple languages
+
+:::tip[RESTful URL Design]
+- Use nouns for resources: `/users`, `/orders`
+- Use HTTP methods for actions: `GET`, `POST`, `PUT`, `DELETE`
+- Nest related resources: `/users/123/orders`
+:::
+
+## Common Trade-offs
+
+System design involves balancing competing concerns:
+
+### Consistency vs Availability
+
+**CAP Theorem**: Choose 2 of 3 (Consistency, Availability, Partition Tolerance)
+
+- **CP Systems**: Strong consistency, possible downtime
+- **AP Systems**: High availability, eventual consistency
+
+### SQL vs NoSQL
+
+| SQL | NoSQL |
+|-----|-------|
+| Strong consistency | Flexibility |
+| ACID guarantees | Horizontal scalability |
+| Complex joins | Simpler data models |
+| Structured schema | Schema-less |
+
+### Caching Strategies
+
+| Strategy | Performance | Consistency | Complexity | Risk |
+|----------|-------------|-------------|------------|------|
+| Cache Aside | Medium | Medium | Low | Low |
+| Write Through | Low (writes) | High | Medium | Low |
+| Write Back | High | Low | High | Data loss |
+| Write Around | Low (first read) | Medium | Low | Low |
+
+### Microservices vs Monolith
+
+**Microservices**:
+- ✅ Modularity, independent scaling
+- ❌ Operational complexity, distributed debugging
+
+**Monolith**:
+- ✅ Simple deployment, easier debugging
+- ❌ Tight coupling, harder to scale
+
+### Security vs Usability
+
+**More Security** → More friction for users
+**Less Security** → Better UX but higher risk
+
+**Balance**: Multi-factor authentication, rate limiting, clear error messages
+
+### Performance vs Cost
+
+**Higher Performance** → More expensive infrastructure
+**Cost Optimization** → Potential performance trade-offs
+
+**Balance**: Caching, efficient algorithms, right-sized resources
+
+:::note[Context is Key]
+There's no universal "best" architecture. The right choice depends on:
+- Business requirements
+- Scale expectations
+- Team expertise
+- Budget constraints
+- Regulatory requirements
+:::
 
 ## Conclusion
-the right answer to designing a system entirely depends on specific requirements, constraints and priorities of the system that we are building. Why we are making a certain choice, what are the trade-offs we are willing to accept, and how does it align with the overall goals of the system. the context is everything.
+
+The "right" system design depends entirely on your specific context:
+
+- **Requirements**: What must the system do?
+- **Constraints**: Budget, team size, timeline, regulations
+- **Priorities**: Performance, reliability, cost, time-to-market
+
+:::tip[Design Decision Framework]
+For every choice, ask:
+1. **Why** are we making this choice?
+2. **What** trade-offs are we accepting?
+3. **How** does it align with our goals?
+:::
+
+**Remember**: Context is everything. A design that works for a startup with 1,000 users will differ vastly from one serving 100 million users.
+
+**Start simple, evolve as needed.** Premature optimization is the root of much wasted effort.

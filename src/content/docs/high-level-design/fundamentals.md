@@ -1352,6 +1352,153 @@ endlegend
 @enduml
 ```
 
+### PACELC Theorem
+
+An extension of the CAP theorem that addresses what happens **during normal operation** (no partition). CAP only explains behavior during partitions, but PACELC provides a more complete picture.
+
+**PACELC** stands for:
+- **P** (Partition): If there is a partition...
+- **A** (Availability) vs **C** (Consistency): choose between Availability or Consistency
+- **E** (Else): Otherwise (no partition)...
+- **L** (Latency) vs **C** (Consistency): choose between Latency or Consistency
+
+:::note[The Key Insight]
+Even when there's **no network partition**, distributed systems must still make a trade-off between **consistency** and **latency** (performance).
+:::
+
+#### Understanding PACELC
+
+**During Partition (PA/C)**:
+- Same as CAP theorem
+- Choose between Availability (serve possibly stale data) or Consistency (refuse requests)
+
+**During Normal Operation (EL/C)**:
+- Choose between Lower Latency (faster responses with relaxed consistency) or stronger Consistency (slower responses, wait for all replicas)
+
+#### PACELC Categories
+
+**PA/EL Systems** (Availability + Latency)
+- **Partition**: Prioritize Availability (AP)
+- **Normal**: Prioritize Latency (fast responses)
+- **Trade-off**: Eventual consistency
+- **Examples**: Cassandra, DynamoDB, Riak
+- **Use case**: Social media, content delivery, shopping carts
+
+**PA/EC Systems** (Availability + Consistency)
+- **Partition**: Prioritize Availability (AP)
+- **Normal**: Prioritize Consistency (slower but consistent)
+- **Examples**: MongoDB (with eventual consistency mode)
+- **Use case**: Less common, but useful for systems that need consistency when stable
+
+**PC/EL Systems** (Consistency + Latency)
+- **Partition**: Prioritize Consistency (CP)
+- **Normal**: Prioritize Latency (caching, read replicas)
+- **Examples**: Memcached, some caching systems
+- **Use case**: Systems that can tolerate unavailability during partitions but need speed normally
+
+**PC/EC Systems** (Consistency + Consistency)
+- **Partition**: Prioritize Consistency (CP)
+- **Normal**: Prioritize Consistency (strong guarantees)
+- **Trade-off**: Higher latency
+- **Examples**: Traditional RDBMS (MySQL, PostgreSQL), HBase, VoltDB
+- **Use case**: Banking, financial transactions, inventory systems
+
+```plantuml
+@startuml
+title PACELC Theorem
+skinparam backgroundColor #ffffff
+skinparam ArrowColor #475569
+skinparam rectangleBorderColor #64748b
+skinparam rectangleBackgroundColor #f8fafc
+skinparam noteBorderColor #94a3b8
+skinparam noteBackgroundColor #fef3c7
+skinparam Shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 13
+
+package "Network Partition?" {
+  rectangle "YES\n(Partition exists)" as P {
+    rectangle "Choose:\nAvailability (A)\nvs\nConsistency (C)" as PAC
+  }
+  
+  rectangle "NO\n(Normal operation)" as E {
+    rectangle "Choose:\nLatency (L)\nvs\nConsistency (C)" as ELC
+  }
+}
+
+note right of PAC
+  PA: High availability,
+      eventual consistency
+  
+  PC: Strong consistency,
+      may be unavailable
+end note
+
+note right of ELC
+  EL: Fast responses,
+      relaxed consistency
+  
+  EC: Strong consistency,
+      higher latency
+end note
+
+rectangle "PA/EL" as PAEL #e0f2fe
+rectangle "PA/EC" as PAEC #dbeafe
+rectangle "PC/EL" as PCEL #fce7f3
+rectangle "PC/EC" as PCEC #fce7f3
+
+PAC --> PAEL : Choose PA
+PAC --> PAEC : Choose PA
+PAC --> PCEL : Choose PC
+PAC --> PCEC : Choose PC
+
+ELC --> PAEL : Choose EL
+ELC --> PAEC : Choose EC
+ELC --> PCEL : Choose EL
+ELC --> PCEC : Choose EC
+
+note bottom of PAEL
+  Examples: Cassandra, DynamoDB
+  Fast & Available, Eventual Consistency
+end note
+
+note bottom of PCEC
+  Examples: MySQL, PostgreSQL
+  Strong Consistency, Higher Latency
+end note
+
+legend right
+PACELC extends CAP to cover normal operation:
+- P/A vs C: During partition (CAP theorem)
+- E/L vs C: During normal operation (new insight)
+endlegend
+@enduml
+```
+
+#### Real-World Examples
+
+**Cassandra (PA/EL)**:
+- **Partition**: Remains available, accepts writes
+- **Normal**: Fast reads/writes with tunable consistency (eventual by default)
+- **Result**: High performance, eventually consistent
+
+**PostgreSQL (PC/EC)**:
+- **Partition**: May become unavailable to maintain consistency
+- **Normal**: Synchronous replication for strong consistency
+- **Result**: Strong guarantees, higher latency
+
+**DynamoDB (PA/EL by default)**:
+- **Partition**: Stays available
+- **Normal**: Low latency reads (eventually consistent reads by default)
+- **Optional**: Can request strongly consistent reads (PA/EC behavior) with higher latency
+
+:::tip[Practical Takeaway]
+PACELC helps you understand that trade-offs exist **all the time**, not just during failures. When designing systems, consider:
+1. What happens during network partitions? (PA or PC)
+2. What happens during normal operation? (EL or EC)
+3. Which combination fits your use case best?
+:::
+
 ### Failover
 
 Automatic switching to redundant systems when primary components fail.

@@ -1,3 +1,6 @@
 ---
 title: SQL databases
 ---
+
+## Indexes
+

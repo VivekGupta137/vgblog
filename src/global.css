@@ -25,3 +25,21 @@ figure.plantuml-diagram img {
   border-radius: 3px;
   overflow: hidden;
 }
+
+html[data-theme="dark"] strong {
+  color: #FFAA33;
+}
+
+
+
+html[data-theme="light"] strong {
+  color: 	#FF7518;
+}
+
+html[data-theme="dark"] em {
+  color: 	#90caf9;
+}
+
+html[data-theme="light"] em {
+  color: 	#1e88e5;
+}

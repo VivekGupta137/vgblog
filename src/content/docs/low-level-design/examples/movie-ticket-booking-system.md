@@ -28,6 +28,68 @@ Design a movie ticket booking system (like BookMyShow) that allows users to sear
 4. Fast seat availability checks
 5. Scalable to multiple cities and theaters
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class BookingService {
+  + searchMovies()
+  + getShowtimes()
+  + selectSeats()
+  + createBooking()
+}
+
+class Theater {
+  + getScreens()
+  + getLocation()
+}
+
+class Screen {
+  + getSeats()
+  + getShows()
+}
+
+class Show {
+  + getAvailableSeats()
+  + blockSeats()
+  + releaseSeats()
+}
+
+class Seat {
+  + getSeatType()
+  + getPrice()
+  + getStatus()
+}
+
+class Booking {
+  + confirm()
+  + cancel()
+  + generateTicket()
+}
+
+class PaymentProcessor {
+  + processPayment()
+  + refund()
+}
+
+BookingService *-- PaymentProcessor
+BookingService ..> Booking
+Theater o-- Screen
+Screen o-- Show
+Screen o-- Seat
+Booking --> Show
+Booking --> Seat
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

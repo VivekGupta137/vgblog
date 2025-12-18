@@ -25,6 +25,65 @@ Design a flexible and extensible logging system that allows applications to log 
 4. Memory efficient for high-volume logging
 5. Easy to integrate and use
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class Logger {
+  + debug()
+  + info()
+  + warning()
+  + error()
+  + fatal()
+}
+
+class LoggerConfig {
+  + setLogLevel()
+  + addDestination()
+  + setFormatter()
+}
+
+class LogFormatter {
+  + format()
+}
+
+class LogDestination {
+  + write()
+  + flush()
+}
+
+class ConsoleDestination {
+  + write()
+}
+
+class FileDestination {
+  + write()
+  + rotate()
+}
+
+class LogMessage {
+  + getLevel()
+  + getMessage()
+  + getTimestamp()
+}
+
+Logger *-- LoggerConfig
+Logger ..> LogMessage
+LoggerConfig --> LogFormatter
+LoggerConfig --> LogDestination
+LogDestination <|-- ConsoleDestination
+LogDestination <|-- FileDestination
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

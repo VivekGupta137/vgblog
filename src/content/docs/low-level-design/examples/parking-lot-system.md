@@ -27,6 +27,66 @@ Design a parking lot system that can manage multiple levels of parking, differen
 4. High availability
 5. Accurate fee calculation
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class ParkingLotService {
+  + parkVehicle()
+  + unparkVehicle()
+  + getAvailableSpots()
+}
+
+class ParkingFloor {
+  + findAvailableSpot()
+  + assignSpot()
+  + releaseSpot()
+}
+
+class ParkingSpot {
+  + getSpotType()
+  + isAvailable()
+  + occupy()
+  + vacate()
+}
+
+class Vehicle {
+  + getType()
+  + getPlateNumber()
+}
+
+class ParkingTicket {
+  + getEntryTime()
+  + getSpotNumber()
+}
+
+class FeeCalculator {
+  + calculateFee()
+  + applyDiscounts()
+}
+
+class PaymentProcessor {
+  + processPayment()
+}
+
+ParkingLotService *-- FeeCalculator
+ParkingLotService *-- PaymentProcessor
+ParkingLotService o-- ParkingFloor
+ParkingLotService ..> ParkingTicket
+ParkingFloor o-- ParkingSpot
+ParkingSpot --> Vehicle
+ParkingTicket --> Vehicle
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

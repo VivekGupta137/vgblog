@@ -28,6 +28,65 @@ Design a hotel booking system that allows customers to search for available room
 4. Scalable to handle multiple hotels
 5. Fast search response time
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class BookingService {
+  + searchHotels()
+  + checkAvailability()
+  + createBooking()
+  + cancelBooking()
+}
+
+class Hotel {
+  + getRooms()
+  + getLocation()
+}
+
+class Room {
+  + checkAvailability()
+  + getRoomType()
+}
+
+class Booking {
+  + confirm()
+  + cancel()
+  + calculateTotal()
+}
+
+class Guest {
+  + getProfile()
+  + getBookingHistory()
+}
+
+class PricingStrategy {
+  + calculatePrice()
+  + applyDiscount()
+}
+
+class PaymentProcessor {
+  + processPayment()
+  + refund()
+}
+
+BookingService *-- PricingStrategy
+BookingService *-- PaymentProcessor
+BookingService ..> Booking
+Booking --> Guest
+Booking --> Room
+Hotel o-- Room
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

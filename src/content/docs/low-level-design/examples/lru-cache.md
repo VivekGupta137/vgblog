@@ -25,6 +25,57 @@ Design a data structure that implements a Least Recently Used (LRU) cache with O
 4. Memory efficient
 5. Support cache statistics (hit rate, miss rate)
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class LRUCache {
+  + get()
+  + put()
+  + remove()
+  + clear()
+}
+
+class Node {
+  + getKey()
+  + getValue()
+  + setValue()
+}
+
+class DoublyLinkedList {
+  + addToFront()
+  + removeNode()
+  + removeLast()
+  + moveToFront()
+}
+
+class EvictionPolicy {
+  + evict()
+  + updateAccess()
+}
+
+class CacheStatistics {
+  + recordHit()
+  + recordMiss()
+  + getHitRate()
+}
+
+LRUCache *-- DoublyLinkedList
+LRUCache *-- EvictionPolicy
+LRUCache *-- CacheStatistics
+DoublyLinkedList o-- Node
+EvictionPolicy --> DoublyLinkedList
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

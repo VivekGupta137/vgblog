@@ -26,6 +26,61 @@ Design an elevator control system for a building with multiple elevators. The sy
 4. Real-time status updates
 5. Fault-tolerant system
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class ElevatorSystem {
+  + requestElevator()
+  + assignElevator()
+  + processRequest()
+}
+
+class Elevator {
+  + move()
+  + openDoor()
+  + closeDoor()
+  + addRequest()
+}
+
+class ElevatorController {
+  + selectOptimalElevator()
+  + manageQueue()
+}
+
+class Request {
+  + getSourceFloor()
+  + getDestinationFloor()
+  + getDirection()
+}
+
+class Floor {
+  + pressUpButton()
+  + pressDownButton()
+}
+
+class Door {
+  + open()
+  + close()
+}
+
+ElevatorSystem *-- ElevatorController
+ElevatorSystem o-- Elevator
+ElevatorController ..> Request
+Elevator *-- Door
+Elevator --> Request
+Floor ..> Request
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

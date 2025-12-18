@@ -28,6 +28,61 @@ Design a library management system that handles book inventory, member managemen
 4. Fast search operations
 5. Data consistency for inventory
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class LibraryService {
+  + searchBooks()
+  + issueBook()
+  + returnBook()
+  + reserveBook()
+}
+
+class Catalog {
+  + addBook()
+  + searchByTitle()
+  + searchByAuthor()
+}
+
+class Book {
+  + getDetails()
+  + getAvailableCopies()
+}
+
+class Member {
+  + getBorrowingLimit()
+  + getActiveLoan()
+}
+
+class Loan {
+  + calculateFine()
+  + extend()
+  + complete()
+}
+
+class FineCalculator {
+  + calculateLateFee()
+  + calculateDamageCharge()
+}
+
+LibraryService *-- Catalog
+LibraryService *-- FineCalculator
+LibraryService ..> Loan
+Catalog o-- Book
+Loan --> Member
+Loan --> Book
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

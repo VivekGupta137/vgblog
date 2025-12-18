@@ -28,6 +28,61 @@ Design a car rental system that allows customers to search for available vehicle
 4. Accurate billing calculations
 5. Scalable to multiple locations
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class RentalService {
+  + searchVehicles()
+  + createReservation()
+  + pickupVehicle()
+  + returnVehicle()
+}
+
+class VehicleInventory {
+  + checkAvailability()
+  + reserveVehicle()
+  + releaseVehicle()
+}
+
+class Vehicle {
+  + getDetails()
+  + updateStatus()
+}
+
+class Reservation {
+  + calculateCost()
+  + confirm()
+  + cancel()
+}
+
+class Customer {
+  + getProfile()
+  + verifyLicense()
+}
+
+class PricingCalculator {
+  + calculateRentalCost()
+  + applyDiscounts()
+}
+
+RentalService *-- VehicleInventory
+RentalService *-- PricingCalculator
+RentalService ..> Reservation
+Reservation --> Customer
+Reservation --> Vehicle
+VehicleInventory o-- Vehicle
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

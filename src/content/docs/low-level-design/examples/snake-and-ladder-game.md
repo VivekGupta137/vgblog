@@ -28,6 +28,66 @@ Design a Snake and Ladder board game that can be played by multiple players. The
 4. Extensible for different board sizes
 5. Support game state persistence
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class Game {
+  + start()
+  + playTurn()
+  + checkWinner()
+  + getGameState()
+}
+
+class Board {
+  + initializeBoard()
+  + movePlayer()
+  + getCell()
+}
+
+class Player {
+  + getName()
+  + getPosition()
+  + setPosition()
+}
+
+class Dice {
+  + roll()
+}
+
+class Snake {
+  + getHead()
+  + getTail()
+}
+
+class Ladder {
+  + getStart()
+  + getEnd()
+}
+
+class GameController {
+  + initGame()
+  + processMove()
+  + endGame()
+}
+
+GameController *-- Game
+Game *-- Board
+Game *-- Dice
+Game o-- Player
+Board o-- Snake
+Board o-- Ladder
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

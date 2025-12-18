@@ -29,6 +29,62 @@ Design an ATM system that allows users to perform banking operations like cash w
 5. Audit logging for all operations
 6. Network resilience for bank communication
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class ATMSystem {
+  + authenticateUser()
+  + checkBalance()
+  + withdrawCash()
+  + depositCash()
+  + transferFunds()
+}
+
+class CardReader {
+  + readCard()
+  + ejectCard()
+}
+
+class CashDispenser {
+  + dispenseCash()
+  + checkCashAvailability()
+}
+
+class BankingService {
+  + validateAccount()
+  + processTransaction()
+  + updateBalance()
+}
+
+class Transaction {
+  + execute()
+  + rollback()
+}
+
+class Account {
+  + getBalance()
+  + debit()
+  + credit()
+}
+
+ATMSystem *-- CardReader
+ATMSystem *-- CashDispenser
+ATMSystem --> BankingService
+ATMSystem ..> Transaction
+BankingService --> Account
+Transaction --> Account
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

@@ -28,6 +28,70 @@ Design an online shopping system (e-commerce platform) that allows customers to 
 4. Fast search and browse operations
 5. Scalable to millions of products and users
 
+## Simplified Class Diagram
+
+```plantuml
+@startuml
+
+skinparam classBorderThickness 3
+skinparam ArrowThickness 1
+skinparam defaultFontSize 16
+skinparam classAttributeFontSize 18
+skinparam classFontSize 16
+
+class ShoppingService {
+  + searchProducts()
+  + addToCart()
+  + checkout()
+  + placeOrder()
+}
+
+class ProductCatalog {
+  + searchByCategory()
+  + getProductDetails()
+  + checkInventory()
+}
+
+class Product {
+  + getPrice()
+  + getDescription()
+  + getAvailability()
+}
+
+class ShoppingCart {
+  + addItem()
+  + removeItem()
+  + calculateTotal()
+}
+
+class Order {
+  + confirm()
+  + track()
+  + cancel()
+}
+
+class Customer {
+  + getProfile()
+  + getOrderHistory()
+}
+
+class PaymentProcessor {
+  + processPayment()
+  + refund()
+}
+
+ShoppingService *-- ProductCatalog
+ShoppingService *-- PaymentProcessor
+ShoppingService ..> Order
+Customer *-- ShoppingCart
+ShoppingCart o-- Product
+Order --> Customer
+Order --> Product
+ProductCatalog o-- Product
+
+@enduml
+```
+
 ## Simplified Overview
 
 ```plantuml

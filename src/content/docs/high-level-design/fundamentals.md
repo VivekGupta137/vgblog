@@ -284,7 +284,7 @@ NoSQL databases offer flexibility beyond rigid table structures. They handle sem
 - Store data in JSON-like documents
 - Flexible schema for evolving data models
 
-**Key-Value Stores** ([Redis](/high-level-design/tools/redis), DynamoDB, Memcached)
+**Key-Value Stores** ([Redis](/high-level-design/additional-concepts/redis), DynamoDB, Memcached)
 - Simple key-value pair storage
 - Ideal for caching, session management, and high-speed operations
 

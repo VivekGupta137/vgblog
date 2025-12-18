@@ -249,7 +249,7 @@ Display <|.. ConsoleDisplay
 1. **[Factory Pattern](/low-level-design/patterns/creational-patterns/#factory-method)**: Create different player types
 2. **[Strategy Pattern](/low-level-design/patterns/behavioural-patterns/#strategy-pattern)**: Different display strategies
 3. **[Observer Pattern](/low-level-design/patterns/behavioural-patterns/#observer-pattern)**: Game state notifications
-4. **[Builder Pattern](/low-level-design/patterns/creational-patterns/#builder-pattern)**: Game configuration
+4. **Builder Pattern**: Game configuration
 5. **[Singleton Pattern](/low-level-design/patterns/singleton/)**: Game controller
 
 ### Design Pattern Diagrams

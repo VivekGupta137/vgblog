@@ -23,6 +23,10 @@ Design an Automated Teller Machine (ATM) that allows users to perform transactio
 
 ```plantuml
 @startuml
+scale 0.8
+skinparam nodesep 30
+skinparam ranksep 30
+
 class ATM {
   - atmId: String
   - location: String
@@ -138,11 +142,11 @@ interface ATMState {
   + handleEjectCard(atm: ATM): void
 }
 
-class IdleState implements ATMState { ... }
-class CardInsertedState implements ATMState { ... }
-class PinEnteredState implements ATMState { ... }
-class TransactionSelectionState implements ATMState { ... }
-class TransactionProcessingState implements ATMState { ... }
+class IdleState implements ATMState
+class CardInsertedState implements ATMState
+class PinEnteredState implements ATMState
+class TransactionSelectionState implements ATMState
+class TransactionProcessingState implements ATMState
 
 ATM "1" *-- "1" CashDispenser
 ATM "1" *-- "1" CashDeposit
@@ -156,6 +160,7 @@ ATM "1" *-- "1" ATMState : current
 
 Bank "1" *-- "many" BankAccount
 Card "1" *-- "1" BankAccount
+
 Transaction <|-- Withdrawal
 Transaction <|-- Deposit
 Transaction <|-- BalanceInquiry

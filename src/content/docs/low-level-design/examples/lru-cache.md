@@ -237,7 +237,7 @@ CacheDriver ..> ICache : uses
 
 1. **[Strategy Pattern](/low-level-design/patterns/behavioural-patterns/#strategy-pattern)**: Different eviction policies (LRU, LFU, FIFO)
 2. **[Singleton Pattern](/low-level-design/patterns/singleton/)**: Cache instance management
-3. **[Template Method](/low-level-design/patterns/behavioural-patterns/#template-method)**: Common cache operations with customizable eviction
+3. **[Template Method](/low-level-design/patterns/behavioural-patterns/#template-method-pattern)**: Common cache operations with customizable eviction
 
 ### Design Pattern Diagrams
 

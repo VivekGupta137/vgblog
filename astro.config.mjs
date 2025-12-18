@@ -41,6 +41,8 @@ export default defineConfig({
       components: {
         Pagination: './src/components/Pagination.astro',
         Header: './src/components/Header.astro',
+        ContentPanel: './src/components/ContentPanel.astro',
+        LastUpdated: './src/components/LastUpdated.astro',
       },
       plugins: [
         starlightSiteGraph(),

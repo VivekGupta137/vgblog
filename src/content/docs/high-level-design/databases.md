@@ -21,6 +21,11 @@ Relational databases provide (ACID) properties to maintain the integrity of the 
 
 **Examples** - MySQL,Oracle Database,Microsoft SQL Server,IBM DB2,Postgres,SQLite
 
+### Pros
+- range queries
+- secondary indexes
+- transactions with the ACID properties
+
 ### Drawback
 **Impedance mismatch** - there is a difference between how the data is structured in relational model as compared to in-memory data structures (like Objects). 
 
@@ -473,5 +478,3 @@ When the coordinator sees different data from different nodes, it needs a rule t
     
     c. **CRDTs** (Conflict-free Replicated Data Types)
       Mechanism: The data structure itself is designed so that it is mathematically impossible to have a conflict. used in Redis enterprise.
-
-## How to choose a database?

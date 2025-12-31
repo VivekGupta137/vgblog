@@ -33,6 +33,78 @@ Instead of modifying existing base classes, we should extend them through inheri
 - Leverage interfaces and abstract classes
 - Avoid modifying stable code
 
+**Bad Example (Violates OCP):**
+
+```java
+class AreaCalculator {
+    public double calculateArea(Object shape) {
+        if (shape instanceof Circle) {
+            Circle circle = (Circle) shape;
+            return Math.PI * circle.radius * circle.radius;
+        } else if (shape instanceof Rectangle) {
+            Rectangle rect = (Rectangle) shape;
+            return rect.width * rect.height;
+        }
+        // Adding new shape requires modifying this method
+        return 0;
+    }
+}
+```
+
+**Good Example (Follows OCP):**
+
+Define an interface that shapes can implement:
+
+```java
+interface Shape {
+    double calculateArea();
+}
+
+class Circle implements Shape {
+    private double radius;
+    
+    public Circle(double radius) {
+        this.radius = radius;
+    }
+    
+    public double calculateArea() {
+        return Math.PI * radius * radius;
+    }
+}
+
+class Rectangle implements Shape {
+    private double width;
+    private double height;
+    
+    public Rectangle(double width, double height) {
+        this.width = width;
+        this.height = height;
+    }
+    
+    public double calculateArea() {
+        return width * height;
+    }
+}
+```
+
+Now we can add new shapes without modifying existing code:
+
+```java
+class Triangle implements Shape {
+    private double base;
+    private double height;
+    
+    public Triangle(double base, double height) {
+        this.base = base;
+        this.height = height;
+    }
+    
+    public double calculateArea() {
+        return 0.5 * base * height;
+    }
+}
+```
+
 ---
 
 ## Liskov Substitution Principle (LSP)

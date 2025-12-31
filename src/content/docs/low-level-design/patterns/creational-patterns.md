@@ -28,7 +28,7 @@ title General Factory Method Pattern
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
-skinparam DefaultFontSize 13
+skinparam DefaultFontSize 17
 skinparam ArrowColor #475569
 skinparam rectangleBorderColor #64748b
 skinparam rectangleBackgroundColor #f8fafc
@@ -39,45 +39,48 @@ skinparam interfaceBorderColor #10b981
 skinparam noteBackgroundColor #fef3c7
 skinparam noteBorderColor #d97706
 
-abstract class Creator {
-  + {abstract} factoryMethod(): Product
+interface Creator {
+  + factoryCreator(): Product
+}
+
+abstract AbstractCreator {
+  + {abstract} factoryCreator(): Product (abstract)
   + someOperation()
 }
 
-class ConcreteCreatorA extends Creator {
-  + factoryMethod(): Product
-}
-
-class ConcreteCreatorB extends Creator {
-  + factoryMethod(): Product
-}
-
 interface Product {
-  + doStuff()
+
 }
 
-class ConcreteProductA implements Product {
-  + doStuff()
-}
+note right of Creator::factoryCreator
+  returns ConcreteProduct;
+end note
 
-class ConcreteProductB implements Product {
-  + doStuff()
-}
+note bottom of Creator
+  Creator interface delegates the instance creation
+  to it's implementations through factoryCreator()
 
-ConcreteCreatorA ..> ConcreteProductA : creates
-ConcreteCreatorB ..> ConcreteProductB : creates
-
-note right of Creator::someOperation
-  Product product = factoryMethod();
+  // Driver.java
+  Product product = creatorImplA.factoryCreator();
   // use the product
   product.doStuff();
 end note
 
-note bottom of Creator
-  The Creator class delegates
-  product instantiation to
-  subclasses through factoryMethod()
-end note
+class ConcreteCreatorA {
+  + factoryCreator(): Product
+}
+
+class ConcreteCreatorB {
+  + factoryCreator(): Product
+}
+
+ConcreteCreatorA ..> Product : creates 
+ConcreteCreatorB ..> Product : creates
+
+AbstractCreator <--> Creator : or
+
+ConcreteCreatorA --|> Creator : implements
+ConcreteCreatorB --|> Creator : implements
 @enduml
 ```
 

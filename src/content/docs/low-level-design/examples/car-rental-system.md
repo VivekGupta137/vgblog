@@ -134,7 +134,6 @@ Bill o-- Charges : uses
 ```
 
 ## Detailed Class Diagram
-
 ```plantuml
 @startuml
 

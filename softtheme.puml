@@ -1,0 +1,62 @@
+' softtheme.puml
+<style>
+classDiagram {
+  root {
+    FontSize 14
+    FontColor #334155
+  }
+
+  note {
+    ' Softer Creamy Tone
+    BackgroundColor #FFFDF2
+    ' Warm Cocoa Border (High contrast but soft)
+    LineColor #5D4037
+    LineThickness 2
+    FontSize 13
+    ' Dark Coffee Text for readability
+    FontColor #3E2723
+    RoundCorner 12
+    DiagonalCorner 0
+  }
+
+  arrow {
+    LineColor #1E293B
+    LineThickness 2.5
+  }
+
+  class {
+    ' --- Base: Soft Mint Concrete Class ---
+    BackgroundColor #FFF
+    LineColor #1E293B
+    LineThickness 2
+    FontColor #1E293B
+    RoundCorner 25
+    
+    header {
+      BackgroundColor #C1EBC0
+      FontStyle bold
+    }
+
+    ' --- Specialized: Soft Purple Interface ---
+    .interface {
+      LineColor #1E293B
+      LineDash 4
+      header {
+        BackgroundColor #E9D5FF
+      }
+    }
+
+    ' --- Specialized: Soft Blue Abstract ---
+    .abstract {
+      LineColor #1E293B
+      header {
+        BackgroundColor #BAE6FD
+      }
+    }
+  }
+}
+
+</style>
+hide interface stereotype
+hide abstract stereotype
+skinparam shadowing false

@@ -57,6 +57,8 @@ classDiagram {
 }
 
 </style>
-hide interface stereotype
-hide abstract stereotype
+hide <<abstract>> stereotype
+hide <<interface>> stereotype
 skinparam shadowing false
+hide empty members
+

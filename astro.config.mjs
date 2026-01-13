@@ -148,7 +148,9 @@ export default defineConfig({
       serverUrl: process.env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
       addWrapperClasses: true,
     }),
-    d2(),
+    d2({
+      skipGeneration: process.env.D2_SKIP_GENERATION === "true",
+    }),
   ],
 
   experimental: {

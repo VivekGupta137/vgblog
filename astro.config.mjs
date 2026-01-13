@@ -138,7 +138,7 @@ export default defineConfig({
       ],
     }),
     plantuml({
-      serverUrl: env.PUBLIC_PLANTUML_SERVER_URL || "https://www.plantuml.com/plantuml/png/",
+      serverUrl: env.PUBLIC_PLANTUML_SERVER_URL || "localhost:8080/plantuml/png/",
       addWrapperClasses: true,
     }),
     d2({

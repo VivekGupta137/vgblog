@@ -149,7 +149,7 @@ export default defineConfig({
       addWrapperClasses: true,
     }),
     d2({
-      skipGeneration: process.env.D2_SKIP_GENERATION === "true",
+      skipGeneration: process.env.NODE_ENV === "production" || process.env.D2_SKIP_GENERATION === "true",
     }),
   ],
 

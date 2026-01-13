@@ -31,6 +31,7 @@ export default defineConfig({
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
   },
+  output: "static",
 
   integrations: [
     starlight({

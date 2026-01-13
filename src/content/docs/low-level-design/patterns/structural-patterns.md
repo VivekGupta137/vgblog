@@ -128,6 +128,7 @@ An Object Adapter uses composition to adapt one interface to another. **It holds
 ```plantuml
 @startuml
 title Object Adapter Pattern
+hide empty members
 
 skinparam backgroundColor #ffffff
 skinparam Shadowing false

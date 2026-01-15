@@ -218,6 +218,7 @@ The Bridge Pattern splits a class into two separate hierarchies:
 @startuml
 title Bridge Pattern
 
+hide empty members
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -258,6 +259,7 @@ class ConcreteImplementorB implements Implementor {
   + operationImpl()
 }
 
+Client --> Abstraction
 Abstraction o--> Implementor
 
 note right of Abstraction::operation
@@ -587,6 +589,7 @@ In a composite structure, each node in the hierarchy shares the same interface, 
 @startuml
 title Composite Pattern
 
+hide empty members
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -871,7 +874,7 @@ class ConcreteComponent implements Component {
 abstract class Decorator implements Component {
   - component: Component
   + Decorator(component: Component)
-  + operation()
+  + {abstract} operation() - abstract
 }
 
 class ConcreteDecoratorA extends Decorator {
@@ -885,8 +888,8 @@ class ConcreteDecoratorB extends Decorator {
   + additionalBehaviorB()
 }
 
-Decorator o--> Component
-Client --> Component
+Decorator o--> Component : implements
+Client --> Component : implements
 
 note right of Decorator::operation
   component.operation();

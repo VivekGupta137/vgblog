@@ -32,6 +32,7 @@ Define a family of algorithms, encapsulate each one, and make them interchangeab
 
 ```plantuml
 @startuml
+hide empty members
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -137,6 +138,8 @@ Define a one-to-many dependency between objects so that when one object changes 
 
 ```plantuml
 @startuml
+hide empty members
+
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -245,6 +248,8 @@ Encapsulate a request as an object, thereby letting you parameterize clients wit
 
 ```plantuml
 @startuml
+hide empty members
+
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial
@@ -291,6 +296,12 @@ ConcreteCommand --> Receiver
 
 note right of ConcreteCommand::execute
   receiver.action()
+end note
+
+note right of Invoker::command
+  // can optionally contain 
+  // to maintain history / undo / redo
+  commandStack: Stack 
 end note
 
 note right of Client::main

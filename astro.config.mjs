@@ -24,6 +24,8 @@ import starlightFullViewMode from "starlight-fullview-mode";
 import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 import { loadEnv } from "vite";
 
+import sitemap from "@astrojs/sitemap";
+
 const env = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 
 // https://astro.build/config
@@ -36,115 +38,111 @@ export default defineConfig({
   },
   output: "static",
 
-  integrations: [
-    starlight({
-      customCss: [
-        './src/global.css',
-        './src/styles/custom.css',
-      ],
-      components: {
-        Pagination: './src/components/Pagination.astro',
-        Header: './src/components/Header.astro',
-        ContentPanel: './src/components/ContentPanel.astro',
-        LastUpdated: './src/components/LastUpdated.astro',
+  integrations: [starlight({
+    customCss: [
+      './src/global.css',
+      './src/styles/custom.css',
+    ],
+    components: {
+      Pagination: './src/components/Pagination.astro',
+      Header: './src/components/Header.astro',
+      ContentPanel: './src/components/ContentPanel.astro',
+      LastUpdated: './src/components/LastUpdated.astro',
+    },
+    plugins: [
+      starlightSiteGraph(),
+      starlightLinksValidator(),
+      starlightThemeRapide(),
+      starlightImageZoom(),
+      starlightGiscus({
+        repo: env.PUBLIC_GISCUS_REPO || "",
+        repoId: env.PUBLIC_GISCUS_REPO_ID || "",
+        category: env.PUBLIC_GISCUS_CATEGORY || "",
+        categoryId: env.PUBLIC_GISCUS_CATEGORY_ID || "",
+        mapping: "pathname",
+        reactions: true,
+        inputPosition: "top",
+        lazy: false,
+        theme: "preferred_color_scheme"
+      }),
+      starlightPageActions({
+        baseUrl: env.PUBLIC_DOMAIN || "",
+        prompt: "Read {url} and explain its main points briefly."
+      }),
+      starlightMarkdownBlocks({
+        blocks: {
+          success: Aside({ label: 'Advantages', color: 'green',  }),
+          warn: Aside({ label: 'Disadvantages', color: 'orange', }),
+          info: Aside({ label: 'Info', color: 'blue',  }),
+        },
+      }),
+      
+      starlightSidebarSwipe()
+    ],
+    expressiveCode: {
+      plugins: [pluginLanguageBadge(), pluginLineNumbers(), pluginCollapsibleSections()],
+      defaultProps: {
+        showLineNumbers: false,
+        overridesByLang: {
+          'js,ts,html,java,python': {
+            showLineNumbers: true,
+          },
+        },
+      }
+    },
+    title: "VG",
+    favicon: "/favicon.ico",
+    social: [
+      {
+        icon: "github",
+        label: "GitHub",
+        href: "https://github.com/withastro/starlight",
       },
-      plugins: [
-        starlightSiteGraph(),
-        starlightLinksValidator(),
-        starlightThemeRapide(),
-        starlightImageZoom(),
-        starlightGiscus({
-          repo: env.PUBLIC_GISCUS_REPO || "",
-          repoId: env.PUBLIC_GISCUS_REPO_ID || "",
-          category: env.PUBLIC_GISCUS_CATEGORY || "",
-          categoryId: env.PUBLIC_GISCUS_CATEGORY_ID || "",
-          mapping: "pathname",
-          reactions: true,
-          inputPosition: "top",
-          lazy: false,
-          theme: "preferred_color_scheme"
-        }),
-        starlightPageActions({
-          baseUrl: env.PUBLIC_DOMAIN || "",
-          prompt: "Read {url} and explain its main points briefly."
-        }),
-        starlightMarkdownBlocks({
-          blocks: {
-            success: Aside({ label: 'Advantages', color: 'green',  }),
-            warn: Aside({ label: 'Disadvantages', color: 'orange', }),
-            info: Aside({ label: 'Info', color: 'blue',  }),
-          },
-        }),
-        
-        starlightSidebarSwipe()
-      ],
-      expressiveCode: {
-        plugins: [pluginLanguageBadge(), pluginLineNumbers(), pluginCollapsibleSections()],
-        defaultProps: {
-          showLineNumbers: false,
-          overridesByLang: {
-            'js,ts,html,java,python': {
-              showLineNumbers: true,
+    ],
+    sidebar: [
+      {
+        label: "Learnings",
+        items: [
+          {
+            label: "Usage example",
+            autogenerate: {
+              directory: "guides",
             },
           },
-        }
+          {
+            label: "Coding",
+            autogenerate: {
+              directory: "coding",
+            },
+          },
+          {
+            label: "High Level Design",
+            autogenerate: {
+              directory: "high-level-design",
+            },
+          },
+          {
+            label: "Low Level Design",
+            autogenerate: {
+              directory: "low-level-design",
+            },
+          },
+        ],
       },
-      title: "VG",
-      favicon: "/favicon.ico",
-      social: [
-        {
-          icon: "github",
-          label: "GitHub",
-          href: "https://github.com/withastro/starlight",
+      {
+        label: "Connect",
+        autogenerate: {
+          directory: "connect",
         },
-      ],
-      sidebar: [
-        {
-          label: "Learnings",
-          items: [
-            {
-              label: "Usage example",
-              autogenerate: {
-                directory: "guides",
-              },
-            },
-            {
-              label: "Coding",
-              autogenerate: {
-                directory: "coding",
-              },
-            },
-            {
-              label: "High Level Design",
-              autogenerate: {
-                directory: "high-level-design",
-              },
-            },
-            {
-              label: "Low Level Design",
-              autogenerate: {
-                directory: "low-level-design",
-              },
-            },
-          ],
-        },
-        {
-          label: "Connect",
-          autogenerate: {
-            directory: "connect",
-          },
-        },
-        
-      ],
-    }),
-    plantuml({
-      serverUrl: env.PUBLIC_PLANTUML_SERVER_URL || "localhost:8080/plantuml/png/",
-      addWrapperClasses: true,
-    }),
-    d2({
-      skipGeneration: env.NODE_ENV === "production" || env.D2_SKIP_GENERATION === "true",
-    }),
-  ],
+      },
+      
+    ],
+  }), plantuml({
+    serverUrl: env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
+    addWrapperClasses: true,
+  }), d2({
+    skipGeneration: env.NODE_ENV === "production" || env.D2_SKIP_GENERATION === "true",
+  }), sitemap()],
 
   experimental: {
     contentIntellisense: true,

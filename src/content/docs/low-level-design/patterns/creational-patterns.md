@@ -24,6 +24,7 @@ meaning there will be a **superclass** with a *abstract method* for creating som
 ```plantuml
 @startuml
 title General Factory Method Pattern
+hide empty members
 
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
@@ -88,6 +89,7 @@ ConcreteCreatorB --|> Creator : implements
 @startuml
 title General Simple Factory Pattern
 
+hide empty members
 skinparam backgroundColor #ffffff
 skinparam Shadowing false
 skinparam DefaultFontName Arial

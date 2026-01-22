@@ -20,7 +20,47 @@ description: js engine
 **Senior phrasing**
 
 > “The JS engine consists of a parser, interpreter, JIT compiler, call stack, heap, and a garbage collector.”
+```plantuml
+@startuml
+!define RECTANGLE class
 
+skinparam rectangle {
+    BackgroundColor<<engine>> LightBlue
+    BackgroundColor<<runtime>> LightGreen
+    BorderColor Black
+}
+
+package "JavaScript Engine" <<engine>> {
+    rectangle "Parser" as parser
+    rectangle "Interpreter\n(Ignition)" as interpreter
+    rectangle "JIT Compiler\n(TurboFan)" as jit
+    rectangle "Call Stack\n(LIFO)" as stack
+    rectangle "Heap\n(Memory)" as heap
+    rectangle "Garbage\nCollector" as gc
+}
+
+package "Runtime Environment" <<runtime>> {
+    rectangle "Web APIs /\nlibuv" as apis
+    rectangle "Task Queue\n(Macrotasks)" as taskq
+    rectangle "Microtask\nQueue" as microq
+    rectangle "Event Loop" as loop
+}
+
+parser --> interpreter
+interpreter --> jit : hot code
+interpreter --> stack : execute
+jit --> stack : optimized
+stack --> heap : allocate objects
+heap --> gc : reclaim memory
+
+apis --> taskq : callbacks
+apis --> microq : promises
+loop --> stack : schedule
+loop --> microq : drain first
+loop --> taskq : then process
+
+@enduml
+```
 ---
 
 ## 2) Is JavaScript really single‑threaded?
@@ -62,6 +102,49 @@ If JS were multi‑threaded, two threads could mutate the DOM simultaneously, ca
 - Event loop
 
 So JS runs on one thread, but async work runs elsewhere and schedules callbacks back later.
+
+```plantuml
+@startuml
+
+skinparam component {
+    BackgroundColor<<single>> #FFE6E6
+    BackgroundColor<<multi>> #E6F7E6
+    BorderColor Black
+}
+
+package "Single-Threaded" <<single>> {
+    component "JS Engine" as engine {
+        [Call Stack]
+        [Heap]
+    }
+    note right of engine
+        Only ONE function
+        executes at a time
+    end note
+}
+
+package "Multi-Threaded" <<multi>> {
+    component "Host Environment" as host {
+        [Timer Thread]
+        [Network Thread]
+        [File I/O Thread]
+        [Worker Threads]
+    }
+    note right of host
+        Background work
+        happens concurrently
+    end note
+}
+
+component "Event Loop" as loop
+component "Task Queues" as queues
+
+host --> queues : callbacks
+queues --> loop : schedule
+loop --> engine : execute when ready
+
+@enduml
+```
 
 ---
 
@@ -110,7 +193,41 @@ pop a
 **Senior phrasing**
 
 > “Because there is only one call stack, JavaScript can only execute one function at a time.”
+```plantuml
+@startuml
+!define STACKCOLOR #E8F4F8
 
+skinparam sequenceMessageAlign center
+
+participant "Code" as code
+participant "Call Stack" as stack
+
+code -> stack : push a()
+activate stack #STACKCOLOR
+note right: Stack: [a]
+
+code -> stack : push b()
+activate stack #STACKCOLOR
+note right: Stack: [a, b]
+
+code -> stack : push c()
+activate stack #STACKCOLOR
+note right: Stack: [a, b, c]
+
+stack -> stack : console.log('hi')
+note right: Execute & pop c
+deactivate stack
+
+note right: Stack: [a, b]
+deactivate stack
+
+note right: Stack: [a]
+deactivate stack
+
+note right: Stack: []
+
+@enduml
+```
 ---
 
 ## 6) Heap — where objects live
@@ -148,7 +265,45 @@ They run in:
 **Senior phrasing**
 
 > “Asynchronous operations are handled by the host environment — timers, network, and I/O run outside the JS engine and notify it when they complete.”
+```plantuml
+@startuml
 
+skinparam participant {
+    BackgroundColor<<js>> LightBlue
+    BackgroundColor<<bg>> LightGreen
+    BackgroundColor<<queue>> LightYellow
+}
+
+participant "JS Main Thread" as js <<js>>
+participant "Web API /\nlibuv" as api <<bg>>
+participant "Task Queue" as queue <<queue>>
+participant "Event Loop" as loop
+
+js -> api : setTimeout(callback, 1000)
+activate api
+note right: Runs in background thread
+
+js -> api : fetch('/api')
+activate api
+
+js -> js : Continue executing\nsynchronous code
+
+api --> queue : Timer complete\n(queue callback)
+deactivate api
+
+api --> queue : Fetch complete\n(queue callback)
+deactivate api
+
+loop -> queue : Is call stack empty?
+queue -> loop : Yes
+
+loop -> js : Execute queued callback
+activate js
+js -> js : Run callback function
+deactivate js
+
+@enduml
+```
 ---
 
 ## 8) Task queues — where callbacks wait
@@ -193,6 +348,48 @@ while (true) {
 }
 ```
 
+```plantuml
+@startuml
+skinparam activityBackgroundColor #E8F4F8
+skinparam activityBorderColor #333
+
+start
+
+:Execute Current\nCall Stack;
+note right: Run synchronous code
+
+:Drain ALL\nMicrotasks;
+note right
+    - Promise.then()
+    - queueMicrotask()
+    - MutationObserver
+    (runs until empty)
+end note
+
+:Run ONE\nMacrotask;
+note right
+    - setTimeout
+    - setInterval
+    - DOM events
+    - I/O callbacks
+end note
+
+if (Browser?) then (yes)
+    :Render UI\n(if needed);
+    note right
+        - Style calculation
+        - Layout
+        - Paint
+        - Composite
+    end note
+else (no)
+endif
+
+backward:Next Loop;
+
+@enduml
+```
+
 **Why microtasks are special**
 
 - They run **immediately after** the current stack finishes.
@@ -234,6 +431,45 @@ A
 D
 C
 B
+```
+
+```plantuml
+@startuml
+
+participant "Main Thread" as main
+participant "Call Stack" as stack
+participant "Microtask Queue" as micro
+participant "Macrotask Queue" as macro
+participant "Web API" as api
+
+main -> stack : console.log('A')
+activate stack
+stack -> stack : Output: A
+deactivate stack
+
+main -> api : setTimeout(()=>log('B'), 0)
+api -> macro : queue callback
+
+main -> micro : Promise.then(()=>log('C'))
+
+main -> stack : console.log('D')
+activate stack
+stack -> stack : Output: D
+deactivate stack
+
+note over stack : Call stack empty!
+
+micro -> stack : Execute log('C')
+activate stack
+stack -> stack : Output: C
+deactivate stack
+
+macro -> stack : Execute log('B')
+activate stack
+stack -> stack : Output: B
+deactivate stack
+
+@enduml
 ```
 
 **Senior explanation**

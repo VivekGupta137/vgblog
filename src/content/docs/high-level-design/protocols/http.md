@@ -557,6 +557,16 @@ HTTPS is the secure version of HTTP, used for web browsing, which encrypts data 
 
 HTTPS is a specific application of TLS for websites. Essentially, HTTPS is a web protocol that relies on TLS to encrypt the connection between your browser and a website.
 
+:::tip[Key Takeaway]
+If the the protocol is HTTPS, we can be sure that no one can read the data in transit.
+:::
+
+:::note[What is actually encrypted in HTTPS?]
+The destination server is not encrypted and it is visible as plaintext during the network transit.
+
+The payload or the body of the request is encrypted.
+:::
+
 **Key Differences from HTTP:**
 
 | Feature | HTTP | HTTPS |
@@ -684,6 +694,21 @@ end note
 - **SEO penalty** for HTTP sites
 - **Cookie security** (Secure flag requires HTTPS)
 :::
+
+### Certificates
+A certificate is a digital document which contains -
+1. version
+2. serial number
+3. Thumprint (hash of the certificate)
+4. Validity period
+5. Issuer
+6. Subject
+7. Public Key
+8. sometimes Private Key is included (for signing the certificate)
+   - Private key is used to decrypt something that was encrypted with the public key.
+   - And to sign stuff with signature and then verify it with the public key.
+
+It is signed by a Certificate Authority (CA) to prove the identity of the server.
 
 ## TLS (Transport Layer Security)
 

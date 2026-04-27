@@ -46,18 +46,18 @@ function ComponentB() {
 3. **Both `ComponentA` and `ComponentB` re-render**
 4. This happens even though `ComponentB` only uses `b`
 
-This is a fundamental limitation of React Context â€” it lacks granular subscriptions.
+This is a fundamental limitation of React Context — it lacks granular subscriptions.
 
 ### Can't We Just Split Contexts?
 
-Yes â€” this is a common first approach to reduce unnecessary re-renders.
+Yes — this is a common first approach to reduce unnecessary re-renders.
 
 **Example context splitting**:
-- `AuthContext` â€” user authentication state
-- `ThemeContext` â€” UI theme preferences
-- `FilterContext` â€” data filtering state
-- `UIContext` â€” UI interaction state
-- `FeatureContext` â€” feature-specific state
+- `AuthContext` — user authentication state
+- `ThemeContext` — UI theme preferences
+- `FilterContext` — data filtering state
+- `UIContext` — UI interaction state
+- `FeatureContext` — feature-specific state
 
 **Problems with multiple contexts**:
 
@@ -71,7 +71,7 @@ Yes â€” this is a common first approach to reduce unnecessary re-renders.
    - No persistence layer
    - No time-travel debugging
 
-**This is where dedicated state management libraries (Redux, Zustand, Jotai) excel** â€” they provide fine-grained subscriptions and developer tooling.
+**This is where dedicated state management libraries (Redux, Zustand, Jotai) excel** — they provide fine-grained subscriptions and developer tooling.
 
 ---
 
@@ -160,7 +160,7 @@ onTTFB(sendToAnalytics)
 
 - **Long Purple Blocks**: JavaScript executing for too long (> 50ms), blocking the main thread and preventing interactions. This happens with heavy computations, large loops, or synchronous operations that should be async or chunked.
 
-- **Forced Reflows**(Layout Thrashing): JavaScript reading layout properties (like `offsetHeight`) immediately after modifying the DOM, forcing the browser to recalculate layout synchronously. Browser has to stop, measure everything, then continue â€” very expensive when done repeatedly.
+- **Forced Reflows**(Layout Thrashing): JavaScript reading layout properties (like `offsetHeight`) immediately after modifying the DOM, forcing the browser to recalculate layout synchronously. Browser has to stop, measure everything, then continue — very expensive when done repeatedly.
 Common causes:
 ```jsx
 // âŒ Bad: Forces layout recalculation in loop
@@ -641,7 +641,7 @@ const value = useMemo(() => compute(a, b), [a, b])
 
 ## How do you handle performance in animation-heavy or real-time UIs?
 
-> "I think in terms of the browser's frame budget â€” at 60fps you have ~16ms per frame, including JS, layout, paint, and compositing."
+> "I think in terms of the browser's frame budget — at 60fps you have ~16ms per frame, including JS, layout, paint, and compositing."
 
 ### Understanding the Browser Rendering Pipeline
 
@@ -664,7 +664,7 @@ JS â†’ Style â†’ Layout â†’ Paint â†’ Composite
 
 ðŸ”¥ **Animate Only `transform` and `opacity`**
 
-These properties are **compositor-only** â€” they bypass Layout and Paint entirely:
+These properties are **compositor-only** — they bypass Layout and Paint entirely:
 
 ```css
 /* âœ… GPU-accelerated (compositor-only) */
@@ -860,7 +860,7 @@ function Timeline() {
 
 **Senior-Level Explanation**:
 
-> "I prefer composition-based APIs because they provide structural flexibility without exploding the prop surface. This pattern follows the Open/Closed Principle â€” components are open for extension through composition, but closed for modification of their core behavior."
+> "I prefer composition-based APIs because they provide structural flexibility without exploding the prop surface. This pattern follows the Open/Closed Principle — components are open for extension through composition, but closed for modification of their core behavior."
 
 ### Implementation Pattern
 

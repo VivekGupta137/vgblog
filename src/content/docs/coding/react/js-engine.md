@@ -195,7 +195,6 @@ pop a
 > “Because there is only one call stack, JavaScript can only execute one function at a time.”
 ```plantuml
 @startuml
-!define STACKCOLOR #E8F4F8
 
 skinparam sequenceMessageAlign center
 
@@ -203,15 +202,15 @@ participant "Code" as code
 participant "Call Stack" as stack
 
 code -> stack : push a()
-activate stack #STACKCOLOR
+activate stack #E8F4F8
 note right: Stack: [a]
 
 code -> stack : push b()
-activate stack #STACKCOLOR
+activate stack #E8F4F8
 note right: Stack: [a, b]
 
 code -> stack : push c()
-activate stack #STACKCOLOR
+activate stack #E8F4F8
 note right: Stack: [a, b, c]
 
 stack -> stack : console.log('hi')
@@ -355,37 +354,40 @@ skinparam activityBorderColor #333
 
 start
 
-:Execute Current\nCall Stack;
-note right: Run synchronous code
+repeat
+  :Execute Current\nCall Stack;
+  note right: Run synchronous code
+  
+  :Drain ALL\nMicrotasks;
+  note right
+      - Promise.then()
+      - queueMicrotask()
+      - MutationObserver
+      (runs until empty)
+  end note
+  
+  :Run ONE\nMacrotask;
+  note right
+      - setTimeout
+      - setInterval
+      - DOM events
+      - I/O callbacks
+  end note
+  
+  if (Browser?) then (yes)
+      :Render UI\n(if needed);
+      note right
+          - Style calculation
+          - Layout
+          - Paint
+          - Composite
+      end note
+  else (no)
+  endif
 
-:Drain ALL\nMicrotasks;
-note right
-    - Promise.then()
-    - queueMicrotask()
-    - MutationObserver
-    (runs until empty)
-end note
+repeat while (more tasks?) is (yes) not (no)
 
-:Run ONE\nMacrotask;
-note right
-    - setTimeout
-    - setInterval
-    - DOM events
-    - I/O callbacks
-end note
-
-if (Browser?) then (yes)
-    :Render UI\n(if needed);
-    note right
-        - Style calculation
-        - Layout
-        - Paint
-        - Composite
-    end note
-else (no)
-endif
-
-backward:Next Loop;
+stop
 
 @enduml
 ```
@@ -408,13 +410,13 @@ Browsers typically render **between** macrotasks (after microtasks drain). That�
 ## 10) Classic interview example (you will be asked)
 
 ```js
-console.log('A')
+console.log('A') // synchronous
 
-setTimeout(() => console.log('B'), 0)
+setTimeout(() => console.log('B'), 0) // macrotask
 
-Promise.resolve().then(() => console.log('C'))
+Promise.resolve().then(() => console.log('C')) // microtask
 
-console.log('D')
+console.log('D') // synchronous
 ```
 
 **Execution order**

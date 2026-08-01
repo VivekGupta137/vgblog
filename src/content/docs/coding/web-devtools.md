@@ -1,7 +1,6 @@
 ---
 title: Web Devtools
 ---
-
 # Chrome DevTools — Complete Guide (Beginner to Advanced)
 
 A structured, end-to-end reference for Google Chrome DevTools covering every panel and tool available in modern Chrome. Each document in this series is self-contained and can be read independently, though the recommended reading paths below will give you the fastest ramp-up depending on your experience level.
@@ -14,25 +13,25 @@ This guide is written for web developers, QA engineers, and performance engineer
 
 | File | Description |
 |------|-------------|
-| [00-getting-started.md](./00-getting-started.md) | Opening DevTools, UI layout, keyboard shortcuts, device mode, remote debugging |
-| [01-elements-panel.md](./01-elements-panel.md) | DOM inspection, live CSS editing, Box Model, accessibility tree, DOM breakpoints |
-| [02-console-panel.md](./02-console-panel.md) | JS REPL, all console methods, console utilities API, live expressions |
-| [03-sources-panel.md](./03-sources-panel.md) | Breakpoints (all types), debugger controls, source maps, snippets, workspaces |
-| [04-network-panel.md](./04-network-panel.md) | Request inspection, waterfall timing, throttling, HAR export, WebSocket |
-| [05-performance-panel.md](./05-performance-panel.md) | Flame charts, Core Web Vitals, long tasks, Bottom-Up/Call Tree |
-| [06-memory-panel.md](./06-memory-panel.md) | Heap snapshots, allocation timeline, memory leak patterns and fixes |
-| [07-application-panel.md](./07-application-panel.md) | Cookies, localStorage, IndexedDB, service workers, PWA manifest |
-| [08-security-panel.md](./08-security-panel.md) | TLS/certificates, mixed content, CSP, CORS, security headers |
-| [09-lighthouse-panel.md](./09-lighthouse-panel.md) | Performance/Accessibility/SEO/PWA audits, scoring, CI integration |
-| [10-recorder-panel.md](./10-recorder-panel.md) | Record user flows, replay, export to Puppeteer/Playwright |
-| [11-coverage-tool.md](./11-coverage-tool.md) | Unused CSS/JS detection, tree shaking guidance |
-| [12-rendering-panel.md](./12-rendering-panel.md) | Paint flashing, GPU layers, FPS meter, CSS media emulation |
-| [13-animations-panel.md](./13-animations-panel.md) | Animation inspector, cubic-bezier editor, slow-motion replay |
-| [14-css-overview.md](./14-css-overview.md) | Color/font inventory, contrast ratios, unused declarations |
-| [15-sensors-panel.md](./15-sensors-panel.md) | Geolocation, device orientation, timezone, idle detection simulation |
-| [16-changes-panel.md](./16-changes-panel.md) | Track all CSS/JS edits made in DevTools, copy as diff |
-| [17-performance-insights.md](./17-performance-insights.md) | Guided LCP/CLS/INP insights, actionable recommendations |
-| [18-advanced-tips-and-tricks.md](./18-advanced-tips-and-tricks.md) | Command Menu, power snippets, CDP, framework debugging |
+| 00-getting-started.md | Opening DevTools, UI layout, keyboard shortcuts, device mode, remote debugging |
+| 01-elements-panel.md | DOM inspection, live CSS editing, Box Model, accessibility tree, DOM breakpoints |
+| 02-console-panel.md | JS REPL, all console methods, console utilities API, live expressions |
+| 03-sources-panel.md | Breakpoints (all types), debugger controls, source maps, snippets, workspaces |
+| 04-network-panel.md | Request inspection, waterfall timing, throttling, HAR export, WebSocket |
+| 05-performance-panel.md | Flame charts, Core Web Vitals, long tasks, Bottom-Up/Call Tree |
+| 06-memory-panel.md | Heap snapshots, allocation timeline, memory leak patterns and fixes |
+| 07-application-panel.md | Cookies, localStorage, IndexedDB, service workers, PWA manifest |
+| 08-security-panel.md | TLS/certificates, mixed content, CSP, CORS, security headers |
+| 09-lighthouse-panel.md | Performance/Accessibility/SEO/PWA audits, scoring, CI integration |
+| 10-recorder-panel.md | Record user flows, replay, export to Puppeteer/Playwright |
+| 11-coverage-tool.md | Unused CSS/JS detection, tree shaking guidance |
+| 12-rendering-panel.md | Paint flashing, GPU layers, FPS meter, CSS media emulation |
+| 13-animations-panel.md | Animation inspector, cubic-bezier editor, slow-motion replay |
+| 14-css-overview.md | Color/font inventory, contrast ratios, unused declarations |
+| 15-sensors-panel.md | Geolocation, device orientation, timezone, idle detection simulation |
+| 16-changes-panel.md | Track all CSS/JS edits made in DevTools, copy as diff |
+| 17-performance-insights.md | Guided LCP/CLS/INP insights, actionable recommendations |
+| 18-advanced-tips-and-tricks.md | Command Menu, power snippets, CDP, framework debugging |
 
 ---
 

@@ -41,26 +41,26 @@ This guide is written for web developers, QA engineers, and performance engineer
 
 If you are new to DevTools, follow this order to build a solid foundation before moving into advanced tooling.
 
-1. **[00-getting-started.md](./00-getting-started.md)** — Get oriented with the UI and essential shortcuts
-2. **[01-elements-panel.md](./01-elements-panel.md)** — Learn to inspect and modify the DOM and CSS live
-3. **[02-console-panel.md](./02-console-panel.md)** — Use the console for logging, querying, and quick JS experiments
-4. **[04-network-panel.md](./04-network-panel.md)** — Understand how your page loads and diagnose request failures
-5. **[03-sources-panel.md](./03-sources-panel.md)** — Set breakpoints and step through JavaScript
-6. **[07-application-panel.md](./07-application-panel.md)** — Inspect storage, cookies, and service workers
-7. **[09-lighthouse-panel.md](./09-lighthouse-panel.md)** — Run your first performance and accessibility audit
+1. **00-getting-started.md** — Get oriented with the UI and essential shortcuts
+2. **01-elements-panel.md** — Learn to inspect and modify the DOM and CSS live
+3. **02-console-panel.md** — Use the console for logging, querying, and quick JS experiments
+4. **04-network-panel.md** — Understand how your page loads and diagnose request failures
+5. **03-sources-panel.md** — Set breakpoints and step through JavaScript
+6. **07-application-panel.md** — Inspect storage, cookies, and service workers
+7. **09-lighthouse-panel.md** — Run your first performance and accessibility audit
 
 ### Advanced Path
 
 Once you are comfortable with the basics, these panels will unlock deeper insight into performance, memory, and automation.
 
-1. **[05-performance-panel.md](./05-performance-panel.md)** — Profile runtime performance with flame charts
-2. **[17-performance-insights.md](./17-performance-insights.md)** — Interpret Core Web Vital signals and act on them
-3. **[06-memory-panel.md](./06-memory-panel.md)** — Hunt and fix memory leaks with heap snapshots
-4. **[11-coverage-tool.md](./11-coverage-tool.md)** — Find and eliminate unused code
-5. **[12-rendering-panel.md](./12-rendering-panel.md)** — Diagnose paint and compositing issues
-6. **[10-recorder-panel.md](./10-recorder-panel.md)** — Automate and replay user flows
-7. **[08-security-panel.md](./08-security-panel.md)** — Audit TLS, CSP, and security headers
-8. **[18-advanced-tips-and-tricks.md](./18-advanced-tips-and-tricks.md)** — Master the Command Menu, CDP, and framework-specific debugging
+1. **05-performance-panel.md** — Profile runtime performance with flame charts
+2. **17-performance-insights.md** — Interpret Core Web Vital signals and act on them
+3. **06-memory-panel.md** — Hunt and fix memory leaks with heap snapshots
+4. **11-coverage-tool.md** — Find and eliminate unused code
+5. **12-rendering-panel.md** — Diagnose paint and compositing issues
+6. **10-recorder-panel.md** — Automate and replay user flows
+7. **08-security-panel.md** — Audit TLS, CSP, and security headers
+8. **18-advanced-tips-and-tricks.md** — Master the Command Menu, CDP, and framework-specific debugging
 
 ---
 
@@ -79,7 +79,9 @@ Once you are comfortable with the basics, these panels will unlock deeper insigh
 | Step into (debugger) | `F11` | `F11` |
 | Resume script execution | `F8` or `Cmd + \` | `F8` or `Ctrl + \` |
 
-> Full shortcut reference: open DevTools, press `?` or navigate to **Settings > Shortcuts**.
+:::tip
+Full shortcut reference: open DevTools, press `?` or navigate to **Settings > Shortcuts**.
+:::
 
 ---
 

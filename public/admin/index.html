@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Upload docs — Admin</title>
+    <title>Docs admin — SDEWay</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -20,7 +20,7 @@
         --text: #15201b;
         --muted: #5a6b63;
         --border: #c5d2cb;
-        --border-strong: #9aafA4;
+        --border-strong: #9aafa4;
         --accent: #0c6b52;
         --accent-soft: rgba(12, 107, 82, 0.1);
         --accent-hover: #095541;
@@ -58,9 +58,7 @@
         }
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         margin: 0;
@@ -74,17 +72,8 @@
       }
 
       main {
-        width: min(820px, calc(100% - 2rem));
+        width: min(880px, calc(100% - 2rem));
         margin: 2rem auto 4rem;
-      }
-
-      .top {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 0.75rem 1.25rem;
-        margin-bottom: 1.25rem;
       }
 
       .brand {
@@ -99,34 +88,42 @@
         margin: 0;
         font-size: clamp(1.6rem, 3vw, 2rem);
         letter-spacing: -0.03em;
-        line-height: 1.15;
       }
 
       .lede {
-        margin: 0.45rem 0 0;
-        max-width: 38rem;
+        margin: 0.45rem 0 1.25rem;
+        max-width: 40rem;
         color: var(--muted);
         line-height: 1.5;
       }
 
-      .steps {
+      .tabs {
         display: flex;
-        gap: 0.4rem;
         flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
       }
 
-      .step-pill {
-        font-size: 0.78rem;
-        color: var(--muted);
+      .tab {
         border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0.3rem 0.7rem;
         background: color-mix(in srgb, var(--panel) 70%, transparent);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        font: inherit;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
       }
 
-      form {
-        display: grid;
-        gap: 1.1rem;
+      .tab[aria-selected="true"] {
+        background: var(--accent);
+        border-color: transparent;
+        color: #fff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .tab[aria-selected="true"] { color: #06291e; }
       }
 
       .panel {
@@ -135,6 +132,7 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 1.15rem 1.2rem 1.25rem;
+        margin-bottom: 1rem;
       }
 
       .panel-head {
@@ -169,70 +167,7 @@
         font-size: 0.82rem;
       }
 
-      .field-error {
-        display: none;
-        color: var(--danger);
-        font-size: 0.8rem;
-        font-weight: 400;
-      }
-
-      .field-error.show {
-        display: block;
-      }
-
-      input,
-      select,
-      textarea,
-      button {
-        font: inherit;
-      }
-
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 0.7rem 0.8rem;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background: color-mix(in srgb, var(--panel) 80%, var(--bg0));
-        color: var(--text);
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      }
-
-      input:focus,
-      select:focus,
-      textarea:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px var(--accent-soft);
-      }
-
-      input.invalid,
-      textarea.invalid {
-        border-color: var(--danger);
-      }
-
-      .password-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 0.5rem;
-      }
-
-      .ghost {
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--text);
-        border-radius: 10px;
-        padding: 0 0.9rem;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 0.85rem;
-      }
-
-      .ghost:hover {
-        border-color: var(--border-strong);
-        background: var(--accent-soft);
-      }
+      .stack { display: grid; gap: 0.9rem; }
 
       .row {
         display: grid;
@@ -241,18 +176,92 @@
       }
 
       @media (max-width: 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
+        .row { grid-template-columns: 1fr; }
       }
 
-      .path-box {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 0.5rem;
-        align-items: stretch;
-        margin-top: 0.85rem;
+      input, select, textarea, button { font: inherit; }
+
+      input, select, textarea {
+        width: 100%;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--panel) 80%, var(--bg0));
+        color: var(--text);
       }
+
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      textarea {
+        min-height: 280px;
+        resize: vertical;
+        font-family: var(--mono);
+        font-size: 0.84rem;
+        line-height: 1.5;
+        tab-size: 2;
+      }
+
+      .password-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 0.5rem;
+      }
+
+      .ghost, .btn-primary, .btn-danger {
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 0;
+      }
+
+      .ghost {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+      }
+
+      .ghost:hover {
+        border-color: var(--border-strong);
+        background: var(--accent-soft);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .btn-primary { color: #06291e; }
+      }
+
+      .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+      .btn-danger {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      .btn-primary:disabled, .btn-danger:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .remember {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.65rem;
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .remember input { width: auto; accent-color: var(--accent); }
 
       .path-preview {
         margin: 0;
@@ -262,36 +271,22 @@
         background: var(--accent-soft);
         font-family: var(--mono);
         font-size: 0.78rem;
-        color: var(--text);
         word-break: break-all;
-        line-height: 1.45;
       }
 
       .dropzone {
         position: relative;
         border: 1.5px dashed var(--border-strong);
         border-radius: 12px;
-        padding: 1.35rem 1rem;
+        padding: 1.2rem 1rem;
         text-align: center;
         background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
-        transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
         cursor: pointer;
       }
 
-      .dropzone:hover,
-      .dropzone:focus-within {
+      .dropzone.dragover, .dropzone:hover {
         border-color: var(--accent);
         background: var(--accent-soft);
-      }
-
-      .dropzone.dragover {
-        border-color: var(--accent);
-        background: var(--accent-soft);
-        transform: scale(1.01);
-      }
-
-      .dropzone.has-file {
-        text-align: left;
       }
 
       .dropzone input[type="file"] {
@@ -301,64 +296,51 @@
         cursor: pointer;
       }
 
-      .drop-title {
-        margin: 0;
-        font-weight: 700;
+      .file-list-wrap {
+        display: grid;
+        gap: 0.5rem;
       }
 
-      .drop-sub {
-        margin: 0.35rem 0 0;
-        color: var(--muted);
-        font-size: 0.86rem;
-      }
-
-      .file-chip {
-        display: none;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        margin: 0;
-      }
-
-      .dropzone.has-file .file-chip {
+      .file-list-toolbar {
         display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
       }
 
-      .dropzone.has-file .drop-idle {
-        display: none;
+      .file-list-toolbar input { flex: 1; min-width: 12rem; }
+
+      #file-list {
+        max-height: 220px;
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.25rem;
       }
 
-      .file-meta {
-        font-family: var(--mono);
-        font-size: 0.82rem;
-      }
-
-      .file-meta small {
+      #file-list button {
         display: block;
-        margin-top: 0.2rem;
-        color: var(--muted);
-        font-family: var(--sans);
-        font-size: 0.78rem;
-      }
-
-      .content-wrap {
-        position: relative;
-      }
-
-      textarea {
-        min-height: 260px;
-        resize: vertical;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        color: var(--text);
         font-family: var(--mono);
-        font-size: 0.84rem;
-        line-height: 1.5;
-        tab-size: 2;
+        font-size: 0.78rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      #file-list button:hover,
+      #file-list button[aria-selected="true"] {
+        background: var(--accent-soft);
       }
 
       .editor-meta {
         display: flex;
         justify-content: space-between;
         gap: 0.75rem;
-        margin-top: 0.45rem;
         color: var(--muted);
         font-size: 0.8rem;
       }
@@ -384,39 +366,8 @@
         margin: 0;
         color: var(--muted);
         font-size: 0.84rem;
+        max-width: 30rem;
         line-height: 1.4;
-        max-width: 28rem;
-      }
-
-      .btn-primary {
-        appearance: none;
-        border: 0;
-        border-radius: 10px;
-        padding: 0.75rem 1.15rem;
-        background: var(--accent);
-        color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-        min-width: 10.5rem;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .btn-primary {
-          color: #06291e;
-        }
-      }
-
-      .btn-primary:hover:not(:disabled) {
-        background: var(--accent-hover);
-      }
-
-      .btn-primary:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      .btn-primary.busy {
-        cursor: wait;
       }
 
       #status {
@@ -428,50 +379,13 @@
         line-height: 1.5;
       }
 
-      #status.show {
-        display: block;
-      }
-
-      #status.ok {
-        border-color: color-mix(in srgb, var(--ok) 50%, var(--border));
-        background: var(--ok-soft);
-        color: var(--ok);
-      }
-
-      #status.err {
-        border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
-        background: var(--danger-soft);
-        color: var(--danger);
-      }
-
-      #status.pending {
-        border-color: color-mix(in srgb, var(--warn) 50%, var(--border));
-        background: var(--warn-soft);
-        color: var(--warn);
-      }
-
-      #status a {
-        color: inherit;
-        font-weight: 700;
-      }
-
-      #status .status-title {
-        margin: 0 0 0.35rem;
-        font-weight: 700;
-        font-size: 1rem;
-      }
-
-      #status .status-body {
-        margin: 0;
-        color: var(--text);
-        font-size: 0.92rem;
-      }
-
-      #status.ok .status-body,
-      #status.err .status-body,
-      #status.pending .status-body {
-        color: var(--text);
-      }
+      #status.show { display: block; }
+      #status.ok { border-color: color-mix(in srgb, var(--ok) 50%, var(--border)); background: var(--ok-soft); }
+      #status.err { border-color: color-mix(in srgb, var(--danger) 50%, var(--border)); background: var(--danger-soft); }
+      #status.pending { border-color: color-mix(in srgb, var(--warn) 50%, var(--border)); background: var(--warn-soft); }
+      #status a { color: inherit; font-weight: 700; }
+      #status .status-title { margin: 0 0 0.35rem; font-weight: 700; }
+      #status .status-body { margin: 0; color: var(--text); font-size: 0.92rem; }
 
       .checklist {
         margin: 0.65rem 0 0;
@@ -483,486 +397,288 @@
         font-size: 0.88rem;
       }
 
-      .checklist li::before {
-        content: "✓ ";
-        color: var(--ok);
-        font-weight: 700;
+      .checklist li::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+
+      .mode-panel[hidden] { display: none !important; }
+
+      .warn-box {
+        margin: 0;
+        padding: 0.75rem 0.85rem;
+        border-radius: 10px;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-size: 0.9rem;
+        line-height: 1.4;
       }
 
-      .remember {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.65rem;
-        font-weight: 400;
-        color: var(--muted);
-        font-size: 0.84rem;
-      }
-
-      .remember input {
-        width: auto;
-        accent-color: var(--accent);
-      }
-
-      code {
-        font-family: var(--mono);
-        font-size: 0.86em;
-      }
+      code { font-family: var(--mono); font-size: 0.86em; }
     </style>
   </head>
   <body>
     <main>
-      <div class="top">
-        <div>
-          <p class="brand">SDEWay admin</p>
-          <h1>Publish a docs page</h1>
-          <p class="lede">
-            Drop in markdown, pick where it belongs, and commit straight to
-            <code>src/content/docs/</code>. Pages rebuilds from that push.
-          </p>
-        </div>
-        <div class="steps" aria-hidden="true">
-          <span class="step-pill">1 · Path</span>
-          <span class="step-pill">2 · Content</span>
-          <span class="step-pill">3 · Commit</span>
-        </div>
+      <p class="brand">SDEWay admin</p>
+      <h1>Manage docs</h1>
+      <p class="lede">
+        Create, edit, move, or delete markdown under <code>src/content/docs/</code>.
+        Changes commit to GitHub; Cloudflare Pages rebuilds automatically.
+      </p>
+
+      <div class="tabs" role="tablist" aria-label="Admin mode">
+        <button type="button" class="tab" role="tab" data-mode="create" aria-selected="true">Create</button>
+        <button type="button" class="tab" role="tab" data-mode="edit" aria-selected="false">Edit</button>
+        <button type="button" class="tab" role="tab" data-mode="move" aria-selected="false">Move</button>
+        <button type="button" class="tab" role="tab" data-mode="delete" aria-selected="false">Delete</button>
       </div>
 
-      <form id="upload-form" novalidate>
-        <section class="panel" aria-labelledby="auth-heading">
-          <div class="panel-head">
-            <h2 id="auth-heading">Access</h2>
-            <span>Required for every commit</span>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Access</h2>
+          <span>Required for every action</span>
+        </div>
+        <label>
+          Admin password
+          <div class="password-row">
+            <input id="password" type="password" autocomplete="current-password" placeholder="Enter admin password" />
+            <button type="button" class="ghost" id="toggle-password">Show</button>
+            <button type="button" class="ghost" id="refresh-list">Load files</button>
           </div>
-          <label>
-            Admin password
-            <div class="password-row">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autocomplete="current-password"
-                placeholder="Enter admin password"
-              />
-              <button type="button" class="ghost" id="toggle-password" aria-pressed="false">
-                Show
-              </button>
+        </label>
+        <label class="remember">
+          <input type="checkbox" id="remember-password" />
+          Keep password for this browser tab
+        </label>
+      </section>
+
+      <section class="panel mode-panel" data-panel="browse" hidden>
+        <div class="panel-head">
+          <h2>Existing docs</h2>
+          <span id="file-count">Not loaded</span>
+        </div>
+        <div class="file-list-wrap">
+          <div class="file-list-toolbar">
+            <input id="file-filter" type="search" placeholder="Filter paths…" autocomplete="off" />
+          </div>
+          <div id="file-list" role="listbox" aria-label="Docs files"></div>
+        </div>
+      </section>
+
+      <!-- CREATE -->
+      <section class="mode-panel stack" data-mode-panel="create">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Destination</h2>
+            <span>New file path</span>
+          </div>
+          <div class="stack">
+            <div class="row">
+              <label>
+                Section
+                <select id="section">
+                  <option value="guides">guides</option>
+                  <option value="coding">coding</option>
+                  <option value="high-level-design" selected>high-level-design</option>
+                  <option value="low-level-design">low-level-design</option>
+                  <option value="connect">connect</option>
+                  <option value="reference">reference</option>
+                </select>
+              </label>
+              <label>
+                Subdirectory
+                <span class="hint">optional</span>
+                <input id="subdir" type="text" placeholder="api-design" autocomplete="off" />
+              </label>
             </div>
-            <span class="field-error" id="password-error">Password is required.</span>
-          </label>
-          <label class="remember">
-            <input type="checkbox" id="remember-password" />
-            Keep password for this browser tab
-          </label>
-        </section>
-
-        <section class="panel" aria-labelledby="path-heading">
-          <div class="panel-head">
-            <h2 id="path-heading">Destination</h2>
-            <span>Where the file lands in the repo</span>
-          </div>
-
-          <div class="row">
             <label>
-              Section
-              <select id="section" name="section" required>
-                <option value="guides">guides</option>
-                <option value="coding">coding</option>
-                <option value="high-level-design" selected>high-level-design</option>
-                <option value="low-level-design">low-level-design</option>
-                <option value="connect">connect</option>
-                <option value="reference">reference</option>
-              </select>
+              Filename
+              <input id="filename" type="text" placeholder="my-note.md" autocomplete="off" />
             </label>
+            <p class="path-preview" id="create-path-preview">src/content/docs/high-level-design/my-note.md</p>
+          </div>
+        </div>
 
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Markdown</h2>
+            <span>Upload or paste</span>
+          </div>
+          <div class="stack">
+            <div class="dropzone" id="dropzone">
+              <input id="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
+              <p style="margin:0;font-weight:700">Drop a .md / .mdx file here</p>
+              <p class="hint" style="margin:0.35rem 0 0">or click to browse</p>
+            </div>
             <label>
-              Subdirectory
-              <span class="hint">optional — e.g. api-design or patterns</span>
-              <input id="subdir" name="subdir" type="text" placeholder="api-design" autocomplete="off" />
+              Content
+              <textarea id="create-content" spellcheck="false" placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading"></textarea>
             </label>
-          </div>
-
-          <label style="margin-top: 0.9rem">
-            Filename
-            <input id="filename" name="filename" type="text" required placeholder="my-note.md" autocomplete="off" />
-            <span class="field-error" id="filename-error">Use a name ending in .md or .mdx.</span>
-          </label>
-
-          <div class="path-box">
-            <p class="path-preview" id="path-preview" title="Target path in the repository">
-              src/content/docs/high-level-design/my-note.md
-            </p>
-            <button type="button" class="ghost" id="copy-path">Copy</button>
-          </div>
-        </section>
-
-        <section class="panel" aria-labelledby="content-heading">
-          <div class="panel-head">
-            <h2 id="content-heading">Markdown</h2>
-            <span>Upload a file or paste below</span>
-          </div>
-
-          <div class="dropzone" id="dropzone">
-            <input id="file" name="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
-            <div class="drop-idle">
-              <p class="drop-title">Drop a .md / .mdx file here</p>
-              <p class="drop-sub">or click to browse — content fills the editor</p>
-            </div>
-            <div class="file-chip">
-              <p class="file-meta">
-                <span id="file-name">file.md</span>
-                <small id="file-size"></small>
-              </p>
-              <button type="button" class="ghost" id="clear-file">Clear</button>
+            <div class="editor-meta">
+              <span id="create-stats">0 lines · 0 characters</span>
+              <span>Missing <code>title</code> is added automatically</span>
             </div>
           </div>
+        </div>
 
-          <label class="content-wrap" style="margin-top: 0.95rem">
-            Content
-            <textarea
-              id="content"
-              name="content"
-              required
-              spellcheck="false"
-              placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading&#10;&#10;Write or paste markdown here."
-            ></textarea>
-            <span class="field-error" id="content-error">Content cannot be empty.</span>
-          </label>
-          <div class="editor-meta">
-            <span id="content-stats">0 lines · 0 characters</span>
-            <span>Missing <code>title</code> frontmatter is added automatically</span>
-          </div>
-        </section>
-
-        <section class="panel" aria-labelledby="commit-heading">
-          <div class="panel-head">
-            <h2 id="commit-heading">Commit</h2>
-            <span>Pushes to the configured branch</span>
-          </div>
+        <div class="panel">
           <label>
             Commit message
-            <span class="hint">optional — a default is generated from the filename</span>
-            <input id="message" name="message" type="text" placeholder="Add my-note.md" autocomplete="off" />
+            <span class="hint">optional</span>
+            <input id="create-message" type="text" placeholder="[WEB] Add my-note.md" autocomplete="off" />
           </label>
-        </section>
-
-        <div class="actions">
-          <p class="actions-note" id="actions-note">
-            Ready when password, filename, and content are set.
-          </p>
-          <button id="submit" class="btn-primary" type="submit">Commit to GitHub</button>
         </div>
-      </form>
+      </section>
+
+      <!-- EDIT -->
+      <section class="mode-panel stack" data-mode-panel="edit" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Edit content</h2>
+            <span id="edit-path-label">Select a file above</span>
+          </div>
+          <label>
+            Content
+            <textarea id="edit-content" spellcheck="false" disabled placeholder="Select a file to load…"></textarea>
+          </label>
+          <div class="editor-meta">
+            <span id="edit-stats">0 lines · 0 characters</span>
+            <span id="edit-sha"></span>
+          </div>
+          <label style="margin-top:0.9rem">
+            Commit message
+            <span class="hint">optional</span>
+            <input id="edit-message" type="text" placeholder="[WEB] Update file.md" autocomplete="off" />
+          </label>
+        </div>
+      </section>
+
+      <!-- MOVE -->
+      <section class="mode-panel stack" data-mode-panel="move" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Move file</h2>
+            <span>One commit: old path removed, new path added</span>
+          </div>
+          <div class="stack">
+            <label>
+              From
+              <input id="move-from" type="text" readonly placeholder="Select a file above" />
+            </label>
+            <div class="row">
+              <label>
+                To section
+                <select id="move-section">
+                  <option value="guides">guides</option>
+                  <option value="coding">coding</option>
+                  <option value="high-level-design" selected>high-level-design</option>
+                  <option value="low-level-design">low-level-design</option>
+                  <option value="connect">connect</option>
+                  <option value="reference">reference</option>
+                </select>
+              </label>
+              <label>
+                To subdirectory
+                <span class="hint">optional</span>
+                <input id="move-subdir" type="text" placeholder="api-design" autocomplete="off" />
+              </label>
+            </div>
+            <label>
+              To filename
+              <input id="move-filename" type="text" placeholder="renamed.md" autocomplete="off" />
+            </label>
+            <p class="path-preview" id="move-path-preview">src/content/docs/…</p>
+            <label>
+              Commit message
+              <span class="hint">optional</span>
+              <input id="move-message" type="text" placeholder="[WEB] Move a.md → b.md" autocomplete="off" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- DELETE -->
+      <section class="mode-panel stack" data-mode-panel="delete" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Delete file</h2>
+            <span>Permanently removes from the repo</span>
+          </div>
+          <p class="warn-box">
+            This deletes the selected markdown from GitHub. The live page disappears after the next Pages rebuild.
+          </p>
+          <label style="margin-top:0.9rem">
+            Path to delete
+            <input id="delete-path" type="text" readonly placeholder="Select a file above" />
+          </label>
+          <label>
+            Type the filename to confirm
+            <input id="delete-confirm" type="text" placeholder="my-note.md" autocomplete="off" />
+          </label>
+          <label>
+            Commit message
+            <span class="hint">optional</span>
+            <input id="delete-message" type="text" placeholder="[WEB] Delete my-note.md" autocomplete="off" />
+          </label>
+        </div>
+      </section>
+
+      <div class="actions">
+        <p class="actions-note" id="actions-note">Enter the admin password to continue.</p>
+        <button type="button" class="btn-primary" id="submit">Commit to GitHub</button>
+      </div>
 
       <div id="status" role="status" aria-live="polite"></div>
     </main>
 
     <script>
-      const STORAGE_SECTION = "sdeway-admin-section";
       const STORAGE_PASSWORD = "sdeway-admin-password";
+      const SECTIONS = ["guides", "coding", "high-level-design", "low-level-design", "connect", "reference"];
 
-      const form = document.getElementById("upload-form");
-      const section = document.getElementById("section");
-      const subdir = document.getElementById("subdir");
-      const filename = document.getElementById("filename");
-      const fileInput = document.getElementById("file");
-      const content = document.getElementById("content");
-      const message = document.getElementById("message");
       const password = document.getElementById("password");
       const rememberPassword = document.getElementById("remember-password");
       const togglePassword = document.getElementById("toggle-password");
+      const refreshList = document.getElementById("refresh-list");
+      const fileFilter = document.getElementById("file-filter");
+      const fileList = document.getElementById("file-list");
+      const fileCount = document.getElementById("file-count");
+      const browsePanel = document.querySelector('[data-panel="browse"]');
       const submit = document.getElementById("submit");
-      const statusEl = document.getElementById("status");
-      const pathPreview = document.getElementById("path-preview");
-      const copyPath = document.getElementById("copy-path");
-      const dropzone = document.getElementById("dropzone");
-      const fileNameEl = document.getElementById("file-name");
-      const fileSizeEl = document.getElementById("file-size");
-      const clearFile = document.getElementById("clear-file");
-      const contentStats = document.getElementById("content-stats");
       const actionsNote = document.getElementById("actions-note");
-      const passwordError = document.getElementById("password-error");
-      const filenameError = document.getElementById("filename-error");
-      const contentError = document.getElementById("content-error");
+      const statusEl = document.getElementById("status");
 
-      const savedSection = sessionStorage.getItem(STORAGE_SECTION);
-      if (savedSection && [...section.options].some((o) => o.value === savedSection)) {
-        section.value = savedSection;
-      }
+      const section = document.getElementById("section");
+      const subdir = document.getElementById("subdir");
+      const filename = document.getElementById("filename");
+      const createPathPreview = document.getElementById("create-path-preview");
+      const createContent = document.getElementById("create-content");
+      const createMessage = document.getElementById("create-message");
+      const createStats = document.getElementById("create-stats");
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("file");
 
-      const savedPassword = sessionStorage.getItem(STORAGE_PASSWORD);
-      if (savedPassword) {
-        password.value = savedPassword;
+      const editContent = document.getElementById("edit-content");
+      const editMessage = document.getElementById("edit-message");
+      const editStats = document.getElementById("edit-stats");
+      const editPathLabel = document.getElementById("edit-path-label");
+      const editSha = document.getElementById("edit-sha");
+
+      const moveFrom = document.getElementById("move-from");
+      const moveSection = document.getElementById("move-section");
+      const moveSubdir = document.getElementById("move-subdir");
+      const moveFilename = document.getElementById("move-filename");
+      const movePathPreview = document.getElementById("move-path-preview");
+      const moveMessage = document.getElementById("move-message");
+
+      const deletePath = document.getElementById("delete-path");
+      const deleteConfirm = document.getElementById("delete-confirm");
+      const deleteMessage = document.getElementById("delete-message");
+
+      let mode = "create";
+      let files = [];
+      let selectedPath = "";
+
+      if (sessionStorage.getItem(STORAGE_PASSWORD)) {
+        password.value = sessionStorage.getItem(STORAGE_PASSWORD);
         rememberPassword.checked = true;
       }
-
-      function sanitizeSegment(value) {
-        return value
-          .trim()
-          .replace(/\\/g, "/")
-          .split("/")
-          .map((part) => part.trim())
-          .filter((part) => part && part !== "." && part !== "..")
-          .join("/");
-      }
-
-      function buildRelativePath() {
-        const parts = [section.value];
-        const sub = sanitizeSegment(subdir.value);
-        if (sub) parts.push(sub);
-        let name = sanitizeSegment(filename.value);
-        if (name.includes("/")) name = name.split("/").pop();
-        if (name && !/\.(md|mdx)$/i.test(name)) name += ".md";
-        if (name) parts.push(name);
-        return parts.join("/");
-      }
-
-      function formatBytes(n) {
-        if (n < 1024) return n + " B";
-        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-        return (n / (1024 * 1024)).toFixed(1) + " MB";
-      }
-
-      function updatePreview() {
-        const relative = buildRelativePath();
-        pathPreview.textContent = "src/content/docs/" + (relative || "…");
-        if (!message.value.trim() && filename.value.trim()) {
-          message.placeholder = "Add " + (relative.split("/").pop() || "file.md");
-        }
-        sessionStorage.setItem(STORAGE_SECTION, section.value);
-        updateReadiness();
-      }
-
-      function updateStats() {
-        const text = content.value;
-        const lines = text ? text.split(/\n/).length : 0;
-        contentStats.textContent = lines + " lines · " + text.length + " characters";
-        updateReadiness();
-      }
-
-      function updateReadiness() {
-        const hasPassword = Boolean(password.value);
-        const relative = buildRelativePath();
-        const hasFile = Boolean(relative && /\.(md|mdx)$/i.test(relative));
-        const hasContent = Boolean(content.value.trim());
-        const ready = hasPassword && hasFile && hasContent;
-
-        password.classList.toggle("invalid", passwordError.classList.contains("show"));
-        filename.classList.toggle("invalid", filenameError.classList.contains("show"));
-        content.classList.toggle("invalid", contentError.classList.contains("show"));
-
-        if (!hasPassword) {
-          actionsNote.textContent = "Enter the admin password to unlock publishing.";
-        } else if (!hasFile) {
-          actionsNote.textContent = "Choose a filename ending in .md or .mdx.";
-        } else if (!hasContent) {
-          actionsNote.textContent = "Add markdown content or drop a file.";
-        } else {
-          actionsNote.textContent = "Will commit to " + pathPreview.textContent;
-        }
-
-        submit.disabled = !ready || submit.classList.contains("busy");
-      }
-
-      function showStatus(kind, title, bodyHtml) {
-        statusEl.className = "show " + kind;
-        statusEl.innerHTML =
-          '<p class="status-title">' +
-          escapeHtml(title) +
-          '</p><div class="status-body">' +
-          bodyHtml +
-          "</div>";
-        statusEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-
-      function setFileChip(file) {
-        if (!file) {
-          dropzone.classList.remove("has-file");
-          fileNameEl.textContent = "";
-          fileSizeEl.textContent = "";
-          return;
-        }
-        dropzone.classList.add("has-file");
-        fileNameEl.textContent = file.name;
-        fileSizeEl.textContent = formatBytes(file.size);
-      }
-
-      async function loadFile(file) {
-        if (!file) return;
-        const lower = file.name.toLowerCase();
-        if (!lower.endsWith(".md") && !lower.endsWith(".mdx")) {
-          showStatus("err", "Unsupported file", "Please choose a <code>.md</code> or <code>.mdx</code> file.");
-          return;
-        }
-        if (!filename.value.trim()) {
-          filename.value = file.name;
-        }
-        content.value = await file.text();
-        setFileChip(file);
-        updatePreview();
-        updateStats();
-        showStatus("pending", "File loaded", "Review the editor, then commit when ready.");
-      }
-
-      section.addEventListener("change", updatePreview);
-      subdir.addEventListener("input", updatePreview);
-      filename.addEventListener("input", () => {
-        filenameError.classList.remove("show");
-        updatePreview();
-      });
-      content.addEventListener("input", () => {
-        contentError.classList.remove("show");
-        setFileChip(null);
-        fileInput.value = "";
-        updateStats();
-      });
-      password.addEventListener("input", () => {
-        passwordError.classList.remove("show");
-        if (rememberPassword.checked) {
-          sessionStorage.setItem(STORAGE_PASSWORD, password.value);
-        }
-        updateReadiness();
-      });
-      rememberPassword.addEventListener("change", () => {
-        if (rememberPassword.checked) {
-          sessionStorage.setItem(STORAGE_PASSWORD, password.value);
-        } else {
-          sessionStorage.removeItem(STORAGE_PASSWORD);
-        }
-      });
-
-      togglePassword.addEventListener("click", () => {
-        const show = password.type === "password";
-        password.type = show ? "text" : "password";
-        togglePassword.textContent = show ? "Hide" : "Show";
-        togglePassword.setAttribute("aria-pressed", String(show));
-      });
-
-      copyPath.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(pathPreview.textContent);
-          copyPath.textContent = "Copied";
-          setTimeout(() => (copyPath.textContent = "Copy"), 1200);
-        } catch {
-          copyPath.textContent = "Failed";
-          setTimeout(() => (copyPath.textContent = "Copy"), 1200);
-        }
-      });
-
-      fileInput.addEventListener("change", async () => {
-        const file = fileInput.files && fileInput.files[0];
-        await loadFile(file);
-      });
-
-      clearFile.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        fileInput.value = "";
-        setFileChip(null);
-      });
-
-      ["dragenter", "dragover"].forEach((type) => {
-        dropzone.addEventListener(type, (event) => {
-          event.preventDefault();
-          dropzone.classList.add("dragover");
-        });
-      });
-      ["dragleave", "drop"].forEach((type) => {
-        dropzone.addEventListener(type, (event) => {
-          event.preventDefault();
-          dropzone.classList.remove("dragover");
-        });
-      });
-      dropzone.addEventListener("drop", async (event) => {
-        const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-        if (!file) return;
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        fileInput.files = dt.files;
-        await loadFile(file);
-      });
-
-      content.addEventListener("keydown", (event) => {
-        if (event.key !== "Tab") return;
-        event.preventDefault();
-        const start = content.selectionStart;
-        const end = content.selectionEnd;
-        content.value = content.value.slice(0, start) + "  " + content.value.slice(end);
-        content.selectionStart = content.selectionEnd = start + 2;
-        updateStats();
-      });
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        let valid = true;
-        if (!password.value) {
-          passwordError.classList.add("show");
-          valid = false;
-        }
-        const relativePath = buildRelativePath();
-        if (!relativePath || !/\.(md|mdx)$/i.test(relativePath)) {
-          filenameError.classList.add("show");
-          valid = false;
-        }
-        if (!content.value.trim()) {
-          contentError.classList.add("show");
-          valid = false;
-        }
-        updateReadiness();
-        if (!valid) {
-          showStatus("err", "Almost there", "Fix the highlighted fields, then try again.");
-          return;
-        }
-
-        submit.disabled = true;
-        submit.classList.add("busy");
-        submit.textContent = "Committing…";
-        showStatus("pending", "Publishing…", "Creating the GitHub commit now.");
-
-        try {
-          const res = await fetch("/api/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              password: password.value,
-              path: relativePath,
-              content: content.value,
-              message: message.value.trim() || undefined,
-            }),
-          });
-
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            const detail = data.detail
-              ? "<br><code>" + escapeHtml(String(data.detail).slice(0, 400)) + "</code>"
-              : "";
-            showStatus("err", "Commit failed", escapeHtml(data.error || "Upload failed.") + detail);
-            return;
-          }
-
-          const action = data.updated ? "Updated" : "Created";
-          const commitLink = data.commitUrl
-            ? ' <a href="' + escapeAttr(data.commitUrl) + '" target="_blank" rel="noopener">View commit</a>'
-            : "";
-          showStatus(
-            "ok",
-            action + " successfully",
-            "<p><code>" +
-              escapeHtml(data.path || relativePath) +
-              "</code>" +
-              commitLink +
-              "</p><ul class=\"checklist\"><li>File committed to GitHub</li><li>Cloudflare Pages will rebuild automatically</li><li>Page goes live when that build finishes</li></ul>"
-          );
-        } catch (err) {
-          showStatus("err", "Network error", escapeHtml(err && err.message ? err.message : "Request failed."));
-        } finally {
-          submit.classList.remove("busy");
-          submit.textContent = "Commit to GitHub";
-          updateReadiness();
-        }
-      });
 
       function escapeHtml(value) {
         return String(value)
@@ -976,8 +692,377 @@
         return escapeHtml(value).replaceAll("'", "&#39;");
       }
 
-      updatePreview();
-      updateStats();
+      function sanitizeSegment(value) {
+        return value
+          .trim()
+          .replace(/\\/g, "/")
+          .split("/")
+          .map((part) => part.trim())
+          .filter((part) => part && part !== "." && part !== "..")
+          .join("/");
+      }
+
+      function buildPath(sectionValue, subdirValue, filenameValue) {
+        const parts = [sectionValue];
+        const sub = sanitizeSegment(subdirValue);
+        if (sub) parts.push(sub);
+        let name = sanitizeSegment(filenameValue);
+        if (name.includes("/")) name = name.split("/").pop();
+        if (name && !/\.(md|mdx)$/i.test(name)) name += ".md";
+        if (name) parts.push(name);
+        return parts.join("/");
+      }
+
+      function splitPath(path) {
+        const parts = path.split("/");
+        const name = parts.pop() || "";
+        const sec = parts[0] || "guides";
+        const sub = parts.slice(1).join("/");
+        return { section: sec, subdir: sub, filename: name };
+      }
+
+      function statsText(text) {
+        const lines = text ? text.split(/\n/).length : 0;
+        return lines + " lines · " + text.length + " characters";
+      }
+
+      function showStatus(kind, title, bodyHtml) {
+        statusEl.className = "show " + kind;
+        statusEl.innerHTML =
+          '<p class="status-title">' +
+          escapeHtml(title) +
+          '</p><div class="status-body">' +
+          bodyHtml +
+          "</div>";
+        statusEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function successBody(data, extra) {
+        const commitLink = data.commitUrl
+          ? ' <a href="' + escapeAttr(data.commitUrl) + '" target="_blank" rel="noopener">View commit</a>'
+          : "";
+        return (
+          "<p>" +
+          escapeHtml(extra || "") +
+          commitLink +
+          '</p><ul class="checklist"><li>Change committed to GitHub</li><li>Cloudflare Pages will rebuild</li><li>Live after that build finishes</li></ul>'
+        );
+      }
+
+      async function api(body) {
+        const res = await fetch("/api/docs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: password.value, ...body }),
+        });
+        const data = await res.json().catch(() => ({}));
+        return { res, data };
+      }
+
+      function setMode(next) {
+        mode = next;
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.setAttribute("aria-selected", String(tab.dataset.mode === mode));
+        });
+        document.querySelectorAll("[data-mode-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.modePanel !== mode;
+        });
+        browsePanel.hidden = mode === "create";
+        submit.className = mode === "delete" ? "btn-danger" : "btn-primary";
+        submit.textContent =
+          mode === "create"
+            ? "Create on GitHub"
+            : mode === "edit"
+              ? "Save changes"
+              : mode === "move"
+                ? "Move on GitHub"
+                : "Delete from GitHub";
+        updateReadiness();
+      }
+
+      function renderFileList() {
+        const q = fileFilter.value.trim().toLowerCase();
+        const filtered = files.filter((f) => !q || f.toLowerCase().includes(q));
+        fileCount.textContent = files.length
+          ? filtered.length + " / " + files.length + " files"
+          : "Not loaded";
+        fileList.innerHTML = filtered
+          .map(
+            (f) =>
+              '<button type="button" role="option" data-path="' +
+              escapeAttr(f) +
+              '" aria-selected="' +
+              String(f === selectedPath) +
+              '">' +
+              escapeHtml(f) +
+              "</button>"
+          )
+          .join("");
+      }
+
+      async function loadFiles() {
+        if (!password.value) {
+          showStatus("err", "Password required", "Enter the admin password first.");
+          return;
+        }
+        showStatus("pending", "Loading…", "Fetching docs tree from GitHub.");
+        const { res, data } = await api({ action: "list" });
+        if (!res.ok) {
+          showStatus("err", "Could not load files", escapeHtml(data.error || "Request failed."));
+          return;
+        }
+        files = data.files || [];
+        renderFileList();
+        showStatus("ok", "Files loaded", escapeHtml(String(files.length)) + " markdown files found on branch <code>" + escapeHtml(data.branch || "master") + "</code>.");
+        updateReadiness();
+      }
+
+      async function selectFile(path) {
+        selectedPath = path;
+        renderFileList();
+
+        if (mode === "edit") {
+          editPathLabel.textContent = path;
+          editContent.disabled = true;
+          editContent.value = "Loading…";
+          const { res, data } = await api({ action: "get", path });
+          if (!res.ok) {
+            editContent.value = "";
+            showStatus("err", "Load failed", escapeHtml(data.error || "Could not open file."));
+            return;
+          }
+          editContent.disabled = false;
+          editContent.value = data.content || "";
+          editStats.textContent = statsText(editContent.value);
+          editSha.textContent = data.sha ? "sha " + data.sha.slice(0, 7) : "";
+          editMessage.placeholder = "[WEB] Update " + path.split("/").pop();
+        }
+
+        if (mode === "move") {
+          moveFrom.value = path;
+          const parts = splitPath(path);
+          if (SECTIONS.includes(parts.section)) moveSection.value = parts.section;
+          moveSubdir.value = parts.subdir;
+          moveFilename.value = parts.filename;
+          updateMovePreview();
+        }
+
+        if (mode === "delete") {
+          deletePath.value = path;
+          deleteConfirm.value = "";
+          deleteConfirm.placeholder = path.split("/").pop();
+          deleteMessage.placeholder = "[WEB] Delete " + path.split("/").pop();
+        }
+
+        updateReadiness();
+      }
+
+      function updateCreatePreview() {
+        const relative = buildPath(section.value, subdir.value, filename.value);
+        createPathPreview.textContent = "src/content/docs/" + (relative || "…");
+        if (!createMessage.value.trim() && filename.value.trim()) {
+          createMessage.placeholder = "[WEB] Add " + (relative.split("/").pop() || "file.md");
+        }
+        updateReadiness();
+      }
+
+      function updateMovePreview() {
+        const relative = buildPath(moveSection.value, moveSubdir.value, moveFilename.value);
+        movePathPreview.textContent = "src/content/docs/" + (relative || "…");
+        if (moveFrom.value && relative) {
+          moveMessage.placeholder = "[WEB] Move " + moveFrom.value + " → " + relative;
+        }
+        updateReadiness();
+      }
+
+      function updateReadiness() {
+        const hasPassword = Boolean(password.value);
+        let ready = false;
+        let note = "Enter the admin password to continue.";
+
+        if (!hasPassword) {
+          actionsNote.textContent = note;
+          submit.disabled = true;
+          return;
+        }
+
+        if (mode === "create") {
+          const relative = buildPath(section.value, subdir.value, filename.value);
+          ready = Boolean(relative && /\.(md|mdx)$/i.test(relative) && createContent.value.trim());
+          note = ready
+            ? "Will create " + createPathPreview.textContent
+            : "Set filename and content to create.";
+        } else if (mode === "edit") {
+          ready = Boolean(selectedPath && editContent.value.trim() && !editContent.disabled);
+          note = ready ? "Will update " + selectedPath : "Select a file and edit its content.";
+        } else if (mode === "move") {
+          const to = buildPath(moveSection.value, moveSubdir.value, moveFilename.value);
+          ready = Boolean(moveFrom.value && to && /\.(md|mdx)$/i.test(to) && moveFrom.value !== to);
+          note = ready
+            ? "Will move " + moveFrom.value + " → " + to
+            : "Select a source file and a different destination.";
+        } else if (mode === "delete") {
+          const expected = (deletePath.value.split("/").pop() || "").toLowerCase();
+          ready = Boolean(
+            deletePath.value &&
+              deleteConfirm.value.trim().toLowerCase() === expected &&
+              expected
+          );
+          note = ready
+            ? "Will permanently delete " + deletePath.value
+            : "Select a file and type its filename to confirm.";
+        }
+
+        actionsNote.textContent = note;
+        submit.disabled = !ready || submit.classList.contains("busy");
+      }
+
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => setMode(tab.dataset.mode));
+      });
+
+      password.addEventListener("input", () => {
+        if (rememberPassword.checked) sessionStorage.setItem(STORAGE_PASSWORD, password.value);
+        updateReadiness();
+      });
+      rememberPassword.addEventListener("change", () => {
+        if (rememberPassword.checked) sessionStorage.setItem(STORAGE_PASSWORD, password.value);
+        else sessionStorage.removeItem(STORAGE_PASSWORD);
+      });
+      togglePassword.addEventListener("click", () => {
+        const show = password.type === "password";
+        password.type = show ? "text" : "password";
+        togglePassword.textContent = show ? "Hide" : "Show";
+      });
+      refreshList.addEventListener("click", loadFiles);
+      fileFilter.addEventListener("input", renderFileList);
+      fileList.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-path]");
+        if (btn) selectFile(btn.dataset.path);
+      });
+
+      section.addEventListener("change", updateCreatePreview);
+      subdir.addEventListener("input", updateCreatePreview);
+      filename.addEventListener("input", updateCreatePreview);
+      createContent.addEventListener("input", () => {
+        createStats.textContent = statsText(createContent.value);
+        updateReadiness();
+      });
+      editContent.addEventListener("input", () => {
+        editStats.textContent = statsText(editContent.value);
+        updateReadiness();
+      });
+      moveSection.addEventListener("change", updateMovePreview);
+      moveSubdir.addEventListener("input", updateMovePreview);
+      moveFilename.addEventListener("input", updateMovePreview);
+      deleteConfirm.addEventListener("input", updateReadiness);
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        if (!filename.value.trim()) filename.value = file.name;
+        createContent.value = await file.text();
+        createStats.textContent = statsText(createContent.value);
+        updateCreatePreview();
+      });
+
+      ["dragenter", "dragover"].forEach((type) => {
+        dropzone.addEventListener(type, (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((type) => {
+        dropzone.addEventListener(type, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+        });
+      });
+      dropzone.addEventListener("drop", async (e) => {
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        if (!filename.value.trim()) filename.value = file.name;
+        createContent.value = await file.text();
+        createStats.textContent = statsText(createContent.value);
+        updateCreatePreview();
+      });
+
+      submit.addEventListener("click", async () => {
+        submit.disabled = true;
+        submit.classList.add("busy");
+        const original = submit.textContent;
+        submit.textContent = "Working…";
+        showStatus("pending", "Working…", "Talking to GitHub.");
+
+        try {
+          let payload;
+          if (mode === "create") {
+            payload = {
+              action: "upsert",
+              path: buildPath(section.value, subdir.value, filename.value),
+              content: createContent.value,
+              message: createMessage.value.trim() || undefined,
+            };
+          } else if (mode === "edit") {
+            payload = {
+              action: "upsert",
+              path: selectedPath,
+              content: editContent.value,
+              message: editMessage.value.trim() || undefined,
+            };
+          } else if (mode === "move") {
+            payload = {
+              action: "move",
+              from: moveFrom.value,
+              to: buildPath(moveSection.value, moveSubdir.value, moveFilename.value),
+              message: moveMessage.value.trim() || undefined,
+            };
+          } else {
+            payload = {
+              action: "delete",
+              path: deletePath.value,
+              message: deleteMessage.value.trim() || undefined,
+            };
+          }
+
+          const { res, data } = await api(payload);
+          if (!res.ok) {
+            const detail = data.detail
+              ? "<br><code>" + escapeHtml(String(data.detail).slice(0, 400)) + "</code>"
+              : "";
+            showStatus("err", "Action failed", escapeHtml(data.error || "Request failed.") + detail);
+            return;
+          }
+
+          if (mode === "create") {
+            showStatus("ok", data.action === "updated" ? "Updated" : "Created", successBody(data, data.path || ""));
+            await loadFiles();
+          } else if (mode === "edit") {
+            showStatus("ok", "Saved", successBody(data, data.path || selectedPath));
+          } else if (mode === "move") {
+            showStatus("ok", "Moved", successBody(data, (data.from || "") + " → " + (data.to || "")));
+            selectedPath = "";
+            moveFrom.value = "";
+            await loadFiles();
+          } else {
+            showStatus("ok", "Deleted", successBody(data, data.path || deletePath.value));
+            selectedPath = "";
+            deletePath.value = "";
+            deleteConfirm.value = "";
+            await loadFiles();
+          }
+        } catch (err) {
+          showStatus("err", "Network error", escapeHtml(err && err.message ? err.message : "Request failed."));
+        } finally {
+          submit.classList.remove("busy");
+          submit.textContent = original;
+          updateReadiness();
+        }
+      });
+
+      setMode("create");
+      updateCreatePreview();
+      createStats.textContent = statsText(createContent.value);
     </script>
   </body>
 </html>

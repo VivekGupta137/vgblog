@@ -1,12 +1,23 @@
 /// <reference path="../env.d.ts" />
 
-interface Env {
-  ADMIN_PASSWORD: string;
-  GITHUB_TOKEN: string;
-  GITHUB_OWNER: string;
-  GITHUB_REPO: string;
-  GITHUB_BRANCH?: string;
-}
+/**
+ * Backward-compatible upsert endpoint.
+ * Prefer POST /api/docs with { action: "upsert", ... }.
+ */
+import {
+  DOCS_ROOT,
+  branchName,
+  contentsUrl,
+  ensureFrontmatter,
+  formatCommitMessage,
+  githubHeaders,
+  json,
+  normalizeDocsPath,
+  requireEnv,
+  timingSafeEqual,
+  toBase64,
+  type Env,
+} from "../_lib/github";
 
 interface UploadBody {
   password?: string;
@@ -15,93 +26,14 @@ interface UploadBody {
   message?: string;
 }
 
-const DOCS_ROOT = "src/content/docs";
-const ALLOWED_EXTENSIONS = [".md", ".mdx"];
-
-function json(status: number, body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBytes = encoder.encode(a);
-  const bBytes = encoder.encode(b);
-  const len = Math.max(aBytes.length, bBytes.length);
-  let mismatch = aBytes.length === bBytes.length ? 0 : 1;
-
-  for (let i = 0; i < len; i++) {
-    const av = i < aBytes.length ? aBytes[i]! : 0;
-    const bv = i < bBytes.length ? bBytes[i]! : 0;
-    mismatch |= av ^ bv;
-  }
-
-  return mismatch === 0;
-}
-
-function toBase64(text: string): string {
-  const bytes = new TextEncoder().encode(text);
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary);
-}
-
-function normalizeDocsPath(rawPath: string): string | null {
-  const trimmed = rawPath.trim().replace(/\\/g, "/");
-  if (!trimmed || trimmed.startsWith("/") || trimmed.includes("..")) {
-    return null;
-  }
-
-  const lower = trimmed.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
-    return null;
-  }
-
-  const segments = trimmed.split("/").filter(Boolean);
-  if (segments.length === 0 || segments.some((s) => s === "." || s === "..")) {
-    return null;
-  }
-
-  return segments.join("/");
-}
-
-function ensureFrontmatter(content: string, relativePath: string): string {
-  const trimmed = content.trimStart();
-  if (trimmed.startsWith("---")) {
-    const end = trimmed.indexOf("\n---", 3);
-    if (end !== -1) {
-      const frontmatter = trimmed.slice(0, end);
-      if (/^title\s*:/m.test(frontmatter) || /\ntitle\s*:/m.test(frontmatter)) {
-        return content;
-      }
-    }
-  }
-
-  const fileName = relativePath.split("/").pop() ?? "untitled.md";
-  const title = fileName
-    .replace(/\.(md|mdx)$/i, "")
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-
-  return `---\ntitle: ${title}\n---\n\n${content.trimStart()}`;
-}
-
 export const onRequest: PagesFunction<Env> = async (context) => {
   if (context.request.method !== "POST") {
     return json(405, { error: "Method not allowed. Use POST." });
   }
 
   const { env } = context;
-
-  if (!env.ADMIN_PASSWORD || !env.GITHUB_TOKEN || !env.GITHUB_OWNER || !env.GITHUB_REPO) {
-    return json(500, {
-      error: "Server is missing required environment variables.",
-    });
-  }
+  const missing = requireEnv(env);
+  if (missing) return missing;
 
   let body: UploadBody;
   try {
@@ -110,8 +42,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return json(400, { error: "Invalid JSON body." });
   }
 
-  const password = typeof body.password === "string" ? body.password : "";
-  if (!timingSafeEqual(password, env.ADMIN_PASSWORD)) {
+  if (typeof body.password !== "string" || !timingSafeEqual(body.password, env.ADMIN_PASSWORD)) {
     return json(401, { error: "Invalid password." });
   }
 
@@ -133,39 +64,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const content = ensureFrontmatter(body.content, relativePath);
   const fullPath = `${DOCS_ROOT}/${relativePath}`;
-  const branch = env.GITHUB_BRANCH || "master";
-  const owner = env.GITHUB_OWNER;
-  const repo = env.GITHUB_REPO;
-  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${fullPath}`;
-  const headers = {
-    Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-    "Content-Type": "application/json",
-    "User-Agent": "sdeway-admin-upload",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
+  const branch = branchName(env);
+  const headers = githubHeaders(env);
+  const apiBase = contentsUrl(env, fullPath);
 
   let existingSha: string | undefined;
-  const getRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}`, {
-    headers,
-  });
+  const getRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}`, { headers });
 
   if (getRes.status === 200) {
     const existing = (await getRes.json()) as { sha?: string };
-    if (existing.sha) {
-      existingSha = existing.sha;
-    }
+    existingSha = existing.sha;
   } else if (getRes.status !== 404) {
-    const detail = await getRes.text();
     return json(502, {
       error: "Failed to check existing file on GitHub.",
-      detail,
+      detail: await getRes.text(),
     });
   }
 
-  const message =
+  const message = formatCommitMessage(
     (typeof body.message === "string" && body.message.trim()) ||
-    `${existingSha ? "Update" : "Add"} ${relativePath}`;
+      `${existingSha ? "Update" : "Add"} ${relativePath}`,
+  );
 
   const putRes = await fetch(apiBase, {
     method: "PUT",
@@ -179,10 +98,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   });
 
   if (!putRes.ok) {
-    const detail = await putRes.text();
     return json(502, {
       error: "Failed to commit file to GitHub.",
-      detail,
+      detail: await putRes.text(),
     });
   }
 

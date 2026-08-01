@@ -1,5 +1,6 @@
 {
   "name": "sdeway",
   "compatibility_date": "2026-01-12", // Update to the day you deploy
+  // Static Astro output. Pages Functions live in /functions (e.g. /api/upload).
   "pages_build_output_dir": "./dist"
 }

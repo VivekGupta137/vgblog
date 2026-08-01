@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Upload docs — Admin</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f6f8;
+        --panel: #ffffff;
+        --text: #1a1f24;
+        --muted: #5b6570;
+        --border: #d7dee5;
+        --accent: #0f6e56;
+        --accent-hover: #0b5744;
+        --danger: #9b1c1c;
+        --ok: #0f6e56;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans: "Segoe UI", system-ui, sans-serif;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #12161a;
+          --panel: #1b2127;
+          --text: #e8eef3;
+          --muted: #9aa7b3;
+          --border: #2d3741;
+          --accent: #3cb98f;
+          --accent-hover: #57d0a6;
+          --danger: #ff8a8a;
+          --ok: #57d0a6;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--sans);
+        color: var(--text);
+        background:
+          radial-gradient(1200px 500px at 10% -10%, rgba(15, 110, 86, 0.12), transparent 60%),
+          radial-gradient(900px 400px at 100% 0%, rgba(40, 80, 120, 0.1), transparent 55%),
+          var(--bg);
+      }
+
+      main {
+        width: min(720px, calc(100% - 2rem));
+        margin: 2.5rem auto 3rem;
+      }
+
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+      }
+
+      .lede {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      form {
+        display: grid;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 0.4rem;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .hint {
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text);
+      }
+
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        line-height: 1.45;
+      }
+
+      .row {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (max-width: 640px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .path-preview {
+        margin: 0;
+        padding: 0.65rem 0.75rem;
+        border-radius: 8px;
+        border: 1px dashed var(--border);
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+
+      button {
+        justify-self: start;
+        padding: 0.7rem 1.1rem;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--accent-hover);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      #status {
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        display: none;
+        line-height: 1.45;
+      }
+
+      #status.show {
+        display: block;
+      }
+
+      #status.ok {
+        border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+        color: var(--ok);
+      }
+
+      #status.err {
+        border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+        color: var(--danger);
+      }
+
+      #status a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Upload markdown</h1>
+      <p class="lede">
+        Commits a file into <code>src/content/docs/</code> on GitHub. Cloudflare Pages
+        rebuilds automatically; the page is live after that build finishes.
+      </p>
+
+      <form id="upload-form">
+        <label>
+          Admin password
+          <input id="password" name="password" type="password" required autocomplete="current-password" />
+        </label>
+
+        <div class="row">
+          <label>
+            Section
+            <select id="section" name="section" required>
+              <option value="guides">guides</option>
+              <option value="coding">coding</option>
+              <option value="high-level-design" selected>high-level-design</option>
+              <option value="low-level-design">low-level-design</option>
+              <option value="connect">connect</option>
+              <option value="reference">reference</option>
+            </select>
+          </label>
+
+          <label>
+            Subdirectory
+            <span class="hint">optional, e.g. api-design</span>
+            <input id="subdir" name="subdir" type="text" placeholder="api-design" autocomplete="off" />
+          </label>
+        </div>
+
+        <label>
+          Filename
+          <input id="filename" name="filename" type="text" required placeholder="my-note.md" autocomplete="off" />
+        </label>
+
+        <p class="path-preview" id="path-preview">src/content/docs/high-level-design/my-note.md</p>
+
+        <label>
+          Markdown file
+          <span class="hint">.md or .mdx — fills the editor below</span>
+          <input id="file" name="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
+        </label>
+
+        <label>
+          Content
+          <textarea id="content" name="content" required placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading"></textarea>
+        </label>
+
+        <label>
+          Commit message
+          <span class="hint">optional</span>
+          <input id="message" name="message" type="text" placeholder="Add my-note.md" autocomplete="off" />
+        </label>
+
+        <button id="submit" type="submit">Commit to GitHub</button>
+      </form>
+
+      <div id="status" role="status" aria-live="polite"></div>
+    </main>
+
+    <script>
+      const form = document.getElementById("upload-form");
+      const section = document.getElementById("section");
+      const subdir = document.getElementById("subdir");
+      const filename = document.getElementById("filename");
+      const fileInput = document.getElementById("file");
+      const content = document.getElementById("content");
+      const message = document.getElementById("message");
+      const password = document.getElementById("password");
+      const submit = document.getElementById("submit");
+      const statusEl = document.getElementById("status");
+      const pathPreview = document.getElementById("path-preview");
+
+      function sanitizeSegment(value) {
+        return value
+          .trim()
+          .replace(/\\/g, "/")
+          .split("/")
+          .map((part) => part.trim())
+          .filter((part) => part && part !== "." && part !== "..")
+          .join("/");
+      }
+
+      function buildRelativePath() {
+        const parts = [section.value];
+        const sub = sanitizeSegment(subdir.value);
+        if (sub) parts.push(sub);
+        let name = sanitizeSegment(filename.value);
+        if (name.includes("/")) {
+          name = name.split("/").pop();
+        }
+        if (name && !/\.(md|mdx)$/i.test(name)) {
+          name += ".md";
+        }
+        if (name) parts.push(name);
+        return parts.join("/");
+      }
+
+      function updatePreview() {
+        pathPreview.textContent = "src/content/docs/" + buildRelativePath();
+      }
+
+      section.addEventListener("change", updatePreview);
+      subdir.addEventListener("input", updatePreview);
+      filename.addEventListener("input", updatePreview);
+      updatePreview();
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        if (!filename.value.trim()) {
+          filename.value = file.name;
+          updatePreview();
+        }
+        content.value = await file.text();
+      });
+
+      function showStatus(ok, html) {
+        statusEl.className = "show " + (ok ? "ok" : "err");
+        statusEl.innerHTML = html;
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const relativePath = buildRelativePath();
+        if (!relativePath || !/\.(md|mdx)$/i.test(relativePath)) {
+          showStatus(false, "Choose a valid filename ending in .md or .mdx.");
+          return;
+        }
+
+        submit.disabled = true;
+        showStatus(true, "Committing…");
+
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              password: password.value,
+              path: relativePath,
+              content: content.value,
+              message: message.value.trim() || undefined,
+            }),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const detail = data.detail ? `<br><code>${escapeHtml(String(data.detail).slice(0, 400))}</code>` : "";
+            showStatus(false, escapeHtml(data.error || "Upload failed.") + detail);
+            return;
+          }
+
+          const action = data.updated ? "Updated" : "Created";
+          const commitLink = data.commitUrl
+            ? ` <a href="${escapeAttr(data.commitUrl)}" target="_blank" rel="noopener">View commit</a>.`
+            : "";
+          showStatus(
+            true,
+            `${action} <code>${escapeHtml(data.path || relativePath)}</code>.${commitLink}<br>${escapeHtml(data.note || "")}`
+          );
+        } catch (err) {
+          showStatus(false, escapeHtml(err && err.message ? err.message : "Network error."));
+        } finally {
+          submit.disabled = false;
+        }
+      });
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replaceAll("'", "&#39;");
+      }
+    </script>
+  </body>
+</html>

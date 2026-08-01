@@ -92,13 +92,6 @@ export default defineConfig({
     },
     title: "VG",
     favicon: "/favicon.ico",
-    social: [
-      {
-        icon: "github",
-        label: "GitHub",
-        href: "https://github.com/withastro/starlight",
-      },
-    ],
     sidebar: [
       {
         label: "Learnings",

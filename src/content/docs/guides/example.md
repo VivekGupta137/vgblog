@@ -1,6 +1,6 @@
 ---
 title: Example Guide
-description: A guide in my new Starlight docs site.
+description: A starter guide in the docs.
 ---
 
 

@@ -28,6 +28,9 @@ import sitemap from "@astrojs/sitemap";
 
 const env = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 
+const enableLinkValidation =
+  env.VALIDATE_LINKS === "true" || process.env.VALIDATE_LINKS === "true";
+
 // https://astro.build/config
 export default defineConfig({
   site: env.PUBLIC_DOMAIN || "http://localhost:4321/",
@@ -51,7 +54,7 @@ export default defineConfig({
     },
     plugins: [
       starlightSiteGraph(),
-      starlightLinksValidator(),
+      ...(enableLinkValidation ? [starlightLinksValidator()] : []),
       starlightThemeRapide(),
       starlightImageZoom(),
       starlightGiscus({

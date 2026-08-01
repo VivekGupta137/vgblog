@@ -5,33 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Upload docs — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f4f6f8;
-        --panel: #ffffff;
-        --text: #1a1f24;
-        --muted: #5b6570;
-        --border: #d7dee5;
-        --accent: #0f6e56;
-        --accent-hover: #0b5744;
-        --danger: #9b1c1c;
-        --ok: #0f6e56;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        --sans: "Segoe UI", system-ui, sans-serif;
+        --bg0: #eef2f0;
+        --bg1: #e2ebe6;
+        --panel: #fbfcfb;
+        --text: #15201b;
+        --muted: #5a6b63;
+        --border: #c5d2cb;
+        --border-strong: #9aafA4;
+        --accent: #0c6b52;
+        --accent-soft: rgba(12, 107, 82, 0.1);
+        --accent-hover: #095541;
+        --danger: #a11d1d;
+        --danger-soft: rgba(161, 29, 29, 0.1);
+        --ok: #0c6b52;
+        --ok-soft: rgba(12, 107, 82, 0.1);
+        --warn: #8a5a00;
+        --warn-soft: rgba(138, 90, 0, 0.1);
+        --shadow: 0 18px 40px rgba(21, 32, 27, 0.08);
+        --radius: 14px;
+        --sans: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, monospace;
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #12161a;
-          --panel: #1b2127;
-          --text: #e8eef3;
-          --muted: #9aa7b3;
-          --border: #2d3741;
-          --accent: #3cb98f;
-          --accent-hover: #57d0a6;
-          --danger: #ff8a8a;
-          --ok: #57d0a6;
+          --bg0: #0f1412;
+          --bg1: #17201c;
+          --panel: #1a2320;
+          --text: #e8f0ec;
+          --muted: #9aada3;
+          --border: #2d3b35;
+          --border-strong: #456055;
+          --accent: #3ecf9a;
+          --accent-soft: rgba(62, 207, 154, 0.12);
+          --accent-hover: #62dbad;
+          --danger: #ff8f8f;
+          --danger-soft: rgba(255, 143, 143, 0.12);
+          --ok: #3ecf9a;
+          --ok-soft: rgba(62, 207, 154, 0.12);
+          --warn: #e6b84d;
+          --warn-soft: rgba(230, 184, 77, 0.12);
+          --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
         }
       }
 
@@ -45,48 +68,116 @@
         font-family: var(--sans);
         color: var(--text);
         background:
-          radial-gradient(1200px 500px at 10% -10%, rgba(15, 110, 86, 0.12), transparent 60%),
-          radial-gradient(900px 400px at 100% 0%, rgba(40, 80, 120, 0.1), transparent 55%),
-          var(--bg);
+          radial-gradient(900px 420px at 0% -10%, rgba(12, 107, 82, 0.16), transparent 55%),
+          radial-gradient(700px 360px at 100% 0%, rgba(40, 90, 120, 0.1), transparent 50%),
+          linear-gradient(165deg, var(--bg0), var(--bg1));
       }
 
       main {
-        width: min(720px, calc(100% - 2rem));
-        margin: 2.5rem auto 3rem;
+        width: min(820px, calc(100% - 2rem));
+        margin: 2rem auto 4rem;
+      }
+
+      .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.75rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .brand {
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 0.35rem;
       }
 
       h1 {
-        margin: 0 0 0.35rem;
-        font-size: 1.75rem;
-        letter-spacing: -0.02em;
+        margin: 0;
+        font-size: clamp(1.6rem, 3vw, 2rem);
+        letter-spacing: -0.03em;
+        line-height: 1.15;
       }
 
       .lede {
-        margin: 0 0 1.5rem;
+        margin: 0.45rem 0 0;
+        max-width: 38rem;
         color: var(--muted);
         line-height: 1.5;
       }
 
+      .steps {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .step-pill {
+        font-size: 0.78rem;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        background: color-mix(in srgb, var(--panel) 70%, transparent);
+      }
+
       form {
         display: grid;
-        gap: 1rem;
-        padding: 1.25rem;
+        gap: 1.1rem;
+      }
+
+      .panel {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.15rem 1.2rem 1.25rem;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.95rem;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+      }
+
+      .panel-head span {
+        font-size: 0.8rem;
+        color: var(--muted);
       }
 
       label {
         display: grid;
         gap: 0.4rem;
         font-size: 0.92rem;
-        font-weight: 600;
+        font-weight: 700;
       }
 
       .hint {
         font-weight: 400;
         color: var(--muted);
         font-size: 0.82rem;
+      }
+
+      .field-error {
+        display: none;
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 400;
+      }
+
+      .field-error.show {
+        display: block;
       }
 
       input,
@@ -100,24 +191,52 @@
       select,
       textarea {
         width: 100%;
-        padding: 0.65rem 0.75rem;
+        padding: 0.7rem 0.8rem;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        background: transparent;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--panel) 80%, var(--bg0));
         color: var(--text);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
-      textarea {
-        min-height: 220px;
-        resize: vertical;
-        font-family: var(--mono);
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      input.invalid,
+      textarea.invalid {
+        border-color: var(--danger);
+      }
+
+      .password-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+      }
+
+      .ghost {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 0 0.9rem;
+        cursor: pointer;
+        font-weight: 700;
         font-size: 0.85rem;
-        line-height: 1.45;
+      }
+
+      .ghost:hover {
+        border-color: var(--border-strong);
+        background: var(--accent-soft);
       }
 
       .row {
         display: grid;
-        gap: 1rem;
+        gap: 0.9rem;
         grid-template-columns: 1fr 1fr;
       }
 
@@ -127,44 +246,186 @@
         }
       }
 
-      .path-preview {
-        margin: 0;
-        padding: 0.65rem 0.75rem;
-        border-radius: 8px;
-        border: 1px dashed var(--border);
-        font-family: var(--mono);
-        font-size: 0.82rem;
-        color: var(--muted);
-        word-break: break-all;
+      .path-box {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+        align-items: stretch;
+        margin-top: 0.85rem;
       }
 
-      button {
-        justify-self: start;
-        padding: 0.7rem 1.1rem;
-        border: 0;
-        border-radius: 8px;
-        background: var(--accent);
-        color: #fff;
-        font-weight: 600;
+      .path-preview {
+        margin: 0;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        border: 1px dashed var(--border-strong);
+        background: var(--accent-soft);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--text);
+        word-break: break-all;
+        line-height: 1.45;
+      }
+
+      .dropzone {
+        position: relative;
+        border: 1.5px dashed var(--border-strong);
+        border-radius: 12px;
+        padding: 1.35rem 1rem;
+        text-align: center;
+        background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+        transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
         cursor: pointer;
       }
 
-      button:hover:not(:disabled) {
+      .dropzone:hover,
+      .dropzone:focus-within {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .dropzone.dragover {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        transform: scale(1.01);
+      }
+
+      .dropzone.has-file {
+        text-align: left;
+      }
+
+      .dropzone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .drop-title {
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .drop-sub {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .file-chip {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin: 0;
+      }
+
+      .dropzone.has-file .file-chip {
+        display: flex;
+      }
+
+      .dropzone.has-file .drop-idle {
+        display: none;
+      }
+
+      .file-meta {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+      }
+
+      .file-meta small {
+        display: block;
+        margin-top: 0.2rem;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 0.78rem;
+      }
+
+      .content-wrap {
+        position: relative;
+      }
+
+      textarea {
+        min-height: 260px;
+        resize: vertical;
+        font-family: var(--mono);
+        font-size: 0.84rem;
+        line-height: 1.5;
+        tab-size: 2;
+      }
+
+      .editor-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-top: 0.45rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.85rem;
+        position: sticky;
+        bottom: 0.75rem;
+        z-index: 2;
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 88%, transparent);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
+      }
+
+      .actions-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.4;
+        max-width: 28rem;
+      }
+
+      .btn-primary {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        padding: 0.75rem 1.15rem;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        min-width: 10.5rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .btn-primary {
+          color: #06291e;
+        }
+      }
+
+      .btn-primary:hover:not(:disabled) {
         background: var(--accent-hover);
       }
 
-      button:disabled {
-        opacity: 0.6;
+      .btn-primary:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn-primary.busy {
         cursor: wait;
       }
 
       #status {
-        margin-top: 1rem;
-        padding: 0.9rem 1rem;
-        border-radius: 8px;
-        border: 1px solid var(--border);
         display: none;
-        line-height: 1.45;
+        margin-top: 1rem;
+        padding: 1rem 1.05rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        line-height: 1.5;
       }
 
       #status.show {
@@ -172,85 +433,235 @@
       }
 
       #status.ok {
-        border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+        border-color: color-mix(in srgb, var(--ok) 50%, var(--border));
+        background: var(--ok-soft);
         color: var(--ok);
       }
 
       #status.err {
-        border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+        border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+        background: var(--danger-soft);
         color: var(--danger);
+      }
+
+      #status.pending {
+        border-color: color-mix(in srgb, var(--warn) 50%, var(--border));
+        background: var(--warn-soft);
+        color: var(--warn);
       }
 
       #status a {
         color: inherit;
+        font-weight: 700;
+      }
+
+      #status .status-title {
+        margin: 0 0 0.35rem;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+
+      #status .status-body {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.92rem;
+      }
+
+      #status.ok .status-body,
+      #status.err .status-body,
+      #status.pending .status-body {
+        color: var(--text);
+      }
+
+      .checklist {
+        margin: 0.65rem 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.35rem;
+        color: var(--text);
+        font-size: 0.88rem;
+      }
+
+      .checklist li::before {
+        content: "✓ ";
+        color: var(--ok);
+        font-weight: 700;
+      }
+
+      .remember {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.65rem;
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .remember input {
+        width: auto;
+        accent-color: var(--accent);
+      }
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>Upload markdown</h1>
-      <p class="lede">
-        Commits a file into <code>src/content/docs/</code> on GitHub. Cloudflare Pages
-        rebuilds automatically; the page is live after that build finishes.
-      </p>
-
-      <form id="upload-form">
-        <label>
-          Admin password
-          <input id="password" name="password" type="password" required autocomplete="current-password" />
-        </label>
-
-        <div class="row">
-          <label>
-            Section
-            <select id="section" name="section" required>
-              <option value="guides">guides</option>
-              <option value="coding">coding</option>
-              <option value="high-level-design" selected>high-level-design</option>
-              <option value="low-level-design">low-level-design</option>
-              <option value="connect">connect</option>
-              <option value="reference">reference</option>
-            </select>
-          </label>
-
-          <label>
-            Subdirectory
-            <span class="hint">optional, e.g. api-design</span>
-            <input id="subdir" name="subdir" type="text" placeholder="api-design" autocomplete="off" />
-          </label>
+      <div class="top">
+        <div>
+          <p class="brand">SDEWay admin</p>
+          <h1>Publish a docs page</h1>
+          <p class="lede">
+            Drop in markdown, pick where it belongs, and commit straight to
+            <code>src/content/docs/</code>. Pages rebuilds from that push.
+          </p>
         </div>
+        <div class="steps" aria-hidden="true">
+          <span class="step-pill">1 · Path</span>
+          <span class="step-pill">2 · Content</span>
+          <span class="step-pill">3 · Commit</span>
+        </div>
+      </div>
 
-        <label>
-          Filename
-          <input id="filename" name="filename" type="text" required placeholder="my-note.md" autocomplete="off" />
-        </label>
+      <form id="upload-form" novalidate>
+        <section class="panel" aria-labelledby="auth-heading">
+          <div class="panel-head">
+            <h2 id="auth-heading">Access</h2>
+            <span>Required for every commit</span>
+          </div>
+          <label>
+            Admin password
+            <div class="password-row">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autocomplete="current-password"
+                placeholder="Enter admin password"
+              />
+              <button type="button" class="ghost" id="toggle-password" aria-pressed="false">
+                Show
+              </button>
+            </div>
+            <span class="field-error" id="password-error">Password is required.</span>
+          </label>
+          <label class="remember">
+            <input type="checkbox" id="remember-password" />
+            Keep password for this browser tab
+          </label>
+        </section>
 
-        <p class="path-preview" id="path-preview">src/content/docs/high-level-design/my-note.md</p>
+        <section class="panel" aria-labelledby="path-heading">
+          <div class="panel-head">
+            <h2 id="path-heading">Destination</h2>
+            <span>Where the file lands in the repo</span>
+          </div>
 
-        <label>
-          Markdown file
-          <span class="hint">.md or .mdx — fills the editor below</span>
-          <input id="file" name="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
-        </label>
+          <div class="row">
+            <label>
+              Section
+              <select id="section" name="section" required>
+                <option value="guides">guides</option>
+                <option value="coding">coding</option>
+                <option value="high-level-design" selected>high-level-design</option>
+                <option value="low-level-design">low-level-design</option>
+                <option value="connect">connect</option>
+                <option value="reference">reference</option>
+              </select>
+            </label>
 
-        <label>
-          Content
-          <textarea id="content" name="content" required placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading"></textarea>
-        </label>
+            <label>
+              Subdirectory
+              <span class="hint">optional — e.g. api-design or patterns</span>
+              <input id="subdir" name="subdir" type="text" placeholder="api-design" autocomplete="off" />
+            </label>
+          </div>
 
-        <label>
-          Commit message
-          <span class="hint">optional</span>
-          <input id="message" name="message" type="text" placeholder="Add my-note.md" autocomplete="off" />
-        </label>
+          <label style="margin-top: 0.9rem">
+            Filename
+            <input id="filename" name="filename" type="text" required placeholder="my-note.md" autocomplete="off" />
+            <span class="field-error" id="filename-error">Use a name ending in .md or .mdx.</span>
+          </label>
 
-        <button id="submit" type="submit">Commit to GitHub</button>
+          <div class="path-box">
+            <p class="path-preview" id="path-preview" title="Target path in the repository">
+              src/content/docs/high-level-design/my-note.md
+            </p>
+            <button type="button" class="ghost" id="copy-path">Copy</button>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="content-heading">
+          <div class="panel-head">
+            <h2 id="content-heading">Markdown</h2>
+            <span>Upload a file or paste below</span>
+          </div>
+
+          <div class="dropzone" id="dropzone">
+            <input id="file" name="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
+            <div class="drop-idle">
+              <p class="drop-title">Drop a .md / .mdx file here</p>
+              <p class="drop-sub">or click to browse — content fills the editor</p>
+            </div>
+            <div class="file-chip">
+              <p class="file-meta">
+                <span id="file-name">file.md</span>
+                <small id="file-size"></small>
+              </p>
+              <button type="button" class="ghost" id="clear-file">Clear</button>
+            </div>
+          </div>
+
+          <label class="content-wrap" style="margin-top: 0.95rem">
+            Content
+            <textarea
+              id="content"
+              name="content"
+              required
+              spellcheck="false"
+              placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading&#10;&#10;Write or paste markdown here."
+            ></textarea>
+            <span class="field-error" id="content-error">Content cannot be empty.</span>
+          </label>
+          <div class="editor-meta">
+            <span id="content-stats">0 lines · 0 characters</span>
+            <span>Missing <code>title</code> frontmatter is added automatically</span>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="commit-heading">
+          <div class="panel-head">
+            <h2 id="commit-heading">Commit</h2>
+            <span>Pushes to the configured branch</span>
+          </div>
+          <label>
+            Commit message
+            <span class="hint">optional — a default is generated from the filename</span>
+            <input id="message" name="message" type="text" placeholder="Add my-note.md" autocomplete="off" />
+          </label>
+        </section>
+
+        <div class="actions">
+          <p class="actions-note" id="actions-note">
+            Ready when password, filename, and content are set.
+          </p>
+          <button id="submit" class="btn-primary" type="submit">Commit to GitHub</button>
+        </div>
       </form>
 
       <div id="status" role="status" aria-live="polite"></div>
     </main>
 
     <script>
+      const STORAGE_SECTION = "sdeway-admin-section";
+      const STORAGE_PASSWORD = "sdeway-admin-password";
+
       const form = document.getElementById("upload-form");
       const section = document.getElementById("section");
       const subdir = document.getElementById("subdir");
@@ -259,9 +670,32 @@
       const content = document.getElementById("content");
       const message = document.getElementById("message");
       const password = document.getElementById("password");
+      const rememberPassword = document.getElementById("remember-password");
+      const togglePassword = document.getElementById("toggle-password");
       const submit = document.getElementById("submit");
       const statusEl = document.getElementById("status");
       const pathPreview = document.getElementById("path-preview");
+      const copyPath = document.getElementById("copy-path");
+      const dropzone = document.getElementById("dropzone");
+      const fileNameEl = document.getElementById("file-name");
+      const fileSizeEl = document.getElementById("file-size");
+      const clearFile = document.getElementById("clear-file");
+      const contentStats = document.getElementById("content-stats");
+      const actionsNote = document.getElementById("actions-note");
+      const passwordError = document.getElementById("password-error");
+      const filenameError = document.getElementById("filename-error");
+      const contentError = document.getElementById("content-error");
+
+      const savedSection = sessionStorage.getItem(STORAGE_SECTION);
+      if (savedSection && [...section.options].some((o) => o.value === savedSection)) {
+        section.value = savedSection;
+      }
+
+      const savedPassword = sessionStorage.getItem(STORAGE_PASSWORD);
+      if (savedPassword) {
+        password.value = savedPassword;
+        rememberPassword.checked = true;
+      }
 
       function sanitizeSegment(value) {
         return value
@@ -278,50 +712,214 @@
         const sub = sanitizeSegment(subdir.value);
         if (sub) parts.push(sub);
         let name = sanitizeSegment(filename.value);
-        if (name.includes("/")) {
-          name = name.split("/").pop();
-        }
-        if (name && !/\.(md|mdx)$/i.test(name)) {
-          name += ".md";
-        }
+        if (name.includes("/")) name = name.split("/").pop();
+        if (name && !/\.(md|mdx)$/i.test(name)) name += ".md";
         if (name) parts.push(name);
         return parts.join("/");
       }
 
+      function formatBytes(n) {
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        return (n / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
       function updatePreview() {
-        pathPreview.textContent = "src/content/docs/" + buildRelativePath();
+        const relative = buildRelativePath();
+        pathPreview.textContent = "src/content/docs/" + (relative || "…");
+        if (!message.value.trim() && filename.value.trim()) {
+          message.placeholder = "Add " + (relative.split("/").pop() || "file.md");
+        }
+        sessionStorage.setItem(STORAGE_SECTION, section.value);
+        updateReadiness();
+      }
+
+      function updateStats() {
+        const text = content.value;
+        const lines = text ? text.split(/\n/).length : 0;
+        contentStats.textContent = lines + " lines · " + text.length + " characters";
+        updateReadiness();
+      }
+
+      function updateReadiness() {
+        const hasPassword = Boolean(password.value);
+        const relative = buildRelativePath();
+        const hasFile = Boolean(relative && /\.(md|mdx)$/i.test(relative));
+        const hasContent = Boolean(content.value.trim());
+        const ready = hasPassword && hasFile && hasContent;
+
+        password.classList.toggle("invalid", passwordError.classList.contains("show"));
+        filename.classList.toggle("invalid", filenameError.classList.contains("show"));
+        content.classList.toggle("invalid", contentError.classList.contains("show"));
+
+        if (!hasPassword) {
+          actionsNote.textContent = "Enter the admin password to unlock publishing.";
+        } else if (!hasFile) {
+          actionsNote.textContent = "Choose a filename ending in .md or .mdx.";
+        } else if (!hasContent) {
+          actionsNote.textContent = "Add markdown content or drop a file.";
+        } else {
+          actionsNote.textContent = "Will commit to " + pathPreview.textContent;
+        }
+
+        submit.disabled = !ready || submit.classList.contains("busy");
+      }
+
+      function showStatus(kind, title, bodyHtml) {
+        statusEl.className = "show " + kind;
+        statusEl.innerHTML =
+          '<p class="status-title">' +
+          escapeHtml(title) +
+          '</p><div class="status-body">' +
+          bodyHtml +
+          "</div>";
+        statusEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function setFileChip(file) {
+        if (!file) {
+          dropzone.classList.remove("has-file");
+          fileNameEl.textContent = "";
+          fileSizeEl.textContent = "";
+          return;
+        }
+        dropzone.classList.add("has-file");
+        fileNameEl.textContent = file.name;
+        fileSizeEl.textContent = formatBytes(file.size);
+      }
+
+      async function loadFile(file) {
+        if (!file) return;
+        const lower = file.name.toLowerCase();
+        if (!lower.endsWith(".md") && !lower.endsWith(".mdx")) {
+          showStatus("err", "Unsupported file", "Please choose a <code>.md</code> or <code>.mdx</code> file.");
+          return;
+        }
+        if (!filename.value.trim()) {
+          filename.value = file.name;
+        }
+        content.value = await file.text();
+        setFileChip(file);
+        updatePreview();
+        updateStats();
+        showStatus("pending", "File loaded", "Review the editor, then commit when ready.");
       }
 
       section.addEventListener("change", updatePreview);
       subdir.addEventListener("input", updatePreview);
-      filename.addEventListener("input", updatePreview);
-      updatePreview();
+      filename.addEventListener("input", () => {
+        filenameError.classList.remove("show");
+        updatePreview();
+      });
+      content.addEventListener("input", () => {
+        contentError.classList.remove("show");
+        setFileChip(null);
+        fileInput.value = "";
+        updateStats();
+      });
+      password.addEventListener("input", () => {
+        passwordError.classList.remove("show");
+        if (rememberPassword.checked) {
+          sessionStorage.setItem(STORAGE_PASSWORD, password.value);
+        }
+        updateReadiness();
+      });
+      rememberPassword.addEventListener("change", () => {
+        if (rememberPassword.checked) {
+          sessionStorage.setItem(STORAGE_PASSWORD, password.value);
+        } else {
+          sessionStorage.removeItem(STORAGE_PASSWORD);
+        }
+      });
+
+      togglePassword.addEventListener("click", () => {
+        const show = password.type === "password";
+        password.type = show ? "text" : "password";
+        togglePassword.textContent = show ? "Hide" : "Show";
+        togglePassword.setAttribute("aria-pressed", String(show));
+      });
+
+      copyPath.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pathPreview.textContent);
+          copyPath.textContent = "Copied";
+          setTimeout(() => (copyPath.textContent = "Copy"), 1200);
+        } catch {
+          copyPath.textContent = "Failed";
+          setTimeout(() => (copyPath.textContent = "Copy"), 1200);
+        }
+      });
 
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files && fileInput.files[0];
-        if (!file) return;
-        if (!filename.value.trim()) {
-          filename.value = file.name;
-          updatePreview();
-        }
-        content.value = await file.text();
+        await loadFile(file);
       });
 
-      function showStatus(ok, html) {
-        statusEl.className = "show " + (ok ? "ok" : "err");
-        statusEl.innerHTML = html;
-      }
+      clearFile.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        fileInput.value = "";
+        setFileChip(null);
+      });
+
+      ["dragenter", "dragover"].forEach((type) => {
+        dropzone.addEventListener(type, (event) => {
+          event.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((type) => {
+        dropzone.addEventListener(type, (event) => {
+          event.preventDefault();
+          dropzone.classList.remove("dragover");
+        });
+      });
+      dropzone.addEventListener("drop", async (event) => {
+        const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+        if (!file) return;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        await loadFile(file);
+      });
+
+      content.addEventListener("keydown", (event) => {
+        if (event.key !== "Tab") return;
+        event.preventDefault();
+        const start = content.selectionStart;
+        const end = content.selectionEnd;
+        content.value = content.value.slice(0, start) + "  " + content.value.slice(end);
+        content.selectionStart = content.selectionEnd = start + 2;
+        updateStats();
+      });
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
+
+        let valid = true;
+        if (!password.value) {
+          passwordError.classList.add("show");
+          valid = false;
+        }
         const relativePath = buildRelativePath();
         if (!relativePath || !/\.(md|mdx)$/i.test(relativePath)) {
-          showStatus(false, "Choose a valid filename ending in .md or .mdx.");
+          filenameError.classList.add("show");
+          valid = false;
+        }
+        if (!content.value.trim()) {
+          contentError.classList.add("show");
+          valid = false;
+        }
+        updateReadiness();
+        if (!valid) {
+          showStatus("err", "Almost there", "Fix the highlighted fields, then try again.");
           return;
         }
 
         submit.disabled = true;
-        showStatus(true, "Committing…");
+        submit.classList.add("busy");
+        submit.textContent = "Committing…";
+        showStatus("pending", "Publishing…", "Creating the GitHub commit now.");
 
         try {
           const res = await fetch("/api/upload", {
@@ -337,23 +935,32 @@
 
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            const detail = data.detail ? `<br><code>${escapeHtml(String(data.detail).slice(0, 400))}</code>` : "";
-            showStatus(false, escapeHtml(data.error || "Upload failed.") + detail);
+            const detail = data.detail
+              ? "<br><code>" + escapeHtml(String(data.detail).slice(0, 400)) + "</code>"
+              : "";
+            showStatus("err", "Commit failed", escapeHtml(data.error || "Upload failed.") + detail);
             return;
           }
 
           const action = data.updated ? "Updated" : "Created";
           const commitLink = data.commitUrl
-            ? ` <a href="${escapeAttr(data.commitUrl)}" target="_blank" rel="noopener">View commit</a>.`
+            ? ' <a href="' + escapeAttr(data.commitUrl) + '" target="_blank" rel="noopener">View commit</a>'
             : "";
           showStatus(
-            true,
-            `${action} <code>${escapeHtml(data.path || relativePath)}</code>.${commitLink}<br>${escapeHtml(data.note || "")}`
+            "ok",
+            action + " successfully",
+            "<p><code>" +
+              escapeHtml(data.path || relativePath) +
+              "</code>" +
+              commitLink +
+              "</p><ul class=\"checklist\"><li>File committed to GitHub</li><li>Cloudflare Pages will rebuild automatically</li><li>Page goes live when that build finishes</li></ul>"
           );
         } catch (err) {
-          showStatus(false, escapeHtml(err && err.message ? err.message : "Network error."));
+          showStatus("err", "Network error", escapeHtml(err && err.message ? err.message : "Request failed."));
         } finally {
-          submit.disabled = false;
+          submit.classList.remove("busy");
+          submit.textContent = "Commit to GitHub";
+          updateReadiness();
         }
       });
 
@@ -368,6 +975,9 @@
       function escapeAttr(value) {
         return escapeHtml(value).replaceAll("'", "&#39;");
       }
+
+      updatePreview();
+      updateStats();
     </script>
   </body>
 </html>

@@ -1,0 +1,8 @@
+# Local secrets for `bun run cf:dev` / `bun run cf:preview`
+# Copy to .dev.vars (gitignored). Wrangler loads this automatically.
+
+ADMIN_PASSWORD=dev-password
+GITHUB_TOKEN=
+GITHUB_OWNER=VivekGupta137
+GITHUB_REPO=vgblog
+GITHUB_BRANCH=master

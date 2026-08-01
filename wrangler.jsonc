@@ -1,7 +1,8 @@
 {
   "name": "sdeway",
   "compatibility_date": "2026-01-12", // Update to the day you deploy
-  // Static Astro output. Pages Functions live in /functions (e.g. /api/upload).
+  // Static Astro output. Pages Functions live in /functions (e.g. /api/docs).
+  // Local: bun run cf:dev  (or bun run cf:preview after build)
   "pages_build_output_dir": "./dist",
   // Non-secret runtime vars for Pages Functions (secrets stay in Dashboard / .dev.vars).
   "vars": {

@@ -7,7 +7,11 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cf:dev": "bun run build && wrangler pages dev ./dist --live-reload",
+    "cf:dev:astro": "wrangler pages dev -- bun run dev",
+    "cf:preview": "bun run build && wrangler pages dev ./dist",
+    "cf:deploy": "bun run build && wrangler pages deploy"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.1",
@@ -35,5 +39,8 @@
   },
   "overrides": {
     "picomatch": "^4.0.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.118.0"
   }
 }

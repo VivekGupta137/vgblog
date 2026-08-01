@@ -3,6 +3,7 @@
 import {
   DOCS_ROOT,
   branchName,
+  commitTreeChanges,
   contentsUrl,
   ensureFrontmatter,
   formatCommitMessage,
@@ -17,7 +18,7 @@ import {
   type Env,
 } from "../_lib/github";
 
-type Action = "list" | "get" | "upsert" | "delete" | "move";
+type Action = "list" | "get" | "upsert" | "upsertMany" | "delete" | "move";
 
 interface DocsBody {
   password?: string;
@@ -27,10 +28,12 @@ interface DocsBody {
   to?: string;
   content?: string;
   message?: string;
+  files?: Array<{ path?: string; content?: string }>;
 }
 
 const REBUILD_NOTE =
   "Cloudflare Pages will rebuild after the push; the page goes live when that build finishes.";
+const MAX_BATCH_FILES = 25;
 
 function auth(env: Env, password: unknown): Response | null {
   const missing = requireEnv(env);
@@ -170,6 +173,61 @@ async function upsertDoc(env: Env, body: DocsBody): Promise<Response> {
   });
 }
 
+async function upsertManyDocs(env: Env, body: DocsBody): Promise<Response> {
+  if (!Array.isArray(body.files) || body.files.length === 0) {
+    return json(400, { error: "files must be a non-empty array." });
+  }
+  if (body.files.length > MAX_BATCH_FILES) {
+    return json(400, { error: `At most ${MAX_BATCH_FILES} files per commit.` });
+  }
+
+  const prepared: Array<{ path: string; content: string }> = [];
+  const seen = new Set<string>();
+
+  for (const item of body.files) {
+    if (typeof item?.path !== "string" || typeof item?.content !== "string") {
+      return json(400, { error: "Each file needs path and content strings." });
+    }
+    if (!item.content.trim()) {
+      return json(400, { error: `Content must not be empty for ${item.path}.` });
+    }
+    const relativePath = normalizeDocsPath(item.path);
+    if (!relativePath) {
+      return json(400, { error: `Invalid path: ${item.path}` });
+    }
+    if (seen.has(relativePath)) {
+      return json(400, { error: `Duplicate path in batch: ${relativePath}` });
+    }
+    seen.add(relativePath);
+    prepared.push({
+      path: relativePath,
+      content: ensureFrontmatter(item.content, relativePath),
+    });
+  }
+
+  const names = prepared.map((f) => f.path.split("/").pop() || f.path);
+  const defaultMessage =
+    prepared.length === 1
+      ? `Add ${names[0]}`
+      : `Add ${prepared.length} files (${names.slice(0, 3).join(", ")}${prepared.length > 3 ? ", …" : ""})`;
+
+  const message =
+    (typeof body.message === "string" && body.message.trim()) || defaultMessage;
+
+  const result = await commitTreeChanges(env, message, prepared);
+  if ("error" in result) return result.error;
+
+  return json(200, {
+    ok: true,
+    action: "upsertMany",
+    count: prepared.length,
+    paths: prepared.map((f) => `${DOCS_ROOT}/${f.path}`),
+    commitUrl: result.html_url,
+    commitSha: result.sha,
+    note: REBUILD_NOTE,
+  });
+}
+
 async function deleteDoc(env: Env, body: DocsBody): Promise<Response> {
   if (typeof body.path !== "string") {
     return json(400, { error: "path is required." });
@@ -244,119 +302,22 @@ async function moveDoc(env: Env, body: DocsBody): Promise<Response> {
   }
   if (dest && "error" in dest) return dest.error;
 
-  const branch = branchName(env);
-  const headers = githubHeaders(env);
-  const message = formatCommitMessage(
-    (typeof body.message === "string" && body.message.trim()) || `Move ${fromPath} → ${toPath}`,
-  );
+  const message =
+    (typeof body.message === "string" && body.message.trim()) || `Move ${fromPath} → ${toPath}`;
 
-  // Single commit via Git Data API: create blob at new path, rebuild tree without old path, update ref.
-  const refRes = await fetch(repoApi(env, `/git/ref/heads/${encodeURIComponent(branch)}`), {
-    headers,
-  });
-  if (!refRes.ok) {
-    return json(502, { error: "Failed to read branch ref.", detail: await refRes.text() });
-  }
-  const refData = (await refRes.json()) as { object?: { sha?: string } };
-  const headSha = refData.object?.sha;
-  if (!headSha) {
-    return json(502, { error: "Branch tip SHA missing." });
-  }
-
-  const commitRes = await fetch(repoApi(env, `/git/commits/${headSha}`), { headers });
-  if (!commitRes.ok) {
-    return json(502, { error: "Failed to read commit.", detail: await commitRes.text() });
-  }
-  const commitData = (await commitRes.json()) as { tree?: { sha?: string } };
-  const baseTreeSha = commitData.tree?.sha;
-  if (!baseTreeSha) {
-    return json(502, { error: "Base tree SHA missing." });
-  }
-
-  const blobRes = await fetch(repoApi(env, "/git/blobs"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      content: toBase64(source.content),
-      encoding: "base64",
-    }),
-  });
-  if (!blobRes.ok) {
-    return json(502, { error: "Failed to create blob.", detail: await blobRes.text() });
-  }
-  const blobData = (await blobRes.json()) as { sha?: string };
-  if (!blobData.sha) {
-    return json(502, { error: "Blob SHA missing." });
-  }
-
-  const treeRes = await fetch(repoApi(env, "/git/trees"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      base_tree: baseTreeSha,
-      tree: [
-        {
-          path: `${DOCS_ROOT}/${fromPath}`,
-          mode: "100644",
-          type: "blob",
-          sha: null,
-        },
-        {
-          path: `${DOCS_ROOT}/${toPath}`,
-          mode: "100644",
-          type: "blob",
-          sha: blobData.sha,
-        },
-      ],
-    }),
-  });
-  if (!treeRes.ok) {
-    return json(502, { error: "Failed to create tree for move.", detail: await treeRes.text() });
-  }
-  const treeData = (await treeRes.json()) as { sha?: string };
-  if (!treeData.sha) {
-    return json(502, { error: "Tree SHA missing." });
-  }
-
-  const newCommitRes = await fetch(repoApi(env, "/git/commits"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      message,
-      tree: treeData.sha,
-      parents: [headSha],
-    }),
-  });
-  if (!newCommitRes.ok) {
-    return json(502, { error: "Failed to create move commit.", detail: await newCommitRes.text() });
-  }
-  const newCommit = (await newCommitRes.json()) as {
-    sha?: string;
-    html_url?: string;
-  };
-  if (!newCommit.sha) {
-    return json(502, { error: "Commit SHA missing." });
-  }
-
-  const updateRefRes = await fetch(repoApi(env, `/git/refs/heads/${encodeURIComponent(branch)}`), {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify({ sha: newCommit.sha }),
-  });
-  if (!updateRefRes.ok) {
-    return json(502, {
-      error: "Failed to update branch after move.",
-      detail: await updateRefRes.text(),
-    });
-  }
+  const result = await commitTreeChanges(env, message, [
+    { path: fromPath, delete: true },
+    { path: toPath, content: source.content },
+  ]);
+  if ("error" in result) return result.error;
 
   return json(200, {
     ok: true,
     action: "moved",
     from: `${DOCS_ROOT}/${fromPath}`,
     to: `${DOCS_ROOT}/${toPath}`,
-    commitUrl: newCommit.html_url,
-    commitSha: newCommit.sha,
+    commitUrl: result.html_url,
+    commitSha: result.sha,
     note: REBUILD_NOTE,
   });
 }
@@ -385,13 +346,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return getDoc(context.env, body.path);
     case "upsert":
       return upsertDoc(context.env, body);
+    case "upsertMany":
+      return upsertManyDocs(context.env, body);
     case "delete":
       return deleteDoc(context.env, body);
     case "move":
       return moveDoc(context.env, body);
     default:
       return json(400, {
-        error: "Unknown action. Use list, get, upsert, delete, or move.",
+        error: "Unknown action. Use list, get, upsert, upsertMany, delete, or move.",
       });
   }
 };

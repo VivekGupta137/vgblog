@@ -164,3 +164,146 @@ export async function getFile(
   const raw = data.encoding === "base64" ? fromBase64(data.content.replace(/\n/g, "")) : data.content;
   return { sha: data.sha, content: raw, path: data.path ?? fullPath };
 }
+
+export type TreeChange =
+  | { path: string; content: string }
+  | { path: string; delete: true };
+
+/** Create one commit that applies multiple file writes/deletes under the docs root. */
+export async function commitTreeChanges(
+  env: Env,
+  message: string,
+  changes: TreeChange[],
+): Promise<{ sha: string; html_url?: string } | { error: Response }> {
+  if (changes.length === 0) {
+    return { error: json(400, { error: "No changes to commit." }) };
+  }
+
+  const branch = branchName(env);
+  const headers = githubHeaders(env);
+
+  const refRes = await fetch(repoApi(env, `/git/ref/heads/${encodeURIComponent(branch)}`), {
+    headers,
+  });
+  if (!refRes.ok) {
+    return { error: json(502, { error: "Failed to read branch ref.", detail: await refRes.text() }) };
+  }
+  const refData = (await refRes.json()) as { object?: { sha?: string } };
+  const headSha = refData.object?.sha;
+  if (!headSha) {
+    return { error: json(502, { error: "Branch tip SHA missing." }) };
+  }
+
+  const commitRes = await fetch(repoApi(env, `/git/commits/${headSha}`), { headers });
+  if (!commitRes.ok) {
+    return { error: json(502, { error: "Failed to read commit.", detail: await commitRes.text() }) };
+  }
+  const commitData = (await commitRes.json()) as { tree?: { sha?: string } };
+  const baseTreeSha = commitData.tree?.sha;
+  if (!baseTreeSha) {
+    return { error: json(502, { error: "Base tree SHA missing." }) };
+  }
+
+  const tree: Array<{
+    path: string;
+    mode: "100644";
+    type: "blob";
+    sha: string | null;
+  }> = [];
+
+  for (const change of changes) {
+    const fullPath = change.path.startsWith(DOCS_ROOT)
+      ? change.path
+      : `${DOCS_ROOT}/${change.path}`;
+
+    if ("delete" in change && change.delete) {
+      tree.push({
+        path: fullPath,
+        mode: "100644",
+        type: "blob",
+        sha: null,
+      });
+      continue;
+    }
+
+    const content = "content" in change ? change.content : "";
+    const blobRes = await fetch(repoApi(env, "/git/blobs"), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        content: toBase64(content),
+        encoding: "base64",
+      }),
+    });
+    if (!blobRes.ok) {
+      return {
+        error: json(502, {
+          error: `Failed to create blob for ${fullPath}.`,
+          detail: await blobRes.text(),
+        }),
+      };
+    }
+    const blobData = (await blobRes.json()) as { sha?: string };
+    if (!blobData.sha) {
+      return { error: json(502, { error: `Blob SHA missing for ${fullPath}.` }) };
+    }
+
+    tree.push({
+      path: fullPath,
+      mode: "100644",
+      type: "blob",
+      sha: blobData.sha,
+    });
+  }
+
+  const treeRes = await fetch(repoApi(env, "/git/trees"), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      base_tree: baseTreeSha,
+      tree,
+    }),
+  });
+  if (!treeRes.ok) {
+    return { error: json(502, { error: "Failed to create tree.", detail: await treeRes.text() }) };
+  }
+  const treeData = (await treeRes.json()) as { sha?: string };
+  if (!treeData.sha) {
+    return { error: json(502, { error: "Tree SHA missing." }) };
+  }
+
+  const newCommitRes = await fetch(repoApi(env, "/git/commits"), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      message: formatCommitMessage(message),
+      tree: treeData.sha,
+      parents: [headSha],
+    }),
+  });
+  if (!newCommitRes.ok) {
+    return {
+      error: json(502, { error: "Failed to create commit.", detail: await newCommitRes.text() }),
+    };
+  }
+  const newCommit = (await newCommitRes.json()) as { sha?: string; html_url?: string };
+  if (!newCommit.sha) {
+    return { error: json(502, { error: "Commit SHA missing." }) };
+  }
+
+  const updateRefRes = await fetch(repoApi(env, `/git/refs/heads/${encodeURIComponent(branch)}`), {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ sha: newCommit.sha }),
+  });
+  if (!updateRefRes.ok) {
+    return {
+      error: json(502, {
+        error: "Failed to update branch ref.",
+        detail: await updateRefRes.text(),
+      }),
+    };
+  }
+
+  return { sha: newCommit.sha, html_url: newCommit.html_url };
+}

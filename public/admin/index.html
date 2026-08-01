@@ -411,6 +411,53 @@
         line-height: 1.4;
       }
 
+      .draft-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+
+      .draft-tabs button {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .draft-tabs button[aria-selected="true"] {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+      }
+
+      .draft-tabs .remove-draft {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 0;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      .batch-paths {
+        margin: 0;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        max-height: 140px;
+        overflow: auto;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
       code { font-family: var(--mono); font-size: 0.86em; }
     </style>
   </head>
@@ -467,7 +514,7 @@
         <div class="panel">
           <div class="panel-head">
             <h2>Destination</h2>
-            <span>New file path</span>
+            <span>Shared folder for all files in this batch</span>
           </div>
           <div class="stack">
             <div class="row">
@@ -484,45 +531,57 @@
               </label>
               <label>
                 Subdirectory
-                <span class="hint">optional</span>
+                <span class="hint">optional — applied to every file</span>
                 <input id="subdir" type="text" placeholder="api-design" autocomplete="off" />
               </label>
             </div>
-            <label>
-              Filename
-              <input id="filename" type="text" placeholder="my-note.md" autocomplete="off" />
-            </label>
-            <p class="path-preview" id="create-path-preview">src/content/docs/high-level-design/my-note.md</p>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-head">
-            <h2>Markdown</h2>
-            <span>Upload or paste</span>
+            <h2>Markdown batch</h2>
+            <span>Drop many files, preview each, commit once</span>
           </div>
           <div class="stack">
             <div class="dropzone" id="dropzone">
-              <input id="file" type="file" accept=".md,.mdx,text/markdown,text/plain" />
-              <p style="margin:0;font-weight:700">Drop a .md / .mdx file here</p>
-              <p class="hint" style="margin:0.35rem 0 0">or click to browse</p>
+              <input id="file" type="file" accept=".md,.mdx,text/markdown,text/plain" multiple />
+              <p style="margin:0;font-weight:700">Drop one or more .md / .mdx files</p>
+              <p class="hint" style="margin:0.35rem 0 0">or click to browse — max 25 per commit</p>
             </div>
+
+            <div id="draft-toolbar" class="file-list-toolbar" hidden>
+              <span class="hint" id="draft-count">0 files</span>
+              <button type="button" class="ghost" id="clear-drafts">Clear all</button>
+              <button type="button" class="ghost" id="add-blank-draft">Add blank</button>
+            </div>
+            <div id="draft-tabs" class="draft-tabs" hidden></div>
+
             <label>
-              Content
-              <textarea id="create-content" spellcheck="false" placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading"></textarea>
+              Filename
+              <span class="hint">for the selected file in the batch</span>
+              <input id="filename" type="text" placeholder="my-note.md" autocomplete="off" />
+            </label>
+            <p class="path-preview" id="create-path-preview">src/content/docs/high-level-design/…</p>
+
+            <label>
+              Content preview
+              <textarea id="create-content" spellcheck="false" placeholder="---&#10;title: My note&#10;---&#10;&#10;# Heading&#10;&#10;Drop files above, or paste here for a single new page."></textarea>
             </label>
             <div class="editor-meta">
               <span id="create-stats">0 lines · 0 characters</span>
               <span>Missing <code>title</code> is added automatically</span>
             </div>
+
+            <div id="batch-path-list" class="batch-paths" hidden></div>
           </div>
         </div>
 
         <div class="panel">
           <label>
             Commit message
-            <span class="hint">optional</span>
-            <input id="create-message" type="text" placeholder="[WEB] Add my-note.md" autocomplete="off" />
+            <span class="hint">optional — one commit for the whole batch</span>
+            <input id="create-message" type="text" placeholder="[WEB] Add 3 files" autocomplete="off" />
           </label>
         </div>
       </section>
@@ -653,6 +712,12 @@
       const createStats = document.getElementById("create-stats");
       const dropzone = document.getElementById("dropzone");
       const fileInput = document.getElementById("file");
+      const draftToolbar = document.getElementById("draft-toolbar");
+      const draftTabs = document.getElementById("draft-tabs");
+      const draftCount = document.getElementById("draft-count");
+      const clearDrafts = document.getElementById("clear-drafts");
+      const addBlankDraft = document.getElementById("add-blank-draft");
+      const batchPathList = document.getElementById("batch-path-list");
 
       const editContent = document.getElementById("edit-content");
       const editMessage = document.getElementById("edit-message");
@@ -674,6 +739,11 @@
       let mode = "create";
       let files = [];
       let selectedPath = "";
+      /** @type {{ id: string, name: string, content: string }[]} */
+      let drafts = [];
+      let activeDraftId = "";
+      let draftSeq = 0;
+      const MAX_BATCH = 25;
 
       if (sessionStorage.getItem(STORAGE_PASSWORD)) {
         password.value = sessionStorage.getItem(STORAGE_PASSWORD);
@@ -771,13 +841,141 @@
         submit.className = mode === "delete" ? "btn-danger" : "btn-primary";
         submit.textContent =
           mode === "create"
-            ? "Create on GitHub"
+            ? drafts.length > 1
+              ? "Commit " + drafts.length + " files"
+              : "Create on GitHub"
             : mode === "edit"
               ? "Save changes"
               : mode === "move"
                 ? "Move on GitHub"
                 : "Delete from GitHub";
         updateReadiness();
+      }
+
+      function normalizeDraftName(name) {
+        let n = sanitizeSegment(name || "untitled.md");
+        if (n.includes("/")) n = n.split("/").pop();
+        if (n && !/\.(md|mdx)$/i.test(n)) n += ".md";
+        return n || "untitled.md";
+      }
+
+      function getActiveDraft() {
+        return drafts.find((d) => d.id === activeDraftId) || null;
+      }
+
+      function syncActiveDraftFromForm() {
+        const draft = getActiveDraft();
+        if (!draft) return;
+        draft.name = normalizeDraftName(filename.value || draft.name);
+        draft.content = createContent.value;
+      }
+
+      function ensureDraftFromPaste() {
+        if (drafts.length > 0) return;
+        if (!createContent.value.trim() && !filename.value.trim()) return;
+        draftSeq += 1;
+        const id = "d" + draftSeq;
+        drafts.push({
+          id,
+          name: normalizeDraftName(filename.value || "untitled.md"),
+          content: createContent.value,
+        });
+        activeDraftId = id;
+      }
+
+      function renderDrafts() {
+        const has = drafts.length > 0;
+        draftToolbar.hidden = !has;
+        draftTabs.hidden = !has;
+        batchPathList.hidden = !has;
+        draftCount.textContent = drafts.length + (drafts.length === 1 ? " file" : " files");
+
+        draftTabs.innerHTML = drafts
+          .map((d) => {
+            return (
+              '<button type="button" data-draft-id="' +
+              escapeAttr(d.id) +
+              '" aria-selected="' +
+              String(d.id === activeDraftId) +
+              '">' +
+              escapeHtml(d.name) +
+              ' <span class="remove-draft" data-remove-id="' +
+              escapeAttr(d.id) +
+              '" title="Remove">×</span></button>'
+            );
+          })
+          .join("");
+
+        const paths = drafts.map((d) => "src/content/docs/" + buildPath(section.value, subdir.value, d.name));
+        batchPathList.innerHTML = paths.map((p) => escapeHtml(p)).join("<br>");
+
+        const active = getActiveDraft();
+        if (active) {
+          filename.value = active.name;
+          createContent.value = active.content;
+        }
+        createStats.textContent = statsText(createContent.value);
+        updateCreatePreview();
+
+        if (mode === "create") {
+          submit.textContent =
+            drafts.length > 1 ? "Commit " + drafts.length + " files" : "Create on GitHub";
+        }
+      }
+
+      function selectDraft(id) {
+        syncActiveDraftFromForm();
+        activeDraftId = id;
+        renderDrafts();
+      }
+
+      function removeDraft(id) {
+        const idx = drafts.findIndex((d) => d.id === id);
+        if (idx === -1) return;
+        drafts.splice(idx, 1);
+        if (activeDraftId === id) {
+          activeDraftId = drafts[Math.max(0, idx - 1)]?.id || drafts[0]?.id || "";
+        }
+        if (drafts.length === 0) {
+          filename.value = "";
+          createContent.value = "";
+        }
+        renderDrafts();
+      }
+
+      async function addFilesFromList(fileList) {
+        const incoming = Array.from(fileList || []).filter((f) => /\.(md|mdx)$/i.test(f.name));
+        if (!incoming.length) {
+          showStatus("err", "No markdown files", "Choose .md or .mdx files.");
+          return;
+        }
+        if (drafts.length + incoming.length > MAX_BATCH) {
+          showStatus("err", "Too many files", "Limit is " + MAX_BATCH + " files per commit.");
+          return;
+        }
+
+        syncActiveDraftFromForm();
+        for (const file of incoming) {
+          const text = await file.text();
+          const name = normalizeDraftName(file.name);
+          const existing = drafts.find((d) => d.name.toLowerCase() === name.toLowerCase());
+          if (existing) {
+            existing.content = text;
+            activeDraftId = existing.id;
+          } else {
+            draftSeq += 1;
+            const id = "d" + draftSeq;
+            drafts.push({ id, name, content: text });
+            activeDraftId = id;
+          }
+        }
+        renderDrafts();
+        showStatus(
+          "pending",
+          "Batch ready",
+          escapeHtml(String(drafts.length)) +
+            " file(s) queued. Review each tab, then commit once."
+        );
       }
 
       function renderFileList() {
@@ -858,12 +1056,39 @@
       }
 
       function updateCreatePreview() {
-        const relative = buildPath(section.value, subdir.value, filename.value);
+        const active = getActiveDraft();
+        const name = active ? active.name : filename.value;
+        const relative = buildPath(section.value, subdir.value, name);
         createPathPreview.textContent = "src/content/docs/" + (relative || "…");
-        if (!createMessage.value.trim() && filename.value.trim()) {
-          createMessage.placeholder = "[WEB] Add " + (relative.split("/").pop() || "file.md");
+        if (!createMessage.value.trim()) {
+          if (drafts.length > 1) {
+            createMessage.placeholder = "[WEB] Add " + drafts.length + " files";
+          } else if (name.trim()) {
+            createMessage.placeholder = "[WEB] Add " + (relative.split("/").pop() || "file.md");
+          }
+        }
+        if (drafts.length > 0) {
+          const paths = drafts.map((d) => "src/content/docs/" + buildPath(section.value, subdir.value, d.name));
+          batchPathList.innerHTML = paths.map((p) => escapeHtml(p)).join("<br>");
+          batchPathList.hidden = false;
         }
         updateReadiness();
+      }
+
+      function collectCreateBatch() {
+        syncActiveDraftFromForm();
+        ensureDraftFromPaste();
+        if (drafts.length === 0) return [];
+        const seen = new Set();
+        const batch = [];
+        for (const d of drafts) {
+          const path = buildPath(section.value, subdir.value, d.name);
+          if (!path || !/\.(md|mdx)$/i.test(path) || !d.content.trim()) continue;
+          if (seen.has(path)) continue;
+          seen.add(path);
+          batch.push({ path, content: d.content });
+        }
+        return batch;
       }
 
       function updateMovePreview() {
@@ -887,11 +1112,24 @@
         }
 
         if (mode === "create") {
-          const relative = buildPath(section.value, subdir.value, filename.value);
-          ready = Boolean(relative && /\.(md|mdx)$/i.test(relative) && createContent.value.trim());
+          syncActiveDraftFromForm();
+          let count = 0;
+          if (drafts.length > 0) {
+            count = drafts.filter((d) => {
+              const path = buildPath(section.value, subdir.value, d.name);
+              return path && /\.(md|mdx)$/i.test(path) && d.content.trim();
+            }).length;
+          } else {
+            const path = buildPath(section.value, subdir.value, filename.value);
+            if (path && /\.(md|mdx)$/i.test(path) && createContent.value.trim()) count = 1;
+          }
+          ready = count > 0;
           note = ready
-            ? "Will create " + createPathPreview.textContent
-            : "Set filename and content to create.";
+            ? count === 1
+              ? "Will create 1 file in one commit"
+              : "Will commit " + count + " files in one commit"
+            : "Add at least one markdown file with content.";
+          submit.textContent = count > 1 ? "Commit " + count + " files" : "Create on GitHub";
         } else if (mode === "edit") {
           ready = Boolean(selectedPath && editContent.value.trim() && !editContent.disabled);
           note = ready ? "Will update " + selectedPath : "Select a file and edit its content.";
@@ -943,8 +1181,21 @@
 
       section.addEventListener("change", updateCreatePreview);
       subdir.addEventListener("input", updateCreatePreview);
-      filename.addEventListener("input", updateCreatePreview);
+      filename.addEventListener("input", () => {
+        const draft = getActiveDraft();
+        if (draft) draft.name = normalizeDraftName(filename.value);
+        else if (filename.value.trim() || createContent.value.trim()) {
+          ensureDraftFromPaste();
+          const d = getActiveDraft();
+          if (d) d.name = normalizeDraftName(filename.value);
+          renderDrafts();
+          return;
+        }
+        updateCreatePreview();
+      });
       createContent.addEventListener("input", () => {
+        const draft = getActiveDraft();
+        if (draft) draft.content = createContent.value;
         createStats.textContent = statsText(createContent.value);
         updateReadiness();
       });
@@ -957,13 +1208,40 @@
       moveFilename.addEventListener("input", updateMovePreview);
       deleteConfirm.addEventListener("input", updateReadiness);
 
+      draftTabs.addEventListener("click", (event) => {
+        const remove = event.target.closest("[data-remove-id]");
+        if (remove) {
+          event.preventDefault();
+          event.stopPropagation();
+          removeDraft(remove.dataset.removeId);
+          return;
+        }
+        const tab = event.target.closest("[data-draft-id]");
+        if (tab) selectDraft(tab.dataset.draftId);
+      });
+      clearDrafts.addEventListener("click", () => {
+        drafts = [];
+        activeDraftId = "";
+        filename.value = "";
+        createContent.value = "";
+        renderDrafts();
+      });
+      addBlankDraft.addEventListener("click", () => {
+        if (drafts.length >= MAX_BATCH) {
+          showStatus("err", "Too many files", "Limit is " + MAX_BATCH + " files per commit.");
+          return;
+        }
+        syncActiveDraftFromForm();
+        draftSeq += 1;
+        const id = "d" + draftSeq;
+        drafts.push({ id, name: "untitled-" + draftSeq + ".md", content: "" });
+        activeDraftId = id;
+        renderDrafts();
+      });
+
       fileInput.addEventListener("change", async () => {
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) return;
-        if (!filename.value.trim()) filename.value = file.name;
-        createContent.value = await file.text();
-        createStats.textContent = statsText(createContent.value);
-        updateCreatePreview();
+        await addFilesFromList(fileInput.files);
+        fileInput.value = "";
       });
 
       ["dragenter", "dragover"].forEach((type) => {
@@ -979,12 +1257,7 @@
         });
       });
       dropzone.addEventListener("drop", async (e) => {
-        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (!file) return;
-        if (!filename.value.trim()) filename.value = file.name;
-        createContent.value = await file.text();
-        createStats.textContent = statsText(createContent.value);
-        updateCreatePreview();
+        await addFilesFromList(e.dataTransfer && e.dataTransfer.files);
       });
 
       submit.addEventListener("click", async () => {
@@ -997,10 +1270,15 @@
         try {
           let payload;
           if (mode === "create") {
+            const batch = collectCreateBatch();
+            renderDrafts();
+            if (!batch.length) {
+              showStatus("err", "Nothing to commit", "Add files with content first.");
+              return;
+            }
             payload = {
-              action: "upsert",
-              path: buildPath(section.value, subdir.value, filename.value),
-              content: createContent.value,
+              action: "upsertMany",
+              files: batch,
               message: createMessage.value.trim() || undefined,
             };
           } else if (mode === "edit") {
@@ -1035,7 +1313,18 @@
           }
 
           if (mode === "create") {
-            showStatus("ok", data.action === "updated" ? "Updated" : "Created", successBody(data, data.path || ""));
+            const count = data.count || 1;
+            showStatus(
+              "ok",
+              count > 1 ? "Committed " + count + " files" : "Created",
+              successBody(data, (data.paths || []).join(", "))
+            );
+            drafts = [];
+            activeDraftId = "";
+            filename.value = "";
+            createContent.value = "";
+            createMessage.value = "";
+            renderDrafts();
             await loadFiles();
           } else if (mode === "edit") {
             showStatus("ok", "Saved", successBody(data, data.path || selectedPath));

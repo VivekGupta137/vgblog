@@ -19,5 +19,8 @@ pnpm-debug.log*
 .env.production
 .dev.vars
 
+# wrangler
+.wrangler/
+
 # macOS-specific files
 .DS_Store

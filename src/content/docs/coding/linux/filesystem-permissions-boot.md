@@ -38,43 +38,30 @@ The entire Linux filesystem is a single tree rooted at `/`. Everything — disks
 └── boot      → kernel, initrd, bootloader files
 ```
 
-```mermaid
-mindmap
-  root(/)
-    bin / sbin
-      Essential binaries
-      ls · cp · bash · mount
-    usr
-      bin
-      lib
-      local
-      share
-    etc
-      System config
-      passwd · fstab · hosts
-    home
-      /home/alice
-      /home/bob
-    var
-      log
-      cache
-      run
-    tmp
-      Cleared on reboot
-    dev
-      Device files
-      null · zero · sda
-    proc
-      Live kernel info
-      cpuinfo · meminfo
-    sys
-      Hardware & drivers
-    boot
-      vmlinuz
-      initrd.img
-      grub/
-    root
-      Root user home
+```plantuml
+@startyaml
+"/":
+  "bin / sbin": "Essential binaries: ls, cp, bash, mount"
+  "usr":
+    "bin": "Most installed programs"
+    "lib": "Shared libraries for /usr/bin"
+    "local": "Software built outside package manager"
+    "share": "Architecture-independent data, docs"
+  "etc": "System-wide configuration files"
+  "home":
+    "/home/alice": "User home directory"
+    "/home/bob": "User home directory"
+  "var":
+    "log": "System & service logs"
+    "cache": "Cached application data"
+    "run": "Runtime data: pid files, sockets"
+  "tmp": "Temp files — cleared on reboot"
+  "dev": "Device files: sda, tty, null, zero"
+  "proc": "Virtual FS — live kernel & process info"
+  "sys": "Virtual FS — hardware & driver info"
+  "boot": "Kernel (vmlinuz), initrd.img, GRUB"
+  "root": "Root user home directory"
+@endyaml
 ```
 
 ### Key directories to know
@@ -275,30 +262,28 @@ alice:x:1001:1001:Alice Smith:/home/alice:/bin/bash
 
 Relationship between users, groups, and files:
 
-```mermaid
-erDiagram
-    USER {
-        int uid PK
-        string username
-        string home_dir
-        string shell
-        int primary_gid FK
-    }
-    GROUP {
-        int gid PK
-        string name
-    }
-    FILE {
-        string path PK
-        string permissions
-        char type
-        int owner_uid FK
-        int owner_gid FK
-    }
-    USER ||--o{ FILE : "owns"
-    GROUP ||--o{ FILE : "group-owner"
-    USER }o--|{ GROUP : "member of"
-    USER }|--|| GROUP : "primary group"
+```erd
+[User]
+*uid
+username
+home_dir
+shell
++primary_gid
+
+[Group]
+*gid
+name
+
+[File]
+*path
+permissions
+type
++owner_uid
++owner_gid
+
+User 1--* File
+Group 1--* File
+User *--* Group
 ```
 
 ### sudo — Run as root
@@ -381,43 +366,25 @@ Power on
         Login prompt
 ```
 
-```plantuml
-@startuml
-skinparam ActivityBackgroundColor #f4f6f8
-skinparam ActivityBorderColor #2c3e50
-skinparam ArrowColor #34495e
+```d2
+direction: down
 
-start
+power_on: "Power On"
+bios: "BIOS / UEFI\nPOST · find boot device"
+grub: "GRUB2 Bootloader\n/boot/grub/grub.cfg"
+kernel: "Load kernel (vmlinuz)\n+ initramfs (initrd.img)"
+hw_init: "Kernel: init hardware\nload drivers"
+initramfs_ram: "Unpack initramfs to RAM\nmount temp root FS"
+real_root: "Load storage drivers\npivot to real root FS"
+systemd: "systemd — PID 1"
+fstab: "Mount /etc/fstab filesystems"
+services: "Start service units in parallel"
+cli: "multi-user.target\nCLI login prompt"
+gui: "graphical.target\nDisplay Manager / GUI"
 
-:Power On;
-:BIOS / UEFI POST
-finds bootable device;
-:GRUB2 Bootloader
-/boot/grub/grub.cfg;
-:Loads kernel vmlinuz
-+ initramfs initrd.img;
-:Kernel decompresses
-init hardware & drivers;
-:initramfs unpacked
-to RAM as temp root;
-:Storage drivers loaded
-real root FS mounted;
-:systemd — PID 1
-/sbin/init;
-:Mounts /etc/fstab
-filesystems;
-:Starts service units
-in parallel;
-
-switch (Default target?)
-case (multi-user.target)
-  :CLI login prompt;
-case (graphical.target)
-  :Display Manager (GUI login);
-endswitch
-
-stop
-@enduml
+power_on -> bios -> grub -> kernel -> hw_init -> initramfs_ram -> real_root -> systemd -> fstab -> services
+services -> cli: multi-user
+services -> gui: graphical
 ```
 
 ### Stage 1 — BIOS vs UEFI
@@ -498,17 +465,29 @@ systemd-analyze critical-chain            # the slowest path through boot
 | 5 | `graphical.target` | Full desktop |
 | 6 | `reboot.target` | Reboot |
 
-```mermaid
-graph TD
-    graphical.target --> multi-user.target
-    multi-user.target --> basic.target
-    basic.target --> sysinit.target
-    basic.target --> sockets.target
-    sysinit.target --> local-fs.target
-    sysinit.target --> swap.target
-    rescue.target --> sysinit.target
-    poweroff.target
-    reboot.target
+```graphviz
+digraph systemd_targets {
+  rankdir=BT
+  node [shape=box, style="filled,rounded"]
+  edge [color=gray50]
+
+  "graphical.target"  [fillcolor=lightblue]
+  "multi-user.target" [fillcolor=lightgreen]
+  "rescue.target"     [fillcolor=lightsalmon]
+  "basic.target"      [fillcolor=lightyellow]
+  "sysinit.target"    [fillcolor=lightgray]
+  "sockets.target"    [fillcolor=lightgray]
+  "local-fs.target"   [fillcolor=lightgray]
+  "swap.target"       [fillcolor=lightgray]
+
+  "graphical.target"  -> "multi-user.target"
+  "multi-user.target" -> "basic.target"
+  "basic.target"      -> "sysinit.target"
+  "basic.target"      -> "sockets.target"
+  "sysinit.target"    -> "local-fs.target"
+  "sysinit.target"    -> "swap.target"
+  "rescue.target"     -> "sysinit.target"
+}
 ```
 
 ```bash

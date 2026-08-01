@@ -37,3 +37,19 @@ bun run build
 ```
 
 Content lives in `src/content/docs/`. Admin publishing UI is at `/admin`.
+
+## Diagrams (Kroki)
+
+All [Kroki](https://kroki.io) diagram types render at build time via `remark-kroki`.
+
+Use a fence named after the diagram type (or `kroki` with `type=`):
+
+- `` ```plantuml `` … `` ``` ``
+- `` ```mermaid `` … `` ``` ``
+- `` ```d2 `` … `` ``` ``
+- `` ```graphviz `` … `` ``` ``
+- `` ```kroki type=excalidraw `` … `` ``` ``
+
+Supported aliases include PlantUML, Mermaid, D2, GraphViz, C4, Excalidraw, Structurizr, WaveDrom, and the rest of Kroki’s catalog.
+
+Set `PUBLIC_KROKI_SERVER_URL` (default `https://kroki.io`). Self-host with Docker if you hit public rate limits.

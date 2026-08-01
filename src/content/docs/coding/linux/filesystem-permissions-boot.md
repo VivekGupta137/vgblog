@@ -381,20 +381,43 @@ Power on
         Login prompt
 ```
 
-```mermaid
-flowchart TD
-    A([Power On]) --> B[BIOS / UEFI\nPOST · finds bootable device]
-    B --> C[GRUB2 Bootloader\n/boot/grub/grub.cfg]
-    C --> D[Loads kernel vmlinuz\n+ initramfs initrd.img]
-    D --> E[Kernel decompresses\ninit hardware + drivers]
-    E --> F[initramfs unpacked\nto RAM as temp root]
-    F --> G[Storage drivers loaded\nreal root FS mounted]
-    G --> H([systemd — PID 1\n/sbin/init])
-    H --> I[Mounts /etc/fstab\nfilesystems]
-    I --> J[Starts service units\nin parallel]
-    J --> K{Default target}
-    K -->|multi-user.target| L([CLI login prompt])
-    K -->|graphical.target| M([Display Manager\nGUI login])
+```plantuml
+@startuml
+skinparam ActivityBackgroundColor #f4f6f8
+skinparam ActivityBorderColor #2c3e50
+skinparam ArrowColor #34495e
+
+start
+
+:Power On;
+:BIOS / UEFI POST
+finds bootable device;
+:GRUB2 Bootloader
+/boot/grub/grub.cfg;
+:Loads kernel vmlinuz
++ initramfs initrd.img;
+:Kernel decompresses
+init hardware & drivers;
+:initramfs unpacked
+to RAM as temp root;
+:Storage drivers loaded
+real root FS mounted;
+:systemd — PID 1
+/sbin/init;
+:Mounts /etc/fstab
+filesystems;
+:Starts service units
+in parallel;
+
+switch (Default target?)
+case (multi-user.target)
+  :CLI login prompt;
+case (graphical.target)
+  :Display Manager (GUI login);
+endswitch
+
+stop
+@enduml
 ```
 
 ### Stage 1 — BIOS vs UEFI

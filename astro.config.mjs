@@ -4,24 +4,21 @@ import starlight from "@astrojs/starlight";
 import starlightSiteGraph from "starlight-site-graph";
 import starlightLinksValidator from "starlight-links-validator";
 import starlightThemeRapide from "starlight-theme-rapide";
-import plantuml from "astro-plantuml";
 import starlightImageZoom from "starlight-image-zoom";
 import starlightPageActions from "starlight-page-actions";
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import starlightSidebarSwipe from 'starlight-sidebar-swipe'
+import { remarkKroki } from "remark-kroki";
 
-
-import d2 from "astro-d2";
 import { pluginLanguageBadge } from "expressive-code-language-badge";
 import starlightGiscus from "starlight-giscus";
 
-import node from "@astrojs/node";
 import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
-import starlightFullViewMode from "starlight-fullview-mode";
 import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
+import { KROKI_DIAGRAM_ALIASES } from "./src/lib/kroki-aliases";
 import { loadEnv } from "vite";
 
 import sitemap from "@astrojs/sitemap";
@@ -31,12 +28,27 @@ const env = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 const enableLinkValidation =
   env.VALIDATE_LINKS === "true" || process.env.VALIDATE_LINKS === "true";
 
+// Prefer dedicated Kroki base URL; fall back to legacy PlantUML Kroki URL host.
+const krokiServer =
+  env.PUBLIC_KROKI_SERVER_URL || "https://kroki.io";
+
 // https://astro.build/config
 export default defineConfig({
   site: env.PUBLIC_DOMAIN || "http://localhost:4321/",
   
   markdown: {
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [
+      [
+        remarkKroki,
+        {
+          server: krokiServer,
+          alias: KROKI_DIAGRAM_ALIASES,
+          
+          target: "html",
+        },
+      ],
+      remarkMath,
+    ],
     rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
   },
   output: "static",
@@ -133,11 +145,6 @@ export default defineConfig({
       },
       
     ],
-  }), plantuml({
-    serverUrl: env.PUBLIC_PLANTUML_SERVER_URL || "http://localhost:8080/png/",
-    addWrapperClasses: true,
-  }), d2({
-    skipGeneration: env.NODE_ENV === "production" || env.D2_SKIP_GENERATION === "true",
   }), sitemap()],
 
   experimental: {

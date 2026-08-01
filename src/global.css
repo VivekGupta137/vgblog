@@ -21,9 +21,16 @@
   font-style: normal;
 }
 
-figure.plantuml-diagram img {
+figure.plantuml-diagram img,
+.content img[alt="plantuml"],
+.content img[alt="d2"],
+.content img[alt="mermaid"],
+.content img[alt="graphviz"],
+.content img[src^="data:image/svg+xml"] {
   border-radius: 3px;
   overflow: hidden;
+  max-width: 100%;
+  height: auto;
 }
 
 html[data-theme="dark"] strong {

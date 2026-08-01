@@ -6,12 +6,12 @@
   "pages_build_output_dir": "./dist",
   // Non-secret runtime vars for Pages Functions (secrets stay in Dashboard / .dev.vars).
   "vars": {
-    "D2_SKIP_GENERATION": "false",
     "PUBLIC_DOMAIN": "https://www.sdeway.com/",
     "PUBLIC_GISCUS_CATEGORY": "General",
     "PUBLIC_GISCUS_CATEGORY_ID": "DIC_kwDOQYyqE84Cx9pf",
     "PUBLIC_GISCUS_REPO": "VivekGupta137/docs-giscus",
     "PUBLIC_GISCUS_REPO_ID": "R_kgDOQYyqEw",
+    "PUBLIC_KROKI_SERVER_URL": "https://kroki.io",
     "PUBLIC_PLANTUML_SERVER_URL": "https://kroki.io/plantuml/png/",
     "GITHUB_OWNER": "VivekGupta137",
     "GITHUB_REPO": "vgblog",

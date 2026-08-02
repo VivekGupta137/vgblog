@@ -59,6 +59,34 @@ Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, and other [Kroki
 
 Code fences use [Expressive Code](https://expressive-code.com/). Meta options go after the language on the opening fence.
 
+### Tabbed code groups
+
+Wrap multiple fences in `:::group` (alias `:::code-group`) to show them as tabs instead of a long scroll. Tab labels use each fence’s `title="…"`, or the language name.
+
+:::group
+```js title="abc.js" showLineNumbers
+export function greet(name) {
+  return `Hello, ${name}!`;
+}
+```
+
+```java title="xyz.java" showLineNumbers
+public class Greeter {
+  public static String greet(String name) {
+    return "Hello, " + name + "!";
+  }
+}
+```
+
+```ts title="greet.ts" showLineNumbers
+export function greet(name: string): string {
+  return `Hello, ${name}!`;
+}
+```
+:::
+
+You can also label tabs with bracket meta: `` ```js [abc.js] ``.
+
 ### Title and frame
 
 ```ts title="src/lib/greet.ts"
@@ -211,6 +239,7 @@ export async function getCachedUser(id: string): Promise<Cache | null> {
 
 | Meta | Effect |
 |------|--------|
+| `:::group` … `:::` | Tabbed group of multiple code fences |
 | `title="file.ts"` | Filename / tab title |
 | `frame="terminal"` | Terminal-style frame |
 | `showLineNumbers` / `=false` | Toggle line numbers |

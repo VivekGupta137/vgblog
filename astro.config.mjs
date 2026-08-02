@@ -19,6 +19,8 @@ import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 import { KROKI_DIAGRAM_ALIASES } from "./src/lib/kroki-aliases";
+import { remarkCodeGroup } from "./src/lib/remark-code-group";
+import remarkDirective from "remark-directive";
 import { loadEnv } from "vite";
 
 import sitemap from "@astrojs/sitemap";
@@ -47,6 +49,8 @@ export default defineConfig({
           target: "html",
         },
       ],
+      remarkDirective,
+      remarkCodeGroup,
       remarkMath,
     ],
     rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
@@ -61,6 +65,7 @@ export default defineConfig({
     components: {
       Pagination: './src/components/Pagination.astro',
       Header: './src/components/Header.astro',
+      Head: './src/components/Head.astro',
       ContentPanel: './src/components/ContentPanel.astro',
       LastUpdated: './src/components/LastUpdated.astro',
     },

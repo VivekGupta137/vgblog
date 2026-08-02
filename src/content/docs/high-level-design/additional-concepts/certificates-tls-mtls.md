@@ -180,6 +180,112 @@ When a cert is presented, the receiver walks the chain up to a trusted root. If 
 Internal PKIs often run their own **private root CA**. Every internal host is configured to trust that root — certs it issues are trusted internally but not on the public internet. This is the standard pattern for service-to-service mTLS within a datacenter or VPC.
 :::
 
+### 3.3.1 What happens when the CA is missing
+
+When the client receives the server's certificate it tries to walk the chain up to a root it already trusts. If that root CA is not in the trust store, the walk terminates without reaching a trusted anchor and the handshake is aborted.
+
+```seqdiag
+seqdiag {
+  CLIENT;
+  SERVER;
+
+  CLIENT -> SERVER  [label = "ClientHello"];
+  SERVER -> CLIENT  [label = "Certificate\n(signed by Internal CA)"];
+  CLIENT -> CLIENT  [label = "Walk chain...\nInternal CA root → NOT in trust store"];
+  CLIENT -> CLIENT  [label = "TLS alert 48: unknown_ca\nHandshake aborted ✗"];
+}
+```
+
+**Common causes:**
+
+| Situation | Why the CA is missing |
+|---|---|
+| Internal / private PKI | Company runs its own CA; root cert not distributed to all clients |
+| Self-signed certificate | The server signed its own cert — it is its own CA, trusted by nobody else |
+| Corporate MITM proxy | Proxy intercepts TLS with its own CA; some clients haven't been given that CA cert |
+| New public CA | Client OS trust store is outdated; the CA was added after the last OS update |
+| Container / CI environment | Minimal base image ships with no or minimal CA bundle |
+
+---
+
+**Fix 1 — install the CA cert into the system trust store** (the right long-term fix)
+
+```bash
+# Debian / Ubuntu
+sudo cp internal-ca.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+
+# RHEL / CentOS / Fedora
+sudo cp internal-ca.crt /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust
+
+# macOS
+sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain internal-ca.crt
+
+# Windows (PowerShell, run as Administrator)
+Import-Certificate -FilePath "internal-ca.crt" `
+  -CertStoreLocation Cert:\LocalMachine\Root
+```
+
+**Fix 2 — pass the CA cert explicitly in code** (no changes to the OS trust store)
+
+Useful in containers, CI, or when you cannot touch system-wide configuration.
+
+```python
+# Python — requests
+requests.get("https://payment-service.internal.corp", verify="internal-ca.crt")
+```
+
+```go
+// Go
+caCert, _ := os.ReadFile("internal-ca.crt")
+pool := x509.NewCertPool()
+pool.AppendCertsFromPEM(caCert)
+client := &http.Client{
+    Transport: &http.Transport{
+        TLSClientConfig: &tls.Config{RootCAs: pool},
+    },
+}
+```
+
+```csharp
+// .NET — inject the CA into a custom chain policy
+var handler = new HttpClientHandler();
+handler.ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => {
+    chain.ChainPolicy.ExtraStore.Add(new X509Certificate2("internal-ca.crt"));
+    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+    return chain.Build(cert);
+};
+var client = new HttpClient(handler);
+```
+
+```bash
+# curl
+curl --cacert internal-ca.crt https://payment-service.internal.corp
+```
+
+**Fix 3 — certificate pinning** (skip the CA model entirely)
+
+Instead of trusting a CA, the client stores the expected certificate fingerprint (or public key hash) and checks the presented cert matches it directly. No CA needed at all.
+
+```bash
+# Get the fingerprint of the server cert
+openssl x509 -noout -fingerprint -sha256 -in server.crt
+# SHA256 Fingerprint=AB:CD:12:...
+
+# curl — pin to the specific cert
+curl --pinnedpubkey "sha256//base64encodedHash=" https://payment-service.internal.corp
+```
+
+:::caution[Pinning tradeoff]
+Pinning removes the CA dependency but makes cert rotation hard — every client must be updated with the new fingerprint whenever the server cert changes. Use it for high-security service-to-service calls where the cert changes infrequently and you fully control both sides.
+:::
+
+:::danger
+Never disable certificate verification (`verify=False`, `InsecureSkipVerify: true`, unconditionally returning `true` from a validation callback). This removes all authentication — an attacker can present any certificate and the client accepts it, making TLS encryption completely pointless. Acceptable only in local development, never in staging or production.
+:::
+
 ### 3.4 Where certificates live
 
 | Platform | Location | Notes |
@@ -263,18 +369,24 @@ TLS (the "S" in HTTPS) does two jobs: **encrypts** the connection and **authenti
 
 This is standard HTTPS. Only the **server** presents a certificate; the client stays anonymous.
 
-```seqdiag
-seqdiag {
-  CLIENT;
-  SERVER;
-
-  CLIENT -> SERVER [label = "1. ClientHello\n'let's negotiate TLS'"];
-  SERVER -> CLIENT [label = "2. ServerHello + Certificate (public key)"];
-  CLIENT -> CLIENT [label = "3. Validate cert chain\nCA trusted?  not expired?  CN matches host?"];
-  SERVER -> CLIENT [label = "4. ServerKeyExchange + signature\nproves server holds the private key"];
-
-  === "5. Both derive shared session key via ECDHE — encrypted channel live" ===
-}
+```
+CLIENT                                              SERVER
+  │  1. ClientHello — "let's negotiate TLS"          │
+  │ ────────────────────────────────────────────────►│
+  │                                                  │
+  │  2. ServerHello + Certificate (public key)       │
+  │ ◄──────────────────────────────────────────────── │
+  │                                                  │
+  │  3. Client validates cert chain + freshness      │
+  │     (CA trusted? not expired? CN matches host?)  │
+  │                                                  │
+  │  4. ServerKeyExchange + signature                │
+  │     (proves server holds the private key)        │
+  │ ◄──────────────────────────────────────────────── │
+  │                                                  │
+  │  5. Both derive shared session key via ECDHE.    │
+  │     Encrypted channel is live.                   │
+  │ ◄─────────────────────────────────────────────── ►│
 ```
 
 The client learns "I really am talking to `payment-service`." But the server has **no idea who the client is** — that is why web apps then ask you to log in.

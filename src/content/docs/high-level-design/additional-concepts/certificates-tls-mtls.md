@@ -263,24 +263,18 @@ TLS (the "S" in HTTPS) does two jobs: **encrypts** the connection and **authenti
 
 This is standard HTTPS. Only the **server** presents a certificate; the client stays anonymous.
 
-```
-CLIENT                                              SERVER
-  │  1. ClientHello — "let's negotiate TLS"          │
-  │ ────────────────────────────────────────────────►│
-  │                                                  │
-  │  2. ServerHello + Certificate (public key)       │
-  │ ◄──────────────────────────────────────────────── │
-  │                                                  │
-  │  3. Client validates cert chain + freshness      │
-  │     (CA trusted? not expired? CN matches host?)  │
-  │                                                  │
-  │  4. ServerKeyExchange + signature                │
-  │     (proves server holds the private key)        │
-  │ ◄──────────────────────────────────────────────── │
-  │                                                  │
-  │  5. Both derive shared session key via ECDHE.    │
-  │     Encrypted channel is live.                   │
-  │ ◄─────────────────────────────────────────────── ►│
+```seqdiag
+seqdiag {
+  CLIENT;
+  SERVER;
+
+  CLIENT -> SERVER [label = "1. ClientHello\n'let's negotiate TLS'"];
+  SERVER -> CLIENT [label = "2. ServerHello + Certificate (public key)"];
+  CLIENT -> CLIENT [label = "3. Validate cert chain\nCA trusted?  not expired?  CN matches host?"];
+  SERVER -> CLIENT [label = "4. ServerKeyExchange + signature\nproves server holds the private key"];
+
+  === "5. Both derive shared session key via ECDHE — encrypted channel live" ===
+}
 ```
 
 The client learns "I really am talking to `payment-service`." But the server has **no idea who the client is** — that is why web apps then ask you to log in.

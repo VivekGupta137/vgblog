@@ -8,6 +8,90 @@ The settlement pipeline must process millions of transactions per day across hun
 
 ---
 
+## Problem Statement
+
+Design the settlement pipeline for a payment gateway. The pipeline must:
+
+- Traverse potentially hundreds of thousands of captured transactions per merchant batch without loading all records into memory
+- Execute multi-step settlement operations (build batch → submit to processor → verify balance → mark settled) where each step can fail independently and must be retried without re-running completed steps
+- Guarantee that a batch is never submitted to the processor twice — even if the settler crashes after submission but before recording the result
+
+The key design challenges:
+1. **Memory safety at scale**: a large merchant may have 100,000+ transactions in a single settlement batch. Loading all into a Java `List` causes OOM errors. Streaming via DB cursor is required.
+2. **Granular retry**: if "submit batch to processor" succeeds but "mark transactions as settled" fails (DB outage), only the DB step should retry — not re-submit to the processor (which would double-settle).
+3. **Out-of-balance detection**: if gateway totals don't match processor totals (SS=4), this must NEVER auto-retry. Manual reconciliation is required.
+
+---
+
+## Clarifying Questions — Interview
+
+### 1. Functional Scope
+**Q:** What steps does a settlement batch go through? Can a batch be partially settled?
+
+**A:** Five steps: (1) query captured transactions, (2) build NACHA/ISO file, (3) submit to processor, (4) verify totals balance, (5) mark transactions as SS=2. For **ACH/NACHA**, batches are largely atomic — the ODFI can reject an entire batch. For **Visa/Mastercard card networks**, individual transactions within a batch can be declined while others succeed (e.g., a transaction whose auth code expired is rejected while the rest settle). The settler must handle partial batch success: mark SS=2 for settled transactions, SS=3 for individually rejected ones, and surface rejected transactions for merchant notification.
+
+### 2. Scale & Performance Budget
+**Q:** How many merchant batches run concurrently? How many transactions per batch?
+
+**A:** Hundreds of merchants have cutoffs within the same hour. Each merchant's batch runs independently. Small merchants: hundreds of transactions. Large merchants: 100,000+ transactions. The settler must handle both without special-casing.
+
+### 3. Consistency & Correctness Invariants
+**Q:** What must NEVER happen during settlement?
+
+**A:** (1) A transaction must never be submitted to the processor twice (double-settlement → double funding). (2) An SS=4 (out-of-balance) batch must never auto-retry. (3) Marking transactions as SS=2 must be idempotent — if the DB write fails and retries, re-running must not corrupt already-settled records.
+
+### 4. Extensibility & Rate of Change
+**Q:** Could new settlement step types be added (e.g., a fraud review step before submission)?
+
+**A:** Yes — Command Pattern makes this easy. Add a `FraudReviewSettlementCommand` and insert it in the invoker's step sequence. Zero changes to existing command classes.
+
+### 5. Concurrency & Thread Safety
+**Q:** Can two settler workers process the same merchant batch simultaneously?
+
+**A:** No — the `settle_merchant_queue` uses `SELECT FOR UPDATE SKIP LOCKED`. Only one worker can claim a given merchant job. The `batch_reference_id` provides idempotency if a claimed job needs to be handed to another worker after a crash.
+
+### 6. Failure & Recovery
+**Q:** The settler submits a batch to the processor and then crashes before marking SS=2. What happens on restart?
+
+**A:** The `SubmitBatchToProcessorCommand` sends `batch_reference_id` to the processor. On restart, before re-submitting, the command checks if the processor already has this batch reference. If yes: skip submission, proceed to `MarkTransactionsSettledCommand`. Idempotency via reference ID.
+
+### 7. Observability & Debuggability
+**Q:** How do we know a settlement batch is stuck?
+
+**A:** Alert on: `settle_merchant_queue` jobs with `status=CLAIMED` and `claimed_at > 30 minutes ago` (stale claim — worker crashed). Alert on: SS=4 count > 0 (out-of-balance requires immediate ops attention). `SettlementCommandInvoker` logs every command attempt with batch_id, command_type, retry_count, outcome.
+
+### 8. Persistence & Durability
+**Q:** Is settlement retry state in-memory or persisted?
+
+**A:** Currently in-memory in `SettlementCommandInvoker` — a known limitation. Production-grade: persist retry state to a `settlement_retry_queue` table. A JVM restart after a failed command must be able to resume from the last failed step.
+
+### 9. Batch Cutoff Timing
+**Q:** When exactly does a settlement day cut off? What happens to a transaction captured 30 seconds before cutoff?
+
+**A:** Each merchant has a configured `batch_cutoff_time` (e.g., 23:55 EST). The iterator query uses `captured_at < batchCutoff` — a transaction captured at 23:54 is in today's batch; one captured at 23:56 is in tomorrow's. The scheduler job runs every 10 minutes checking which merchants' cutoffs have passed. Edge case: a transaction captured during the 10-minute scheduler window between cutoff and the scheduler run is still included correctly because the query uses the cutoff timestamp, not "now". Missing the cutoff delays the merchant's funding by one business day — a merchant complaint driver that ops fields regularly.
+
+### 10. Funding Timeline After Settlement
+**Q:** After the gateway confirms settlement with the processor, when does the merchant receive funds?
+
+**A:** T+1 to T+3 depending on: card network (Visa typically T+1, Amex T+2), merchant risk tier (standard merchants T+1, high-risk merchants T+3 with a 6-month rolling reserve), and whether the settlement lands on a banking holiday (weekends/holidays do not count). The gateway records a `funded_at` timestamp on the batch when the acquirer's ACH credit to the merchant's bank account is confirmed. The `DDR (Deposit Detail Report)` shows the exact deposit amount and timing. Merchants with cash flow sensitivity configure "accelerated funding" through the acquirer for an additional fee.
+
+### 11. ACH Return Handling After Settlement
+**Q:** An ACH eCheck transaction was marked SS=2 (settled). Two weeks later, the customer's bank sends an R07 return (authorization revoked). What happens?
+
+**A:** An ACH return after settlement creates an `EXCEPTION` state (not covered by the SS state machine used for card transactions — ACH has its own return-processing pipeline). The gateway: (1) receives the R-code via the RDFI → ODFI → gateway daily return file; (2) creates a `return_event` record linked to the original `transaction_id`; (3) debits the merchant's reserve account for the returned amount; (4) surfaces the return in the `TEDR (Transaction Exception & Dispute Report)`; (5) for R07/R10 (unauthorized), immediately flags the bank account as `DO_NOT_DEBIT` — future charges to this account are blocked. The 60-day unauthorized return window means financial reserves must account for this exposure.
+
+### 12. Multi-Currency Settlement
+**Q:** If a merchant processes in EUR and USD, how are settlement batches structured?
+
+**A:** Settlement batches are created per processor per currency per merchant. A merchant processing EUR Visa and USD Visa creates two separate batches submitted to Visa's network — one in EUR, one in USD. The settler's batch builder groups by `(merchant_id, processor_id, currency)`. FX conversion happens at the card network level (issuer currency → network settlement currency → acquirer currency) — the gateway does not perform FX conversion itself. The settlement totals in the balance check must compare in the same currency as the processor settlement file.
+
+### 13. Chargeback Effect on Settled Batches
+**Q:** A transaction was settled (SS=2) last week. Today the merchant receives a chargeback. Does the settlement record change?
+
+**A:** No — the SS=2 record is immutable. Chargebacks are recorded as separate events in the `CRDR (Chargeback & Retrieval Detail Report)`. The gateway debits the merchant's reserve account for the chargeback amount and fee (typically $15–50). If the merchant disputes the chargeback (representment), the dispute workflow creates a new credit record on resolution. The original settled transaction always shows SS=2 — the chargeback is a separate financial event, not a state change on the original transaction.
+
+---
+
 ## Section 1: Iterator Pattern — Settlement Batch Traversal
 
 :::tip[Intent]
@@ -106,8 +190,7 @@ SettlerWorker --> SettlementBatch : uses createIterator()
 - You need to track running totals (total amount, transaction count) as you iterate for balance verification
 :::
 
-```java
-// SettlementTransaction.java
+```java title="SettlementTransaction.java"
 public class SettlementTransaction {
     private final String transactionId;
     private final String merchantId;
@@ -120,8 +203,7 @@ public class SettlementTransaction {
 }
 ```
 
-```java
-// SettlementBatchIterator.java
+```java title="SettlementBatchIterator.java"
 public interface SettlementBatchIterator {
     boolean hasNext();
     SettlementTransaction next();
@@ -131,8 +213,7 @@ public interface SettlementBatchIterator {
 }
 ```
 
-```java
-// SettlementBatch.java
+```java title="SettlementBatch.java"
 public interface SettlementBatch {
     SettlementBatchIterator createIterator();
     String getMerchantId();
@@ -141,8 +222,7 @@ public interface SettlementBatch {
 }
 ```
 
-```java {10,14}
-// DatabaseCursorSettlementBatchIterator.java
+```java title="DatabaseCursorSettlementBatchIterator.java" {10,14}
 public class DatabaseCursorSettlementBatchIterator implements SettlementBatchIterator {
     private final ResultSet cursor;
     private BigDecimal runningTotal = BigDecimal.ZERO;
@@ -203,8 +283,7 @@ public class DatabaseCursorSettlementBatchIterator implements SettlementBatchIte
 }
 ```
 
-```java collapse={1-8}
-// DatabaseCursorSettlementBatch.java
+```java title="DatabaseCursorSettlementBatch.java" collapse={1-8}
 public class DatabaseCursorSettlementBatch implements SettlementBatch {
     private final DataSource dataSource;
     private final String merchantId;
@@ -245,8 +324,7 @@ public class DatabaseCursorSettlementBatch implements SettlementBatch {
 
 How the settler worker uses the iterator — note it never knows the underlying storage:
 
-```java {7,12}
-// SettlerWorker.java — core iteration logic
+```java title="SettlerWorker.java" {7,12}
 public class SettlerWorker {
 
     public SettlementResult processBatch(SettlementBatch batch) {
@@ -286,9 +364,25 @@ public class SettlerWorker {
 - **Interchangeable sources**: `InMemorySettlementBatch` in tests, `DatabaseCursorSettlementBatch` in prod — settler code unchanged
 - **Running totals**: iterator tracks amount and count during traversal — no second pass needed for balance check
 :::
-:::caution[Disadvantages]
+:::warn[Disadvantages]
 - **Must call `close()`**: if the worker crashes mid-batch, the DB cursor leaks. Use try-finally or try-with-resources.
 - **Forward-only**: DB cursors are forward-only; can't rewind without reopening the cursor
+:::
+
+### Why Iterator Pattern and Not Alternatives
+
+| Alternative | Why it fails for settlement batch traversal |
+|---|---|
+| `List<SettlementTransaction> = repo.findAll(merchantId)` | Loads 100,000 records into heap memory. OOM error for large merchants. Blocks until all records are fetched before processing begins. |
+| Pagination (`LIMIT/OFFSET`) | Each page requires a new DB query. With OFFSET, later pages get progressively slower (DB must skip N rows). Risk of missing/duplicating rows if data changes between page fetches. |
+| Keyset pagination | Better than OFFSET but adds complexity and requires a stable sort key. Iterator encapsulates this complexity so the worker doesn't need to manage pagination state. |
+| **Iterator** ✓ | DB cursor streams records one chunk at a time (fetch size 1,000). Worker processes as fast as records arrive. Memory usage is constant regardless of batch size. `SettlerWorker` is completely unaware of storage details. |
+
+:::tip[Always use Iterator Pattern when...]
+- A collection is too large to fit in memory (>10K records)
+- The caller needs to process records one at a time without loading everything first
+- Multiple traversal strategies may be needed (DB cursor for prod, in-memory list for tests)
+- You want to track running aggregates (total amount, count) during traversal
 :::
 
 ---
@@ -397,8 +491,7 @@ ReconcileWithProcessorCommand ..> SettlementCommandResult : returns
 - Operations team needs to re-run a specific failed command without rerunning the entire batch
 :::
 
-```java
-// SettlementCommand.java
+```java title="SettlementCommand.java"
 public interface SettlementCommand {
     SettlementCommandResult execute();
     boolean canRetry();
@@ -411,8 +504,7 @@ public interface SettlementCommand {
 }
 ```
 
-```java
-// SettlementCommandResult.java
+```java title="SettlementCommandResult.java"
 public class SettlementCommandResult {
     private final boolean success;
     private final String errorCode;
@@ -431,8 +523,7 @@ public class SettlementCommandResult {
 }
 ```
 
-```java {6,14,21}
-// SubmitBatchToProcessorCommand.java
+```java title="SubmitBatchToProcessorCommand.java" {6,14,21}
 public class SubmitBatchToProcessorCommand implements SettlementCommand {
     private final String batchId;
     private final List<SettlementTransaction> transactions;
@@ -483,8 +574,7 @@ public class SubmitBatchToProcessorCommand implements SettlementCommand {
 }
 ```
 
-```java collapse={1-6}
-// MarkTransactionsSettledCommand.java
+```java title="MarkTransactionsSettledCommand.java" collapse={1-6}
 public class MarkTransactionsSettledCommand implements SettlementCommand {
     private final String batchId;
     private final List<String> transactionIds;
@@ -513,8 +603,7 @@ public class MarkTransactionsSettledCommand implements SettlementCommand {
 }
 ```
 
-```java {12,18,24}
-// SettlementCommandInvoker.java
+```java title="SettlementCommandInvoker.java" {12,18,24}
 public class SettlementCommandInvoker {
     private final SettlementAuditLog auditLog;
     private final Queue<SettlementCommand> retryQueue = new LinkedList<>();
@@ -560,11 +649,27 @@ public class SettlementCommandInvoker {
 :::danger
 Never retry a command that returned `OUT_OF_BALANCE`. The SS=4 state requires manual reconciliation — automated retry would create duplicate processor submissions and potentially double-fund transactions.
 :::
-:::caution[Disadvantages]
+:::warn[Disadvantages]
 - **Command proliferation**: one class per settlement step
 - **Statefulness**: `retryCount` is in-memory — if the settler JVM restarts mid-retry, the counter resets. For production, persist retry state in DB.
 :::
 
+### Why Command Pattern and Not Alternatives
+
+| Alternative | Why it fails for settlement retry |
+|---|---|
+| Catch exception, retry inline in `SettlerWorker` | Retry logic mixed with orchestration logic. Cannot retry a specific step without re-running earlier steps. No audit trail of which step failed how many times. |
+| Simple retry wrapper (`@Retry` annotation) | Retries the entire `processBatch()` call — including re-submitting to the processor, risking double-settlement. |
+| Saga pattern | Correct for distributed systems with multiple services. Overkill for a single-service settlement pipeline with 3-4 in-process steps. Command Pattern is sufficient. |
+| **Command** ✓ | Each step is an object. `SubmitBatchToProcessorCommand` retries only processor submission. `MarkTransactionsSettledCommand` retries only the DB write. SS=4 detected in `execute()` returns `permanentFailure` — invoker never retries it. |
+
+:::tip[Always use Command Pattern when...]
+- A multi-step operation needs step-level retry without re-running earlier steps
+- Each step needs an audit trail (which batch, which step, how many retries, what outcome)
+- Some failures are permanent (SS=4) and others are transient (timeout) — distinguishable at the command level
+- You need compensation (undo) for already-completed steps when a later step permanently fails
+:::
+
 ---
 
-[← Payment Gateway LLD](/learnings/payment-gateway/lld/)
+[← Payment Gateway LLD](/low-level-design/payment-gateway/lld-payment-gateway/)

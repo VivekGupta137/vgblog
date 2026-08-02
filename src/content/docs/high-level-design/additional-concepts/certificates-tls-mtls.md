@@ -304,23 +304,45 @@ The client verifies the signature using the public key in the presented cert.
 
 Because the signature covers freshly-generated random values unique to **this session**, it cannot be replayed from any prior connection.
 
-#### Diffie-Hellman key exchange
+#### ECDHE — how both sides derive the same session key
 
-Both sides independently derive the **same** session key without ever transmitting it. TLS uses **ECDHE** (Elliptic Curve Diffie-Hellman Ephemeral):
+The core trick: multiplying a number by a curve point is a **one-way operation** — fast forward, infeasible to reverse. That single property is what makes the exchange safe over a public wire.
 
+```svgbob
+  Both agree up front: curve P-256  +  base point G   (public, not secret)
+
+       CLIENT                                               SERVER
+       ──────                                               ──────
+
+  a = random secret                              b = random secret
+  (never transmitted)                            (never transmitted)
+        │                                               │
+        │  × G  ← one-way                   one-way → │  × G
+        ▼                                               ▼
+  A = a×G  (public)                           B = b×G  (public)
+        │                                               │
+        ├───────────────── A ──────────────────────────►│
+        │◄────────────────── B ─────────────────────────┤
+        │                                               │
+        ▼                                               ▼
+   a × B = a×(b×G)                            b × A = b×(a×G)
+         = (a×b)×G                                   = (a×b)×G
+                     │                   │
+                     └────────┬──────────┘
+                              ▼
+                   ┌─────────────────────┐
+                   │   shared = (a×b)×G  │
+                   │   → session key     │
+                   └─────────────────────┘
+
+  Attacker sees A and B.  To crack it: find  a  from  a×G = A.
+  That is the Discrete Log Problem — no efficient algorithm exists.
 ```
-1. Both agree on a curve and a base point G (public)
-2. Client  picks secret scalar a → sends a·G (public point)
-3. Server  picks secret scalar b → sends b·G (public point)
-4. Client  computes a·(b·G) = ab·G
-5. Server  computes b·(a·G) = ab·G   ← same value!
 
-An eavesdropper saw a·G and b·G but cannot compute ab·G
-without knowing a or b. Neither secret crossed the wire.
-```
+Why both sides get the **same result**: scalar multiplication is associative, so `a×(b×G)` = `b×(a×G)` = `(a×b)×G`. Each side used their own private number with the *other side's public point* and arrived at identical output.
 
-:::note[Forward secrecy]
-Because ECDHE uses **ephemeral** key pairs (generated fresh per session and then discarded), past sessions cannot be decrypted even if the server's long-term certificate private key is stolen later. This property is called **forward secrecy**.
+:::note[Forward secrecy — why "ephemeral" matters]
+`a` and `b` are discarded immediately after the handshake. A fresh pair is generated for every session. If an attacker records today's traffic and steals the server's certificate key tomorrow, they still cannot decrypt old sessions — `b` no longer exists anywhere. Compare that to classic RSA key exchange, where the session secret is encrypted with the server's long-term key, meaning every past session becomes retroactively decryptable once that key is stolen.
 :::
 
 ```plantuml
@@ -342,34 +364,33 @@ note over C : Validate cert chain:\n  ✓ CA trusted by OS?\n  ✓ Not expired?\
 
 == Phase 2 — Key Exchange (ECDHE) ==
 
-S -> C : ServerKeyExchange\n  Ks_pub  (server ephemeral EC public key)\n  + RSA_sign(SHA256(client_random + server_random + Ks_pub),\n             server_private_key)\n  ← THIS signature proves server owns the cert
+S -> S : generate ephemeral EC pair\n  Ks_priv  (secret — never leaves)\n  Ks_pub   (send to client)
 
-note over C : Verify signature with public key from the cert.\n✓ pass → server is genuine\n✗ fail → abort; impersonation detected
+S -> C : ServerKeyExchange\n  Ks_pub\n  sig = RSA_sign( SHA256(client_random + server_random + Ks_pub),\n                  cert_private_key )\n  ↑ binds the ephemeral key to the cert — proves server owns it
 
-C -> C : Generate ephemeral EC key pair:\n  Kc_priv  (secret, stays here forever)\n  Kc_pub   (sent to server)
+note over C #FFF9C4 : verify sig using public key from the cert\n✓ genuine   ✗ abort
+
+C -> C : generate ephemeral EC pair\n  Kc_priv  (secret — never leaves)\n  Kc_pub   (send to server)
 
 C -> S : ClientKeyExchange\n  Kc_pub
 
-note over C : pre_master_secret = ECDH(Kc_priv, Ks_pub)
-note over S : pre_master_secret = ECDH(Ks_priv, Kc_pub)\n← same value (a·B = b·A in EC math)\n\nNeither private key crossed the wire.
+note over C,S #E8F5E9 : pre_master_secret\n  client computes: Kc_priv × Ks_pub\n  server computes: Ks_priv × Kc_pub\n  ─────────────────────────────────\n  same result  ✓  (EC scalar mult: a·B = b·A)\n  neither private key crossed the wire
 
 == Phase 3 — Derive Session Keys ==
 
 note over C,S
-  master_secret = PRF(pre_master_secret, "master secret",
-                      client_random + server_random)
+  master_secret = PRF( pre_master_secret,
+                       client_random + server_random )
 
-  session_keys  = PRF(master_secret, "key expansion",
-                      server_random + client_random)
+  ┌─────────────────────────────────────────────────────┐
+  │  client_write_key → AES-256  (encrypts C→S traffic) │
+  │  server_write_key → AES-256  (encrypts S→C traffic) │
+  │  client_MAC_key   → HMAC     (integrity  C→S)        │
+  │  server_MAC_key   → HMAC     (integrity  S→C)        │
+  └─────────────────────────────────────────────────────┘
 
-  Expands into symmetric keys:
-    client_write_key  → AES key for client → server
-    server_write_key  → AES key for server → client
-    + MAC keys for integrity
-
-  pre_master_secret discarded immediately.
-  Ephemeral keys (Kc_priv, Ks_priv) discarded immediately.
-  Forward secrecy: past sessions safe even if cert key stolen later.
+  Discard: pre_master_secret,  Kc_priv,  Ks_priv
+  (forward secrecy: past sessions safe even if cert key later stolen)
 end note
 
 C -> S : ChangeCipherSpec + Finished  (encrypted)
@@ -428,9 +449,11 @@ S -> C : 3. Certificate\n   server X.509 cert (public key inside)
 
 S -> C : 4. CertificateRequest  ← the mTLS-only extra message\n   "I require a client certificate too"
 
-S -> C : 5. ServerKeyExchange\n   Ks_pub (ephemeral EC key)\n   + RSA_sign(hash, server_private_key)\n   → proves server owns its cert
+S -> S : generate ephemeral EC pair\n   Ks_priv (secret — never leaves)\n   Ks_pub  (send to client)
 
-note over C : Validate server cert chain.\nVerify ServerKeyExchange signature.\n✓ → server is genuine.
+S -> C : 5. ServerKeyExchange\n   Ks_pub\n   sig = RSA_sign( SHA256(client_random + server_random + Ks_pub),\n                   cert_private_key )\n   ↑ binds the ephemeral key to the cert — proves server owns it
+
+note over C #FFF9C4 : Validate server cert chain.\nVerify ServerKeyExchange signature.\n✓ server is genuine   ✗ abort
 
 == Phase 2 — Client Proves Its Identity ==
 
@@ -444,16 +467,33 @@ note over S #LightCoral : 9. Verify CertificateVerify:\n   h' = SHA256(handshake
 
 note over S #LightCoral : 10. Check allow-list:\n    Is this cert CN mapped to an allowed identity?\n    "order-service.internal.corp"   → ✓ allowed\n    "unknown-service.internal.corp" → ✗ rejected (HTTP 403)
 
-== Phase 3 — Session Keys ==
+== Phase 3 — Key Exchange + Session Keys ==
 
-C -> S : 11. ClientKeyExchange\n    Kc_pub (client ephemeral EC public key)
+C -> C : generate ephemeral EC pair\n   Kc_priv (secret — never leaves)\n   Kc_pub  (send to server)
 
-note over C,S : Both independently compute:\n  pre_master = ECDH(my_priv, their_pub)  ← same on both sides\n  master_secret, session_keys derived via PRF\n\nNo private key or pre-master secret ever crossed the wire.
+C -> S : 11. ClientKeyExchange\n    Kc_pub
 
-C -> S : 12. ChangeCipherSpec + Finished  (encrypted)
-S -> C : 13. ChangeCipherSpec + Finished  (encrypted)
+note over C,S #E8F5E9 : pre_master_secret\n   client computes: Kc_priv × Ks_pub\n   server computes: Ks_priv × Kc_pub\n   ─────────────────────────────────\n   same result  ✓  (EC scalar mult: a·B = b·A)\n   neither private key crossed the wire
 
-note over C,S #LightGreen : Encrypted channel established.\nBoth identities cryptographically proven.\nApplication traffic flows over AES-256-GCM.
+note over C,S
+  master_secret = PRF( pre_master_secret,
+                       client_random + server_random )
+
+  ┌──────────────────────────────────────────────────────────┐
+  │  client_write_key  → AES-256  encrypts  C → S traffic   │
+  │  server_write_key  → AES-256  encrypts  S → C traffic   │
+  │  client_write_IV   → GCM nonce seed for C → S           │
+  │  server_write_IV   → GCM nonce seed for S → C           │
+  └──────────────────────────────────────────────────────────┘
+
+  Discard: pre_master_secret,  Kc_priv,  Ks_priv
+  (forward secrecy: past sessions safe if cert key later stolen)
+end note
+
+C -> S : 12. ChangeCipherSpec + Finished  (encrypted with client_write_key)
+S -> C : 13. ChangeCipherSpec + Finished  (encrypted with server_write_key)
+
+note over C,S #LightGreen : Encrypted channel established.\nBoth identities cryptographically proven.\nAll traffic uses AES-256-GCM with the derived session keys.
 @enduml
 ```
 
@@ -463,6 +503,86 @@ note over C,S #LightGreen : Encrypted channel established.\nBoth identities cryp
 |---|---|---|
 | Chain validation | Is this cert genuine? | Walk the chain to a trusted root CA |
 | CertificateVerify | Does the presenter own the cert? | Verify the signature — only possible with the private key |
+
+### 4.3 Session keys — why they exist and how they work
+
+**AES is symmetric encryption** — the same key both encrypts and decrypts. That is the opposite of RSA/ECDHE (asymmetric), where a public key encrypts and a different private key decrypts. Symmetric is much faster (think nanoseconds per record vs milliseconds for asymmetric), which is why all actual TLS data is encrypted with AES, not with the certificate's RSA key.
+
+The catch: both sides must hold the identical key before they can talk. You cannot send the key over the wire — anyone listening would grab it. That is exactly the problem ECDHE solves: it lets both sides independently arrive at the same secret without ever transmitting it.
+
+**The single-sentence reason session keys exist:** ECDHE is powerful but slow — it runs once to agree on a shared secret. That secret is fed into a fast "key factory" (PRF) that produces short-lived AES keys used for all actual data. When the session ends, every key is thrown away.
+
+```svgbob
+  ECDHE shared secret          client_random + server_random
+  (pre_master_secret)          (fresh 32-byte values from handshake)
+          │                                  │
+          └──────────────┬───────────────────┘
+                         │
+                         ▼
+                 ┌────────────────┐
+                 │  PRF           │  "key expansion"
+                 │  key factory   │
+                 └───────┬────────┘
+                         │
+          ┌──────────────┼──────────────────┐
+          │              │                  │
+          ▼              ▼                  ▼
+  client_write_key  server_write_key    write_IVs
+    (AES-256)          (AES-256)        (GCM nonce seeds)
+  client encrypts    server encrypts   ensure every
+  C→S traffic        S→C traffic       record is unique
+  server decrypts    client decrypts
+```
+
+**How both sides independently arrive at the same keys**
+
+The PRF (key factory) is **deterministic** — same inputs always produce the same outputs. Both sides feed it the exact same three things:
+
+| Input | Where it comes from | Both sides have it? |
+|---|---|---|
+| `pre_master_secret` | ECDHE — each side computed the same value independently (`a×B = b×A`) | ✓ yes — that was ECDHE's whole job |
+| `client_random` | Client generated it, sent openly in ClientHello | ✓ yes — exchanged in plaintext |
+| `server_random` | Server generated it, sent openly in ServerHello | ✓ yes — exchanged in plaintext |
+
+```
+Client computes:                     Server computes:
+  PRF( Kc_priv×Ks_pub,               PRF( Ks_priv×Kc_pub,
+       client_random,                      client_random,
+       server_random )                     server_random )
+         │                                       │
+         ▼                                       ▼
+  client_write_key = X  ◄──── same ────►  client_write_key = X
+  server_write_key = Y  ◄──── same ────►  server_write_key = Y
+```
+
+Neither key was transmitted. Both sides computed them independently from the same ingredients.
+
+**How a record travels over the wire:**
+
+```
+CLIENT                                                    SERVER
+
+"GET /orders"
+    │
+    │  encrypt( "GET /orders", client_write_key )
+    ▼
+[ ciphertext | auth_tag ] ──────────────────────────────► decrypt( ciphertext,
+                                                                    client_write_key )
+                                                           verify auth_tag
+                                                               │
+                                                               ▼ if tag ✓ → "GET /orders"
+                                                               ▼ if tag ✗ → drop (tampered)
+```
+
+The `auth_tag` is a fingerprint over the ciphertext. One flipped bit in transit → tag check fails → record silently dropped. No extra signature step needed.
+
+:::note[Why two keys instead of one shared key?]
+If both sides used the same key, an attacker could record a message the client sent and replay it back to the client — the client would decrypt it fine and think it came from the server (a **reflection attack**). Separate keys per direction make this impossible: the key used to send is different from the key used to receive.
+:::
+
+:::note[Why are they thrown away after the session?]
+Session keys come from ephemeral ECDHE keys (`Kc_priv`, `Ks_priv`) that are also discarded. So even if an attacker records today's traffic and later steals the server's certificate key, they cannot recompute the session keys — the ephemeral values are gone. This is **forward secrecy**: past sessions stay safe no matter what gets stolen in the future.
+:::
 
 :::success[Advantages of mTLS]
 - **No shared secret transmitted** — identity proof uses signing, not secret comparison

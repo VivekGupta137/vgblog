@@ -8,6 +8,89 @@ The transaction engine is the heart of a payment gateway. This document shows ho
 
 ---
 
+## Problem Statement
+
+Design the core transaction processing engine for a payment gateway. The engine must:
+
+- Accept payment requests (auth, capture, void, refund) and route them to card processors
+- Prevent illegal operations — a refund on an unauthorized transaction must be impossible
+- Never lose an authorized charge even if the server crashes mid-processing
+- Detect and reject duplicate requests without double-charging the customer
+- Support multiple payment types (card, ACH, digital wallet) through the same pipeline
+
+The key design challenges:
+1. **State enforcement**: a `SETTLED` transaction cannot be voided — only refunded. An `AUTHORIZED` transaction cannot be refunded — only captured or voided. These rules must be enforced at every call site.
+2. **Crash safety**: the processor charges the card at the network level before the gateway can record the result. A crash in that window must be recoverable.
+3. **Payment type variance**: card, ACH, and wallet payments share the same pipeline stages (validate → fraud-check → submit → record) but have completely different implementations for each stage.
+
+---
+
+## Clarifying Questions — Interview
+
+These are the questions you should ask (and be ready to answer) when designing any transaction processing LLD.
+
+### 1. Functional Scope
+**Q:** What transaction types must be supported? Can a transaction be partially captured?
+
+**A:** AUTH_ONLY, AUTH_CAPTURE, CAPTURE, VOID, REFUND. Partial capture is required — capture amount can be less than or equal to the original auth amount (e.g., an $80 item on a $100 hotel auth).
+
+### 2. Scale & Performance Budget
+**Q:** How many concurrent transactions are processed at peak? What is the target latency?
+
+**A:** ~5,000 TPS at peak. The full authorization round-trip (gateway + processor + issuer) must complete within 3 seconds (p99). The engine itself must contribute <200ms of that budget.
+
+### 3. Consistency & Correctness Invariants
+**Q:** What must NEVER happen, regardless of failures?
+
+**A:** (1) A customer must never be charged twice for the same purchase. (2) An authorized charge must never be permanently lost — even if the gateway crashes, recovery must be possible. (3) A `SETTLED` transaction must never be voided — only refunded.
+
+### 4. Extensibility & Rate of Change
+**Q:** How often are new transaction types or new payment methods added?
+
+**A:** New payment methods (BNPL, crypto) are added every 1-2 years. Each must go through the same pipeline stages. The system should allow adding a new payment type without modifying the existing pipeline code.
+
+### 5. Concurrency & Thread Safety
+**Q:** Is a single `Transaction` object shared across multiple threads?
+
+**A:** No — each transaction request gets its own `Transaction` object, so the State machine is safe. However, concurrent retries for the same order race to insert into the DB simultaneously. The UNIQUE index on `(merchant_id, idempotency_key)` ensures only one wins — the loser gets a constraint violation, reads the winner's PENDING record, and returns that result. No lock required; the DB constraint is the synchronization primitive.
+
+### 6. Failure & Recovery
+**Q:** What happens if the server crashes after the processor approves the charge but before the database is updated?
+
+**A:** The PENDING record write happens BEFORE the processor call. The PENDING record acts as a recovery marker. Ops can query all PENDING records older than 5 minutes and reconcile them against the processor's records. This is why write-before-call is non-negotiable.
+
+### 7. Observability & Debuggability
+**Q:** How do we trace a specific transaction through the system? How do we detect a stuck transaction?
+
+**A:** `transaction_id` is the trace anchor — injected at PENDING write and included in every log line. Alert on `PENDING` transactions older than 5 minutes: this indicates a processor call that never returned a response.
+
+### 8. Persistence & Durability
+**Q:** Is transaction state in-memory or persisted? What is the durability requirement?
+
+**A:** Fully persisted in PostgreSQL. No transaction state lives in-memory only. A JVM restart must lose zero transaction data. The `settlement_state` field on each transaction record is the authoritative source of truth.
+
+### 9. Authorization Expiry
+**Q:** What happens when an authorization is not captured before it expires?
+
+**A:** Authorization holds expire — typically 7 days for e-commerce credit cards, 3 days for debit, up to 30 days for hotel/car rental (merchant-category-specific). The system tracks `auth_expires_at` on each `AUTHORIZED` transaction. A background job runs daily and transitions expired `AUTHORIZED` records to `EXPIRED` (a terminal state). `AuthorizedState.capture()` checks expiry before allowing capture — expired auths throw `AuthorizationExpiredException`. The merchant must re-authorize. This is one of the most common production bugs in payment systems when not handled.
+
+### 10. Partial and Multiple Refunds
+**Q:** Can a settled transaction be partially refunded? Can it be refunded multiple times?
+
+**A:** Yes to both. A $100 settled transaction can be refunded $30 and then $50 (total $80 in refunds). `SettledState.refund()` tracks `totalRefunded` and validates `newRefundAmount + totalRefunded ≤ settledAmount`. Each refund creates a new transaction record (a new credit) linked to the original via `parent_tx_id`. The state does not move to REFUNDED until fully refunded — partial refunds keep the transaction in SETTLED state with a running `refunded_amount` counter.
+
+### 11. Reversal vs. Refund
+**Q:** What is the difference between a void, a reversal, and a refund? When is each used?
+
+**A:** These are three distinct operations with different network-level effects: **(1) Void** — cancels an AUTHORIZED transaction before capture. The authorization hold is released on the cardholder's account (within hours). No money ever moved. **(2) Reversal** — a processor-level cancellation of a captured-but-not-yet-settled transaction sent directly to the card network. Like a void but later in the lifecycle. Must happen before the settlement batch closes. **(3) Refund** — creates a new credit transaction after settlement. Money has already moved from issuer to acquirer; a refund initiates a new movement back. Takes 3–5 business days to appear on the cardholder's statement. The state machine models Void and Refund; Reversal is handled at the processor-adapter layer.
+
+### 12. PCI DSS Compliance
+**Q:** What PCI DSS requirements directly affect the design of the transaction engine?
+
+**A:** Three requirements are directly relevant: **(1) Req 3.2** — CVV must never be stored after authorization. `Transaction` must not have a `cvv` field; the value is passed through in the request but purged from the object before any persistence. **(2) Req 10** — all access to cardholder data environments must be logged. The `TransactionInvoker` audit log (from the Command Pattern) satisfies this — every operation on every transaction is recorded. **(3) Req 6** — applications must not introduce vulnerabilities. The State Pattern satisfies this: illegal operations throw `InvalidStateTransitionException` rather than silently processing, preventing unauthorized state manipulation.
+
+---
+
 ## State Pattern — Transaction Lifecycle
 
 :::tip[Intent]
@@ -116,8 +199,7 @@ end note
 - You want to add new states (e.g., HELD_FOR_REVIEW) without modifying existing states
 :::
 
-```java
-// TransactionState.java
+```java title="TransactionState.java"
 public interface TransactionState {
     void authorize(Transaction context);
     void capture(Transaction context, BigDecimal amount);
@@ -127,8 +209,7 @@ public interface TransactionState {
 }
 ```
 
-```java
-// Transaction.java
+```java title="Transaction.java"
 public class Transaction {
     private TransactionState state;
     private String transactionId;
@@ -154,8 +235,7 @@ public class Transaction {
 }
 ```
 
-```java {8,14}
-// AuthorizedState.java
+```java title="AuthorizedState.java" {8,14}
 public class AuthorizedState implements TransactionState {
 
     @Override
@@ -191,8 +271,7 @@ public class AuthorizedState implements TransactionState {
 }
 ```
 
-```java collapse={1-8}
-// SettledState.java
+```java title="SettledState.java" collapse={1-8}
 public class SettledState implements TransactionState {
 
     @Override
@@ -244,9 +323,25 @@ public class SettledState implements TransactionState {
 - **No massive switch statements**: Each state handles its own logic
 :::
 
-:::caution[Disadvantages]
+:::warn[Disadvantages]
 - More classes: one class per state (6+ states = 6+ files)
 - State transitions scattered across state classes — must read multiple files to understand the full lifecycle
+:::
+
+### Why State Pattern and Not Alternatives
+
+| Alternative | Why it fails for transaction lifecycle |
+|---|---|
+| `if-else` / `switch` chains | Every new state or operation requires modifying the `Transaction` class. Adding HELD_FOR_REVIEW means touching every operation method. Illegal transitions silently pass through instead of throwing. |
+| `enum` with abstract methods | Works for simple cases, but all state logic is in one file. A 6-state × 5-operation matrix becomes a 1000-line enum. Hard to test individual states in isolation. |
+| Boolean flags (`isVoided`, `isCaptured`, `isSettled`) | Multiple flags can contradict each other (`isVoided=true` AND `isCaptured=true`). No single source of truth for "what can I do now?" |
+| **State Pattern** ✓ | Each state is a self-contained class. `VoidedState.capture()` throws `InvalidStateTransitionException` at exactly the right place. New states are new files — existing states unchanged. |
+
+:::tip[Always use State Pattern when...]
+- An object has 3+ distinct states where behavior changes significantly per state
+- Some operations are illegal in certain states and must throw (not silently no-op)
+- You expect new states to be added over the lifetime of the system
+- You want state transition logic owned by the state itself, not by the caller
 :::
 
 ---
@@ -344,8 +439,7 @@ end note
 - You want to decouple the operation trigger (merchant API call) from the operation execution (processor call)
 :::
 
-```java
-// TransactionCommand.java
+```java title="TransactionCommand.java"
 public interface TransactionCommand {
     CommandResult execute();
     void undo();
@@ -354,8 +448,7 @@ public interface TransactionCommand {
 }
 ```
 
-```java
-// CommandResult.java
+```java title="CommandResult.java"
 public class CommandResult {
     private final boolean success;
     private final String responseCode;
@@ -366,8 +459,7 @@ public class CommandResult {
 }
 ```
 
-```java {6,10}
-// AuthorizeCommand.java
+```java title="AuthorizeCommand.java" {6,10}
 public class AuthorizeCommand implements TransactionCommand {
     private final TransactionService transactionService;
     private final String transactionId;
@@ -401,8 +493,7 @@ public class AuthorizeCommand implements TransactionCommand {
 }
 ```
 
-```java
-// TransactionInvoker.java
+```java title="TransactionInvoker.java"
 public class TransactionInvoker {
     private final Deque<TransactionCommand> commandHistory = new ArrayDeque<>();
     private final AuditLogger auditLogger;
@@ -436,9 +527,25 @@ public class TransactionInvoker {
 - **Decoupling**: merchant API handler just builds a command and passes to invoker
 :::
 
-:::caution[Disadvantages]
+:::warn[Disadvantages]
 - **Command explosion**: one class per operation type (AuthorizeCommand, CaptureCommand, etc.)
 - **State management**: undo() must be carefully implemented or it creates inconsistency
+:::
+
+### Why Command Pattern and Not Alternatives
+
+| Alternative | Why it fails for transaction operations |
+|---|---|
+| Direct method calls (`transactionService.authorize(...)`) | No audit trail. Undo requires ad-hoc compensation logic scattered through callers. Operations cannot be queued or retried as units. |
+| Event sourcing only | Useful for replay but adds overhead. Command Pattern gives you undo + audit without the full event sourcing infrastructure. |
+| Simple logging wrapper | Logging after the fact doesn't give you structured retry or undo capability. |
+| **Command Pattern** ✓ | Each operation is a first-class object: loggable, retryable, undoable, queueable. The `TransactionInvoker` owns all cross-cutting behavior — callers stay clean. |
+
+:::tip[Always use Command Pattern when...]
+- Operations need an audit trail (who, what, when, outcome) — required for PCI compliance
+- You need undo/compensation (void an authorization that was erroneously captured)
+- Operations may need to be queued, delayed, or retried independently
+- You want to decouple "who triggers the operation" from "how the operation executes"
 :::
 
 ---
@@ -517,8 +624,7 @@ end note
 - New payment methods (e.g., BNPL) can be added by implementing only the variant steps
 :::
 
-```java {5,7,9,11,13}
-// AbstractPaymentProcessor.java
+```java title="AbstractPaymentProcessor.java" {5,7,9,11,13}
 public abstract class AbstractPaymentProcessor {
 
     // Template method — final so subclasses cannot reorder steps
@@ -552,8 +658,7 @@ public abstract class AbstractPaymentProcessor {
 }
 ```
 
-```java collapse={1-6}
-// CardPaymentProcessor.java
+```java title="CardPaymentProcessor.java" collapse={1-6}
 public class CardPaymentProcessor extends AbstractPaymentProcessor {
 
     private final CardValidator cardValidator;
@@ -601,8 +706,7 @@ public class CardPaymentProcessor extends AbstractPaymentProcessor {
 }
 ```
 
-```java collapse={1-6}
-// AchPaymentProcessor.java
+```java title="AchPaymentProcessor.java" collapse={1-6}
 public class AchPaymentProcessor extends AbstractPaymentProcessor {
 
     private final AchValidator achValidator;
@@ -641,11 +745,27 @@ public class AchPaymentProcessor extends AbstractPaymentProcessor {
 - **Code reuse**: shared steps (webhook notification, result building) written once
 :::
 
-:::caution[Disadvantages]
+:::warn[Disadvantages]
 - **Inheritance coupling**: subclasses depend on the abstract class — changes to the template method affect all subclasses
 - **Hidden control flow**: the template method controls execution; reading a subclass alone doesn't show the full picture
 :::
 
+### Why Template Method and Not Alternatives
+
+| Alternative | Why it fails for multi-payment-type processing |
+|---|---|
+| Copy-paste the pipeline in each processor class | Fraud check and recording get skipped or implemented differently per payment type. A bug fix in the pipeline must be applied to every copy. |
+| Strategy Pattern for the whole pipeline | Strategy swaps the entire algorithm. Template Method keeps the skeleton fixed and only varies the steps — correct here because the sequence (validate → fraud → submit → record) must always run in order. |
+| Composition with a `Pipeline` object | Works but gives subclasses no way to add payment-type-specific hooks (like the wallet-specific webhook on hold). Template Method's `hook()` mechanism is cleaner for optional extensions. |
+| **Template Method** ✓ | The pipeline skeleton is `final` — subclasses cannot reorder or skip steps. Each step is overridable. Optional behavior (webhook) is a hook with a default no-op. |
+
+:::tip[Always use Template Method when...]
+- Multiple variants share the same algorithm skeleton but differ in specific steps
+- Some steps are mandatory and must not be skipped (fraud check, transaction recording)
+- You want to allow extension at defined points (hooks) without allowing reordering
+- The invariant part of the algorithm and the variant part are cleanly separable
+:::
+
 ---
 
-[← Payment Gateway LLD](/learnings/payment-gateway/lld/)
+[← Payment Gateway LLD](/low-level-design/payment-gateway/lld-payment-gateway/)

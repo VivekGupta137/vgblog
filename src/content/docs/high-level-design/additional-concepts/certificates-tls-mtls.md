@@ -184,16 +184,20 @@ Internal PKIs often run their own **private root CA**. Every internal host is co
 
 When the client receives the server's certificate it tries to walk the chain up to a root it already trusts. If that root CA is not in the trust store, the walk terminates without reaching a trusted anchor and the handshake is aborted.
 
-```seqdiag
-seqdiag {
-  CLIENT;
-  SERVER;
-
-  CLIENT -> SERVER  [label = "ClientHello"];
-  SERVER -> CLIENT  [label = "Certificate\n(signed by Internal CA)"];
-  CLIENT -> CLIENT  [label = "Walk chain...\nInternal CA root → NOT in trust store"];
-  CLIENT -> CLIENT  [label = "TLS alert 48: unknown_ca\nHandshake aborted ✗"];
-}
+```
+CLIENT                                          SERVER
+  │  ClientHello                                  │
+  │ ─────────────────────────────────────────────►│
+  │                                               │
+  │  Certificate (signed by Internal CA)          │
+  │ ◄───────────────────────────────────────────── │
+  │                                               │
+  │  Walk chain...                                │
+  │  Internal CA root → NOT in trust store        │
+  │                                               │
+  │  TLS alert 48: unknown_ca                     │
+  │  Handshake aborted ✗                          │
+  │                                               │
 ```
 
 **Common causes:**

@@ -1,5 +1,7 @@
 ---
 title: Payment Gateway
+sidebar:
+  order: 1
 ---
 
 # Payment Gateway — HLD Documentation

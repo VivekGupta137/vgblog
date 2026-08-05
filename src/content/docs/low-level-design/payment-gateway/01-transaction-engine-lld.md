@@ -199,6 +199,7 @@ end note
 - You want to add new states (e.g., HELD_FOR_REVIEW) without modifying existing states
 :::
 
+:::group
 ```java title="TransactionState.java"
 public interface TransactionState {
     void authorize(Transaction context);
@@ -304,6 +305,7 @@ public class SettledState implements TransactionState {
     }
 }
 ```
+:::
 
 ### State Transition Table
 

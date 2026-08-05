@@ -23,16 +23,24 @@
   height: 1.3em;
 }
 
-/* :::group / :::code-group — tabbed code blocks
-   Kill Starlight's adjacent-sibling content gap inside the group.
-   (EC puts `not-content` on the figure, not the .expressive-code wrapper.) */
+/* Tab groups — code (::group) and content (::group-container)
+   Kill Starlight's adjacent-sibling content gap inside groups. */
 .sl-markdown-content .code-group > * + *,
-.sl-markdown-content .code-group .expressive-code {
+.sl-markdown-content .code-group .expressive-code,
+.sl-markdown-content .content-group > * + *,
+.sl-markdown-content .content-group .content-group__panel > * + * {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 
-.code-group {
+/* Restore normal markdown spacing inside content panels only */
+.sl-markdown-content .content-group .content-group__panel > * + * {
+  margin-top: var(--sl-content-gap-y) !important;
+  margin-bottom: 0 !important;
+}
+
+.code-group,
+.content-group {
   margin-block: 1.25rem;
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 0.5rem;
@@ -40,7 +48,8 @@
   background: var(--sl-color-gray-6, var(--sl-color-bg));
 }
 
-.code-group__tabs {
+.code-group__tabs,
+.content-group__tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.15rem;
@@ -49,7 +58,8 @@
   background: var(--sl-color-gray-6);
 }
 
-.code-group__tab {
+.code-group__tab,
+.content-group__tab {
   appearance: none;
   border: 0;
   background: transparent;
@@ -65,12 +75,14 @@
   border-bottom: 2px solid transparent;
 }
 
-.code-group__tab:hover {
+.code-group__tab:hover,
+.content-group__tab:hover {
   color: var(--sl-color-white);
   background: color-mix(in srgb, var(--sl-color-gray-5) 55%, transparent);
 }
 
-.code-group__tab[aria-selected="true"] {
+.code-group__tab[aria-selected="true"],
+.content-group__tab[aria-selected="true"] {
   color: var(--sl-color-white);
   border-bottom-color: var(--sl-color-accent);
   background: color-mix(in srgb, var(--sl-color-accent-low) 70%, transparent);
@@ -78,7 +90,9 @@
 
 .code-group > .expressive-code,
 .code-group > .code-group__panel,
-.code-group > .code-group__tabs {
+.code-group > .code-group__tabs,
+.content-group > .content-group__panel,
+.content-group > .content-group__tabs {
   margin: 0 !important;
   border-radius: 0 !important;
 }
@@ -86,6 +100,11 @@
 .code-group > .expressive-code,
 .code-group > .code-group__panel {
   border: 0 !important;
+}
+
+.content-group__panel {
+  padding: 0.75rem 1rem 1rem;
+  overflow-x: auto;
 }
 
 .code-group .expressive-code .frame {

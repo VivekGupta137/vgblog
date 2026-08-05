@@ -5,7 +5,9 @@ title: Company Apply
 # Companies to apply
 
 
-## SDE 3
+::::group-container
+:::group-item[SDE 3]{active}
+
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -255,9 +257,11 @@ title: Company Apply
 | [Thoughtworks](https://www.thoughtworks.com/careers) | Services | Bengaluru, Pune, Gurgaon, Chennai | 21–30L |
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 17–24L |
 
----
 
-## SDE 2
+:::
+
+:::group-item[SDE 2]
+
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -507,9 +511,11 @@ title: Company Apply
 | [Thoughtworks](https://www.thoughtworks.com/careers) | Services | Bengaluru, Pune, Gurgaon, Chennai | 14–20L |
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 11–16L |
 
----
 
-## SDE 1
+:::
+
+:::group-item[SDE 1]
+
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -758,3 +764,6 @@ title: Company Apply
 | [Tech Mahindra](https://careers.techmahindra.com/) | Services | Pan-India | 6–14L |
 | [Thoughtworks](https://www.thoughtworks.com/careers) | Services | Bengaluru, Pune, Gurgaon, Chennai | 9–13L |
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 7–10L |
+
+:::
+::::

@@ -20,6 +20,7 @@ import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-s
 import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 import { KROKI_DIAGRAM_ALIASES } from "./src/lib/kroki-aliases";
 import { remarkCodeGroup } from "./src/lib/remark-code-group";
+import { remarkContentGroup } from "./src/lib/remark-content-group";
 import remarkDirective from "remark-directive";
 import { loadEnv } from "vite";
 
@@ -51,6 +52,7 @@ export default defineConfig({
       ],
       remarkDirective,
       remarkCodeGroup,
+      remarkContentGroup,
       remarkMath,
     ],
     rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
@@ -117,7 +119,7 @@ export default defineConfig({
         label: "Learnings",
         items: [
           {
-            label: "Usage example",
+            label: "Guides",
             autogenerate: {
               directory: "guides",
             },

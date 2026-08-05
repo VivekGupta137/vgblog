@@ -21,6 +21,7 @@ import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 import { KROKI_DIAGRAM_ALIASES } from "./src/lib/kroki-aliases";
 import { remarkCodeGroup } from "./src/lib/remark-code-group";
 import { remarkContentGroup } from "./src/lib/remark-content-group";
+import { remarkDataTable } from "./src/lib/remark-data-table";
 import remarkDirective from "remark-directive";
 import { loadEnv } from "vite";
 
@@ -53,6 +54,7 @@ export default defineConfig({
       remarkDirective,
       remarkCodeGroup,
       remarkContentGroup,
+      remarkDataTable,
       remarkMath,
     ],
     rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],

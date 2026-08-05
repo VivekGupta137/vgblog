@@ -5,9 +5,10 @@ title: Company Apply
 # Companies to apply
 
 
-::::group-container
-:::group-item[SDE 3]{active}
+:::::group-container
+::::group-item[SDE 3]{active}
 
+:::data-table
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -257,11 +258,13 @@ title: Company Apply
 | [Thoughtworks](https://www.thoughtworks.com/careers) | Services | Bengaluru, Pune, Gurgaon, Chennai | 21–30L |
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 17–24L |
 
-
 :::
 
-:::group-item[SDE 2]
+::::
 
+::::group-item[SDE 2]
+
+:::data-table
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -511,11 +514,13 @@ title: Company Apply
 | [Thoughtworks](https://www.thoughtworks.com/careers) | Services | Bengaluru, Pune, Gurgaon, Chennai | 14–20L |
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 11–16L |
 
-
 :::
 
-:::group-item[SDE 1]
+::::
 
+::::group-item[SDE 1]
+
+:::data-table
 
 | Company | Category | Locations | Est. Comp (LPA) |
 |---------|----------|-----------|-----------------|
@@ -766,4 +771,6 @@ title: Company Apply
 | [Deloitte](https://www2.deloitte.com/global/en/careers.html) | Services | Bengaluru, Hyderabad, Pune, Gurgaon | 7–10L |
 
 :::
+
 ::::
+:::::

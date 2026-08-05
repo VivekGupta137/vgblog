@@ -27,20 +27,19 @@
    Kill Starlight's adjacent-sibling content gap inside groups. */
 .sl-markdown-content .code-group > * + *,
 .sl-markdown-content .code-group .expressive-code,
-.sl-markdown-content .content-group > * + *,
-.sl-markdown-content .content-group .content-group__panel > * + * {
+.sl-markdown-content .content-group > * + * {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 
-/* Restore normal markdown spacing inside content panels only */
+/* Restore normal markdown spacing inside content panels */
 .sl-markdown-content .content-group .content-group__panel > * + * {
   margin-top: var(--sl-content-gap-y) !important;
   margin-bottom: 0 !important;
 }
 
-.code-group,
-.content-group {
+/* :::group / :::code-group keep a filled frame; content tabs stay light */
+.code-group {
   margin-block: 1.25rem;
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 0.5rem;
@@ -48,14 +47,30 @@
   background: var(--sl-color-gray-6, var(--sl-color-bg));
 }
 
-.code-group__tabs,
-.content-group__tabs {
+.content-group {
+  margin-block: 1.25rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.35rem;
+  background: transparent;
+  overflow: hidden;
+}
+
+.code-group__tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.15rem;
   padding: 0.35rem 0.45rem 0;
   border-bottom: 1px solid var(--sl-color-gray-5);
   background: var(--sl-color-gray-6);
+}
+
+.content-group__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding: 0.25rem 0.35rem 0;
+  border-bottom: 1px solid var(--sl-color-gray-5);
+  background: transparent;
 }
 
 .code-group__tab,
@@ -67,25 +82,43 @@
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  font-family: var(--sl-font-system-mono, ui-monospace, monospace);
   padding: 0.45rem 0.75rem;
   margin-bottom: -1px;
-  border-radius: 0.35rem 0.35rem 0 0;
+  border-radius: 0;
   cursor: pointer;
   border-bottom: 2px solid transparent;
+}
+
+.code-group__tab {
+  font-family: var(--sl-font-system-mono, ui-monospace, monospace);
+  border-radius: 0.35rem 0.35rem 0 0;
 }
 
 .code-group__tab:hover,
 .content-group__tab:hover {
   color: var(--sl-color-white);
+}
+
+.code-group__tab:hover {
   background: color-mix(in srgb, var(--sl-color-gray-5) 55%, transparent);
+}
+
+.content-group__tab:hover {
+  background: transparent;
 }
 
 .code-group__tab[aria-selected="true"],
 .content-group__tab[aria-selected="true"] {
   color: var(--sl-color-white);
   border-bottom-color: var(--sl-color-accent);
+}
+
+.code-group__tab[aria-selected="true"] {
   background: color-mix(in srgb, var(--sl-color-accent-low) 70%, transparent);
+}
+
+.content-group__tab[aria-selected="true"] {
+  background: transparent;
 }
 
 .code-group > .expressive-code,
@@ -103,7 +136,7 @@
 }
 
 .content-group__panel {
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.75rem 0.85rem 0.85rem;
   overflow-x: auto;
 }
 
@@ -116,4 +149,233 @@
 /* Hide per-block filename chrome when the group tabs already show titles */
 .code-group .frame.has-title:not(.is-terminal) .header {
   display: none;
+}
+
+/* :::data-table — thin chrome only; table itself matches Starlight markdown tables */
+.sl-data-table {
+  margin-block: 0.5rem;
+}
+
+.sl-data-table .datatable-wrapper {
+  font: inherit;
+  color: inherit;
+}
+
+.sl-data-table .datatable-top,
+.sl-data-table .datatable-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.35rem 0;
+  float: none;
+}
+
+.sl-data-table .datatable-top > *,
+.sl-data-table .datatable-bottom > * {
+  float: none !important;
+}
+
+.sl-data-table .datatable-input,
+.sl-data-table .datatable-selector {
+  font: inherit;
+  font-size: var(--sl-text-sm, 0.875rem);
+  color: var(--sl-color-text);
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.25rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.sl-data-table .datatable-input {
+  width: min(100%, 16rem);
+}
+
+.sl-data-table .datatable-input:focus,
+.sl-data-table .datatable-selector:focus {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 1px;
+}
+
+.sl-data-table .datatable-info,
+.sl-data-table .datatable-dropdown label {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm, 0.875rem);
+}
+
+/* Do not restyle the grid itself — inherit / mirror Starlight table rules */
+.sl-data-table .datatable-container {
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+.sl-markdown-content .sl-data-table table {
+  display: block;
+  overflow: auto;
+  border-spacing: 0;
+  width: 100%;
+  margin: 0;
+}
+
+.sl-markdown-content .sl-data-table :is(th, td) {
+  border-bottom: 1px solid var(--sl-color-gray-5);
+  padding: 0.5rem 1rem;
+  vertical-align: baseline;
+}
+
+.sl-markdown-content .sl-data-table :is(th:first-child, td:first-child) {
+  padding-inline-start: 0;
+}
+
+.sl-markdown-content .sl-data-table :is(th:last-child, td:last-child) {
+  padding-inline-end: 0;
+}
+
+.sl-markdown-content .sl-data-table th {
+  color: var(--sl-color-white);
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.sl-markdown-content .sl-data-table th:hover {
+  color: var(--sl-color-accent-high, var(--sl-color-accent));
+}
+
+/* Company / cell links stay accented; do not style sort buttons as links */
+.sl-markdown-content .sl-data-table tbody a {
+  color: var(--sl-color-text-accent);
+}
+
+/* Sortable header buttons + chevrons */
+.sl-data-table th.datatable-sorter-cell {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.sl-data-table th button,
+.sl-data-table .datatable-sorter {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: none;
+  box-shadow: none;
+  background: transparent !important;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.sl-data-table th button:hover,
+.sl-data-table th button:focus,
+.sl-data-table th button:active,
+.sl-data-table .datatable-sorter:hover,
+.sl-data-table .datatable-sorter:focus,
+.sl-data-table .datatable-sorter:active {
+  border: 0 !important;
+  outline: none;
+  box-shadow: none;
+  background: transparent !important;
+  color: inherit;
+}
+
+/* Large chevrons for sort state */
+.sl-data-table .datatable-sorter {
+  position: relative;
+  padding-inline-end: 1.6rem;
+}
+
+.sl-data-table .datatable-sorter::before {
+  content: none !important;
+  display: none !important;
+}
+
+.sl-data-table .datatable-sorter::after {
+  content: "▴\A▾";
+  white-space: pre;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.9rem;
+  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--sl-color-gray-2);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.sl-data-table th.datatable-ascending .datatable-sorter::after {
+  content: "▴";
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--sl-color-accent);
+  opacity: 1;
+}
+
+.sl-data-table th.datatable-descending .datatable-sorter::after {
+  content: "▾";
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--sl-color-accent);
+  opacity: 1;
+}
+
+.sl-data-table .datatable-pagination .datatable-pagination-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-data-table .datatable-pagination button {
+  appearance: none;
+  border: 1px solid var(--sl-color-gray-5);
+  background: transparent;
+  color: var(--sl-color-gray-1);
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font: inherit;
+  font-size: var(--sl-text-sm, 0.875rem);
+  cursor: pointer;
+}
+
+.sl-data-table .datatable-pagination button:hover {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+
+.sl-data-table .datatable-pagination .datatable-active button,
+.sl-data-table .datatable-pagination button[aria-current="page"] {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+
+.sl-data-table .datatable-empty {
+  color: var(--sl-color-gray-2);
+  text-align: center;
 }

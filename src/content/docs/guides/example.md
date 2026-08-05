@@ -1,9 +1,9 @@
 ---
 title: Example Guide
-description: How to write docs — markdown basics, diagrams, and Expressive Code snippets.
+description: How to write docs — markdown, diagrams, tabbed content/code, data tables, and Expressive Code.
 ---
 
-This page is a quick reference for writing content on this site: markdown, Kroki diagrams, and code blocks (highlighting, line marks, diffs, collapse, and more).
+This page is a quick reference for writing content on this site: markdown, Kroki diagrams, tabbed blocks, interactive tables, and code snippets.
 
 ## Markdown basics
 
@@ -54,6 +54,114 @@ MQ --> B: Deliver event
 ```
 
 Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, and other [Kroki](https://kroki.io) types.
+
+## Tabbed content (`group-container`)
+
+Use this for **any** markdown — tables, lists, prose — not just code. Outer fences need **more colons** than inner ones so nesting parses correctly.
+
+| Directive | Role |
+|-----------|------|
+| `:::::group-container` … `:::::` | Outer tab group |
+| `::::group-item[Title]` … `::::` | One tab (+ body) |
+| `{active}` on an item | Default selected tab (first if omitted) |
+
+Example (outer `:::::`, items `::::`):
+
+:::::group-container
+
+::::group-item[Alpha]{active}
+
+Short note for the **Alpha** tab.
+
+- One
+- Two
+
+::::
+
+::::group-item[Beta]
+
+Content for **Beta**. Nested code or tables go here.
+
+::::
+
+:::::
+
+See [Company Apply](/guides/company-apply/) for a real page: level tabs (SDE 1/2/3) each holding a large table.
+
+### Nesting rule
+
+Container directives close at the first matching fence of the same length. Nesting pattern:
+
+```md
+:::::outer
+::::mid
+:::inner
+…
+:::
+::::
+:::::
+```
+
+**Rule:** outer fences use more colons than inner ones.
+
+## Interactive tables (`data-table`)
+
+Wrap a normal markdown table in `:::data-table` to add:
+
+- **Search** across all columns
+- **Sort** any column (click the header; chevrons show direction)
+- **Pagination** (rows per page control)
+
+Links inside cells (e.g. company names) are preserved.
+
+:::data-table
+
+| Company | Category | Locations | Est. Comp (LPA) |
+|---------|----------|-----------|-----------------|
+| [Acme](https://example.com) | Product | Remote | 40–60L |
+| [Globex](https://example.com) | HFT | Bengaluru | 55–80L |
+| [Initech](https://example.com) | Fintech | Mumbai | 30–45L |
+| [Umbrella](https://example.com) | Services | Pan-India | 18–28L |
+
+:::
+
+### Options
+
+Attributes on the opening fence:
+
+| Attribute | Default | Effect |
+|-----------|---------|--------|
+| `searchable` | on | Set `searchable=false` to hide search |
+| `sortable` | on | Set `sortable=false` to disable column sort |
+| `paging` | on | Set `paging=false` for a full list |
+| `perPage` | `25` | Rows per page (e.g. `perPage=50`) |
+
+```md
+:::data-table{perPage=50}
+
+| Name | Score |
+|------|-------|
+| A    | 10    |
+
+:::
+```
+
+Numeric-looking columns (headers matching *comp*, *salary*, *ctc*, *lpa*, *package*) sort by the lower bound of ranges like `140–220L`.
+
+### Nested with content tabs
+
+Put `data-table` **inside** `group-item` with enough colons:
+
+```md
+:::::group-container
+::::group-item[SDE 3]{active}
+:::data-table
+| Company | …
+| …
+:::
+::::
+:::::
+```
 
 ## Code snippets (Expressive Code)
 
@@ -239,8 +347,13 @@ export async function getCachedUser(id: string): Promise<Cache | null> {
 
 | Meta | Effect |
 |------|--------|
-| `:::group` … `:::` | Tabbed group of multiple code fences |
-| `title="file.ts"` | Filename / tab title |
+| `:::group` … `:::` | Tabbed **code** fences |
+| `:::code-group` | Same as `:::group` |
+| `:::::group-container` + `::::group-item[Title]` | Tabbed **content** (markdown body) |
+| `group-item[…]{active}` | Default open content tab |
+| `:::data-table` … `:::` | Sortable / searchable / paged table |
+| `:::data-table{perPage=50}` | Rows per page (and other flags above) |
+| `title="file.ts"` | Filename / code-tab title |
 | `frame="terminal"` | Terminal-style frame |
 | `showLineNumbers` / `=false` | Toggle line numbers |
 | `startLineNumber=N` | Start numbering at N |
@@ -254,6 +367,7 @@ export async function getCachedUser(id: string): Promise<Cache | null> {
 
 ## Further reading
 
+- [Company Apply](/guides/company-apply/) — content tabs + data tables in production usage
 - [Expressive Code — text & line markers](https://expressive-code.com/key-features/text-markers/)
 - [Expressive Code — line numbers](https://expressive-code.com/plugins/line-numbers/)
 - [Expressive Code — collapsible sections](https://expressive-code.com/plugins/collapsible-sections/)

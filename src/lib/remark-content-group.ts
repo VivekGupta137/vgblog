@@ -54,7 +54,7 @@ export function remarkContentGroup() {
       const active = isActive(directive);
 
       const hast = h("div", {
-        class: "content-group__panel not-content",
+        class: "content-group__panel",
         role: "tabpanel",
         dataLabel: label,
         ...(active ? { dataActive: "" } : {}),
@@ -91,7 +91,7 @@ export function remarkContentGroup() {
       });
 
       const hast = h("div", {
-        class: "content-group not-content",
+        class: "content-group",
         dataContentGroup: true,
         dataLabels: JSON.stringify(labels),
         dataActive: String(activeIndex),

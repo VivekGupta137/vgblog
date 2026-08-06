@@ -24,10 +24,14 @@
 }
 
 /* Tab groups — code (::group) and content (::group-container)
-   Kill Starlight's adjacent-sibling content gap inside groups. */
+   Kill Starlight's adjacent-sibling content gap on group shell + tab buttons.
+   Code groups also use .not-content on the wrapper (remark). Content groups
+   only mark .__tabs as not-content so panel tables/links keep Starlight styles. */
 .sl-markdown-content .code-group > * + *,
 .sl-markdown-content .code-group .expressive-code,
-.sl-markdown-content .content-group > * + * {
+.sl-markdown-content .content-group > * + *,
+.sl-markdown-content .code-group__tabs > *,
+.sl-markdown-content .content-group__tabs > * {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
@@ -58,6 +62,7 @@
 .code-group__tabs {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.15rem;
   padding: 0.35rem 0.45rem 0;
   border-bottom: 1px solid var(--sl-color-gray-5);
@@ -67,6 +72,7 @@
 .content-group__tabs {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.15rem;
   padding: 0.25rem 0.35rem 0;
   border-bottom: 1px solid var(--sl-color-gray-5);
@@ -82,11 +88,15 @@
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.25;
   padding: 0.45rem 0.75rem;
-  margin-bottom: -1px;
+  margin: 0 0 -1px !important;
   border-radius: 0;
   cursor: pointer;
   border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .code-group__tab {

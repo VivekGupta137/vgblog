@@ -22,7 +22,8 @@ function activate(frames, tablist, index) {
 
 function buildTablist(frames, labels, activeIndex, tabClass) {
   const tablist = document.createElement("div");
-  tablist.className = tabClass;
+  // not-content: skip Starlight .sl-markdown-content *+* margin on tab buttons
+  tablist.className = `${tabClass} not-content`;
   tablist.setAttribute("role", "tablist");
 
   frames.forEach((frame, index) => {

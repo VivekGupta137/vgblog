@@ -1,0 +1,28 @@
+services:
+  core:
+    image: yuzutech/kroki:0.30.1
+    environment:
+      - KROKI_MERMAID_HOST=mermaid
+      - KROKI_BPMN_HOST=bpmn
+      - KROKI_DIAGRAMSNET_HOST=diagramsnet
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mermaid
+      - bpmn
+      - diagramsnet
+
+  mermaid:
+    image: yuzutech/kroki-mermaid:0.30.1
+    expose:
+      - "8002"
+
+  bpmn:
+    image: yuzutech/kroki-bpmn:0.30.1
+    expose:
+      - "8003"
+
+  diagramsnet:
+    image: yuzutech/kroki-diagramsnet:0.30.1
+    expose:
+      - "8005"

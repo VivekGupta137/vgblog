@@ -85,7 +85,7 @@ For architecture diagrams authored in Draw.io, paste the uncompressed XML into a
 </mxfile>
 ```
 
-Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, and other [Kroki](https://kroki.io) types.
+Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, and other [Kroki](https://kroki.io) types. Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
 
 ## Tabbed content (`group-container`)
 

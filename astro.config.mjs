@@ -32,9 +32,38 @@ const env = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 const enableLinkValidation =
   env.VALIDATE_LINKS === "true" || process.env.VALIDATE_LINKS === "true";
 
-// Prefer dedicated Kroki base URL; fall back to legacy PlantUML Kroki URL host.
-const krokiServer =
-  env.PUBLIC_KROKI_SERVER_URL || "https://kroki.io";
+/**
+ * Resolve Kroki base URL for remark-kroki (build-time HTTP).
+ * loadEnv only reads .env files — also check process.env (CF/CI vars).
+ * Fall back to PUBLIC_PLANTUML_SERVER_URL origin so local .env keeps working.
+ * Never leave this unset: remark-kroki defaults to http://localhost:8000.
+ */
+function resolveKrokiServer() {
+  const dedicated = (
+    env.PUBLIC_KROKI_SERVER_URL ||
+    process.env.PUBLIC_KROKI_SERVER_URL ||
+    ""
+  ).trim();
+  if (dedicated) return dedicated.replace(/\/$/, "");
+
+  const plantuml = (
+    env.PUBLIC_PLANTUML_SERVER_URL ||
+    process.env.PUBLIC_PLANTUML_SERVER_URL ||
+    ""
+  ).trim();
+  if (plantuml) {
+    try {
+      return new URL(plantuml).origin;
+    } catch {
+      return plantuml.replace(/\/plantuml\/.*$/i, "").replace(/\/$/, "");
+    }
+  }
+
+  return "https://kroki.io";
+}
+
+const krokiServer = resolveKrokiServer();
+console.log(`[kroki] diagram server: ${krokiServer}`);
 
 // https://astro.build/config
 export default defineConfig({
@@ -47,7 +76,7 @@ export default defineConfig({
         {
           server: krokiServer,
           alias: KROKI_DIAGRAM_ALIASES,
-          
+          output: "img-html-base64",
           target: "html",
         },
       ],

@@ -7,6 +7,7 @@ export const KROKI_DIAGRAM_ALIASES = [
   "c4plantuml",
   "d2",
   "dbml",
+  "diagramsnet",
   "ditaa",
   "erd",
   "excalidraw",

@@ -26,11 +26,34 @@ figure.plantuml-diagram img,
 .content img[alt="d2"],
 .content img[alt="mermaid"],
 .content img[alt="graphviz"],
-.content img[src^="data:image/svg+xml"] {
-  border-radius: 3px;
+.content img[src^="data:image/svg+xml"],
+.sl-markdown-content img.kroki-image,
+.sl-markdown-content img[src^="data:image/svg+xml"],
+.sl-markdown-content .kroki-inline-svg,
+.sl-markdown-content object.kroki-object {
+  border-radius: 0.5rem;
   overflow: hidden;
   max-width: 100%;
   height: auto;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  /* Diagrams are authored for light UIs; opaque plate keeps strokes visible */
+  background-color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #ccc) 65%, transparent);
+}
+
+html[data-theme="dark"] figure.plantuml-diagram img,
+html[data-theme="dark"] .content img[alt="plantuml"],
+html[data-theme="dark"] .content img[alt="d2"],
+html[data-theme="dark"] .content img[alt="mermaid"],
+html[data-theme="dark"] .content img[alt="graphviz"],
+html[data-theme="dark"] .content img[src^="data:image/svg+xml"],
+html[data-theme="dark"] .sl-markdown-content img.kroki-image,
+html[data-theme="dark"] .sl-markdown-content img[src^="data:image/svg+xml"],
+html[data-theme="dark"] .sl-markdown-content .kroki-inline-svg,
+html[data-theme="dark"] .sl-markdown-content object.kroki-object {
+  background-color: #f4f4f5;
+  border-color: color-mix(in srgb, #ffffff 14%, transparent);
 }
 
 html[data-theme="dark"] strong {

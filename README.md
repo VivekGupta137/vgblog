@@ -48,8 +48,9 @@ Use a fence named after the diagram type (or `kroki` with `type=`):
 - `` ```mermaid `` … `` ``` ``
 - `` ```d2 `` … `` ``` ``
 - `` ```graphviz `` … `` ``` ``
+- `` ```diagramsnet `` … `` ``` `` (Draw.io / diagrams.net XML)
 - `` ```kroki type=excalidraw `` … `` ``` ``
 
-Supported aliases include PlantUML, Mermaid, D2, GraphViz, C4, Excalidraw, Structurizr, WaveDrom, and the rest of Kroki’s catalog.
+Supported aliases include PlantUML, Mermaid, D2, GraphViz, C4, Excalidraw, Diagrams.net, Structurizr, WaveDrom, and the rest of Kroki’s catalog.
 
-Set `PUBLIC_KROKI_SERVER_URL` (default `https://kroki.io`). Self-host with Docker if you hit public rate limits.
+Set `PUBLIC_KROKI_SERVER_URL` to your Kroki core (e.g. `http://localhost:8000`). Diagrams.net needs the companion `yuzutech/kroki-diagramsnet` service and `KROKI_DIAGRAMSNET_HOST=diagramsnet` on core.

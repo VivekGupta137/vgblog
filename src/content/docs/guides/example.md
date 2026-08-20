@@ -53,6 +53,38 @@ MQ --> B: Deliver event
 @enduml
 ```
 
+### Diagrams.net (Draw.io)
+
+For architecture diagrams authored in Draw.io, paste the uncompressed XML into a `diagramsnet` block.
+
+```diagramsnet
+<mxfile>
+  <diagram id="arch-diagram" name="Architecture">
+    <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Web Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="120" y="120" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="320" y="120" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Database" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="520" y="110" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="HTTPS" style="endArrow=classic;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Query" style="endArrow=classic;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+```
+
 Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, and other [Kroki](https://kroki.io) types.
 
 ## Tabbed content (`group-container`)

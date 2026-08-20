@@ -389,3 +389,35 @@
   color: var(--sl-color-gray-2);
   text-align: center;
 }
+
+/* ```renderhtml — light plate + dark text so pastel diagrams stay readable */
+.sl-markdown-content .render-html {
+  margin-block: 1.25rem;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: #18181b;
+  background-color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--sl-color-gray-5, #ccc) 65%, transparent);
+  color-scheme: light;
+}
+
+html[data-theme="dark"] .sl-markdown-content .render-html {
+  background-color: #f4f4f5;
+  border-color: color-mix(in srgb, #ffffff 14%, transparent);
+}
+
+html[data-theme="dark"] .sl-markdown-content .render-html :is(strong, em) {
+  color: inherit;
+}
+
+.sl-markdown-content .render-html svg,
+.sl-markdown-content .render-html img,
+.sl-markdown-content .render-html canvas,
+.sl-markdown-content .render-html video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

@@ -53,4 +53,6 @@ Use a fence named after the diagram type (or `kroki` with `type=`):
 
 Supported aliases include PlantUML, Mermaid, D2, GraphViz, C4, Excalidraw, Diagrams.net, Structurizr, WaveDrom, and the rest of Kroki’s catalog.
 
+For diagrams that only work as HTML/CSS/SVG, use `` ```renderhtml `` (renders in the page). Regular `` ```html `` fences still show highlighted source.
+
 Set `PUBLIC_KROKI_SERVER_URL` to your Kroki core (e.g. `http://localhost:8000`). Diagrams.net needs the companion `yuzutech/kroki-diagramsnet` service and `KROKI_DIAGRAMSNET_HOST=diagramsnet` on core.

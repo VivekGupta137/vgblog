@@ -87,6 +87,29 @@ For architecture diagrams authored in Draw.io, paste the uncompressed XML into a
 
 Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, and other [Kroki](https://kroki.io) types. Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
 
+### HTML diagrams (`renderhtml`)
+
+Use a `renderhtml` fence when the diagram is authored as HTML/CSS/SVG and must be **rendered**, not shown as source. A normal `html` fence stays a highlighted code block.
+
+```renderhtml
+<div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;font-family:sans-serif;font-size:0.9rem;">
+  <div style="padding:0.7rem 1rem;border:2px solid #6c8ebf;border-radius:8px;background:#dae8fc;">Client</div>
+  <span aria-hidden="true">→</span>
+  <div style="padding:0.7rem 1rem;border:2px solid #82b366;border-radius:8px;background:#d5e8d4;">API</div>
+  <span aria-hidden="true">→</span>
+  <div style="padding:0.7rem 1rem;border:2px solid #d79b00;border-radius:8px;background:#ffe6cc;">Database</div>
+</div>
+```
+
+```renderhtml
+<svg viewBox="0 0 200 80" width="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" rx="8" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="100" y="46" text-anchor="middle" font-size="16">SVG diagram</text>
+</svg>
+```
+
+Starlight content styles are skipped inside the block (`not-content`), so inner layout, lists, and headings keep the diagram’s own CSS.
+
 ## Tabbed content (`group-container`)
 
 Use this for **any** markdown — tables, lists, prose — not just code. Outer fences need **more colons** than inner ones so nesting parses correctly.
@@ -385,6 +408,8 @@ export async function getCachedUser(id: string): Promise<Cache | null> {
 | `group-item[…]{active}` | Default open content tab |
 | `:::data-table` … `:::` | Sortable / searchable / paged table |
 | `:::data-table{perPage=50}` | Rows per page (and other flags above) |
+| Language `renderhtml` | Render HTML/SVG (not a code block) |
+| Language `html` | Highlighted HTML **source** |
 | `title="file.ts"` | Filename / code-tab title |
 | `frame="terminal"` | Terminal-style frame |
 | `showLineNumbers` / `=false` | Toggle line numbers |

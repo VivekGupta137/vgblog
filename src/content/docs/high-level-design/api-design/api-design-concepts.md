@@ -1624,8 +1624,370 @@ Web **APIs** and **SPAs** persist state in the **browser** in several mechanisms
 ---
 
 ## Reliability and Performance
-1. Caching strategy and cache invalidation
-2. Rate limiting and throttling
+
+### 1. Caching strategy and cache invalidation
+
+Cache what is expensive to compute or fetch and safe to serve slightly stale; skip caching per-user secrets or anything where staleness would break a business rule (e.g. an in-flight payment status). The right layer and invalidation strategy follow from two facts about the data: **how often it changes** and **how stale a client can tolerate it being**.
+
+**Where to cache**
+
+| Layer | Good for | Watch out |
+| --- | --- | --- |
+| **Client** (`Cache-Control`, `ETag`) | Static assets, rarely-changing reference data | Client controls freshness — you cannot force a purge |
+| **CDN** (Content Delivery Network) / edge | Public, cacheable **GETs** shared across users | Wrong `Vary` / auth handling leaks per-user data across users |
+| **API gateway / reverse proxy** | Hot read endpoints in front of a slower origin | One more place invalidation has to reach |
+| **Application cache** (Redis, Memcached) | Computed aggregates, joined/denormalized views | Extra infra to run, monitor, and keep coherent across instances |
+| **Database** (query cache, materialized view) | Expensive aggregate queries with a known refresh cadence | Refresh lag is itself a staleness source to document |
+
+Each layer only exists to short-circuit the one behind it — a hit returns immediately, a miss falls through to the next, slower layer:
+
+```mermaid
+flowchart LR
+    C[Client] -->|request| CDN[CDN / Edge]
+    CDN -->|cache miss| GW[API Gateway]
+    GW -->|cache miss| App["App Cache<br/>Redis / Memcached"]
+    App -->|cache miss| DB[(Database)]
+
+    CDN -.->|cache hit| C
+    GW -.->|cache hit| C
+    App -.->|cache hit| C
+```
+
+**HTTP-native caching**
+
+- **`Cache-Control: max-age=…, s-maxage=…`** — the primary **TTL** (Time To Live) signal; `s-maxage` lets shared caches (CDN) hold longer than the browser does.
+- **`ETag`** / **`If-None-Match`** — revalidate cheaply: the server returns **304 Not Modified** with no body when the resource hash is unchanged.
+- **`Last-Modified`** / **`If-Modified-Since`** — coarser revalidation when a hash is impractical to compute.
+- **`Vary`** — tells a shared cache to key its stored responses by a request header too, not just the URL. `Vary: Authorization` makes the cache key `(URL, Authorization value)`, so a request with `Bearer A` and one with `Bearer B` get two separate stored entries. Without it, a cache keyed only on the URL will serve one user's cached response to a different user. Downside: since every user's `Authorization`/`Cookie` value is different, `Vary`-ing on them means the shared cache basically stops getting cross-user hits at all — for personal responses, `Cache-Control: private` (browser-only, no shared cache stores it) is usually the more honest fix than relying on `Vary`.
+- **`stale-while-revalidate`** — serve the stale copy immediately while refreshing in the background; hides origin latency, at the cost of briefly serving old data on every refresh cycle.
+
+**Invalidation strategies**
+
+| Strategy | How it works | Trade-off |
+| --- | --- | --- |
+| **TTL expiration** | Entry expires after a fixed window; no explicit invalidation needed | Zero invalidation machinery, at the cost of a staleness window that exists even right after a write |
+| **Cache-aside, invalidate-on-write** | App deletes/updates the cache key synchronously right after the write commits | Cache stays close to correct, at the cost of every write path having to remember the cache exists |
+| **Write-through** | Write goes to cache and store together, in the same request | Reads are always fresh, at the cost of write latency = cache write + store write |
+| **Event-driven invalidation** | A domain event (e.g. `order.updated`) fans out to purge affected keys | Decouples writers from cache topology, at the cost of an async delivery path that can lose or delay the purge |
+| **Versioned keys** (`cache:v3:order:123`) | Bump a version/namespace on schema or logic change instead of purging | Avoids a purge stampede, at the cost of old versions lingering until their own TTL |
+
+**Event-driven invalidation, concretely** — the writer publishes a domain event (e.g. `ProductPriceChanged{id}`) to a broker (Kafka, SNS/SQS, Redis pub-sub) instead of purging any cache itself. One or more independent consumers subscribe to that event and purge their own cache/CDN/search-index entries. The write path never has to know which caches exist downstream — a new consumer can start subscribing later without any change to the write path.
+
+**Versioned keys, concretely** — two variants:
+
+- **Global bump** (`v3:…` → `v4:…`) when a *code/logic* change, not a data change, makes old entries wrong — e.g. fixing a computed-field bug. New reads use the new prefix; old entries just age out via TTL, no bulk purge needed, and old/new app versions can coexist safely during a rolling deploy.
+- **Per-entity version** (`order:{id}:{updated_at}`), derived from the row's own version or timestamp — a write changes `updated_at`, so the next read computes a different key automatically. This needs **no explicit delete at all**: the key itself encodes staleness.
+
+The most commonly tested pattern is cache-aside reads paired with invalidate-on-write:
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Ca as Cache
+    participant DB as Database
+
+    Note over C,DB: Read (cache-aside)
+    C->>Ca: GET key
+    alt cache hit
+        Ca-->>C: cached value
+    else cache miss
+        Ca-->>C: miss
+        C->>DB: fetch
+        DB-->>C: value
+        C->>Ca: SET key, value, TTL
+    end
+
+    Note over C,DB: Write (invalidate-on-write)
+    C->>DB: UPDATE
+    DB-->>C: ack
+    C->>Ca: DEL key
+```
+
+**Where this breaks**
+
+- **Cache stampede** — a hot key expiring under high concurrency sends every in-flight request to the origin at once.
+
+  - **Request coalescing (single-flight)** — the first miss takes a lock (in-process mutex, or a distributed lock via `SET key val NX PX 5000` in Redis); it alone fetches from the origin while every other concurrent request blocks on that same in-flight result. Net effect: exactly one origin call per key, regardless of concurrency.
+  - **Jittered TTL** — `60s + random(0, 10s)` instead of a fixed `60s`, so keys populated around the same moment don't all expire in the same instant and stampede together.
+  - **`stale-while-revalidate`** — keep serving the stale value to everyone while exactly one background job refreshes it; from the client's side there is never a "miss" to stampede on at all.
+  - **Cache warming** — proactively refresh known hot keys (top-N products, homepage data) before they'd expire under load, so the risk never materializes for your hottest keys in the first place.
+
+  ```mermaid
+  sequenceDiagram
+      participant C1 as Client 1
+      participant C2 as Client 2
+      participant C3 as Client 3
+      participant Ca as Cache
+      participant DB as Database
+
+      Note over C1,DB: key just expired — no coalescing
+      C1->>Ca: GET key (miss)
+      C2->>Ca: GET key (miss)
+      C3->>Ca: GET key (miss)
+      C1->>DB: fetch
+      C2->>DB: fetch
+      C3->>DB: fetch
+      Note over DB: 3x simultaneous load for one key
+  ```
+
+- **Invalidation message loss** — event-driven purge depends on delivery; a dropped message leaves a stale entry with nothing to correct it until the next unrelated write or TTL. That's why you still put a **backstop TTL** on entries even when you have active invalidation — a TTL you're not relying on to do the invalidating, only to cap how stale things can get if the active path fails. Example: purge normally lands within ~200ms via Kafka, but every entry also carries a 6-hour TTL, so a consumer that's down for an hour still can't leave anyone more than 6 hours stale.
+- **Multi-instance / multi-region incoherence** — this only bites when each server keeps its own in-process cache instead of a shared one. Deleting a key on server A does nothing to server B or C — each holds its own copy in memory and keeps serving it until its own TTL expires.
+
+  - **Accept the staleness window** — keep local TTLs short enough that being wrong for a few seconds is tolerable; no coordination needed.
+  - **Move to one shared cache tier** — every instance reads/writes the same Redis/Memcached cluster, so one `DEL` invalidates everyone at once, at the cost of a network hop on every access.
+  - **Pub/sub invalidation broadcast** — keep local in-process caches for speed, but broadcast a purge message on write; each instance deletes the key from its own memory on receipt. This reintroduces the message-loss risk above, so pair it with a backstop TTL too.
+  - **Multi-region specifically** — cross-region replication/purge takes real time, not zero. Mitigate with read-your-own-writes region pinning, shorter TTLs at edge/CDN layers, or an explicit CDN purge call (which itself takes seconds to fan out globally) — or simply document the bound ("cross-region reads may lag writes by up to N seconds") instead of engineering it away.
+
+**Avoid**
+
+- Caching a mutable, per-user response at a shared layer without a correct `Vary` — this is how one user's cached response gets served to another.
+- Relying on TTL alone for data with a hard consistency requirement ("did the payment go through") — the TTL window is exactly the window where the cached answer can be wrong.
+- Deleting a key on invalidation with no stampede protection — every request that misses at the same instant recomputes cold and can take the origin down.
+- No invalidation strategy at all ("cache everything with a TTL and hope") — silently means every write has an undocumented staleness window somewhere downstream.
+
+---
+
+### 2. Rate limiting and throttling
+
+Rate limit to protect shared capacity from any one caller and to keep usage fair across tenants. The right algorithm and granularity follow from two facts: **how bursty legitimate traffic is allowed to be**, and **what you're protecting** (your own backend, or a slower downstream dependency you call on their behalf).
+
+**Algorithms**
+
+| Algorithm | How it works | Trade-off |
+| --- | --- | --- |
+| **Fixed window counter** | Count requests in a fixed bucket (e.g. per minute); reset to 0 at each boundary | Simple to reason about and cheap to store, at the cost of allowing up to 2x the limit in a burst that straddles a window boundary |
+| **Sliding window log** | Store every request's timestamp, count how many fall inside the trailing window | Exact limit enforcement, at the cost of storing and scanning a timestamp per request |
+| **Sliding window counter** | Weighted blend of the current and previous fixed-window counts | Smooths out the boundary-burst problem, at the cost of being an approximation rather than an exact count |
+| **Token bucket** | A bucket holds tokens up to a capacity and refills at a fixed rate; each request consumes one token and is rejected if the bucket is empty | Allows controlled bursts up to the bucket size while still enforcing a steady average rate — the usual default |
+| **Leaky bucket** | Requests queue and drain out at a fixed rate; a full queue rejects new requests | Smooths bursts into a steady output rate, at the cost of added latency for anything sitting in the queue |
+
+**Watch each algorithm run**
+
+The behavior that actually matters for each algorithm — where it resets abruptly, where it stays smooth, where it rejects — is easier to see moving than described in prose:
+
+:::::group-container
+
+::::group-item[Fixed window]{active}
+
+```renderhtml
+<div class="rlviz">
+  <p class="rlviz-title">Fixed window counter</p>
+  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
+    <line x1="8" y1="10" x2="92" y2="10" stroke="#f87171" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
+    <text x="92" y="7" font-size="3.2" fill="#f87171" text-anchor="end">limit</text>
+    <line x1="50" y1="6" x2="50" y2="38" stroke="#3a4a6b" stroke-width="0.5" stroke-dasharray="1.2 1.2"/>
+    <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
+    <text x="50" y="43.5" font-size="3" fill="#7d94c4" text-anchor="middle">window boundary</text>
+    <rect class="rlf-bar" x="42" width="16" rx="1.2" fill="#60a5fa" y="38" height="0"/>
+    <circle class="rlf-reject" cx="50" cy="5.5" r="1.8" fill="#f87171" opacity="0"/>
+  </svg>
+  <p class="rlviz-caption">The count snaps to <strong>0</strong> at every boundary. A burst just before the reset and another just after can let close to <strong>2×</strong> the limit through within a short real span.</p>
+</div>
+<style>
+  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
+  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
+  .rlf-bar{ animation: rlfFill 4s linear infinite; }
+  @keyframes rlfFill{
+    0%   { height:0;  y:38; }
+    33%  { height:25; y:13; }
+    44%  { height:29; y:9;  }
+    50%  { height:0;  y:38; }
+    82%  { height:27; y:11; }
+    100% { height:0;  y:38; }
+  }
+  .rlf-reject{ animation: rlfReject 4s linear infinite; }
+  @keyframes rlfReject{ 0%,42%,54%,100%{opacity:0;} 45%,50%{opacity:1;} }
+  @media (prefers-reduced-motion: reduce){ .rlf-bar,.rlf-reject{ animation:none; } .rlf-bar{ height:20; y:18; } }
+</style>
+```
+
+::::
+
+::::group-item[Sliding window log]
+
+```renderhtml
+<div class="rlviz">
+  <p class="rlviz-title">Sliding window log</p>
+  <svg viewBox="0 0 100 40" width="100%" height="160" preserveAspectRatio="xMidYMid meet">
+    <line x1="6" y1="24" x2="96" y2="24" stroke="#3a4a6b" stroke-width="0.5"/>
+    <rect class="rls-window" x="-26" y="14" width="26" height="16" rx="2" fill="#60a5fa" opacity="0.16" stroke="#60a5fa" stroke-width="0.4"/>
+    <circle class="rls-dot rls-d1" cx="14" cy="24" r="2.1" fill="#4ade80"/>
+    <circle class="rls-dot rls-d2" cx="28" cy="24" r="2.1" fill="#4ade80"/>
+    <circle class="rls-dot rls-d3" cx="42" cy="24" r="2.1" fill="#4ade80"/>
+    <circle class="rls-dot rls-d4" cx="56" cy="24" r="2.1" fill="#4ade80"/>
+    <circle class="rls-dot rls-d5" cx="70" cy="24" r="2.1" fill="#4ade80"/>
+    <circle class="rls-dot rls-d6" cx="84" cy="24" r="2.1" fill="#4ade80"/>
+    <text x="6" y="8" font-size="3" fill="#7d94c4">trailing window, sliding right with "now" →</text>
+  </svg>
+  <p class="rlviz-caption">Every request's timestamp is kept. The window is exactly "now minus the limit's duration," so the count is <strong>always exact</strong> — never off by a boundary trick — at the cost of storing one entry per request.</p>
+</div>
+<style>
+  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
+  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
+  .rls-window{ animation: rlsSlide 8s linear infinite; }
+  @keyframes rlsSlide{ 0%{ x:-26; } 100%{ x:100; } }
+  .rls-dot{ animation-duration:8s; animation-iteration-count:infinite; animation-timing-function:linear; }
+  .rls-d1{ animation-name: rlsg1; } @keyframes rlsg1{ 0%,10%{r:2.1;fill:#4ade80;} 12%,31%{r:2.9;fill:#bbf7d0;} 33%,100%{r:2.1;fill:#4ade80;} }
+  .rls-d2{ animation-name: rlsg2; } @keyframes rlsg2{ 0%,21%{r:2.1;fill:#4ade80;} 23%,42%{r:2.9;fill:#bbf7d0;} 44%,100%{r:2.1;fill:#4ade80;} }
+  .rls-d3{ animation-name: rlsg3; } @keyframes rlsg3{ 0%,32%{r:2.1;fill:#4ade80;} 34%,53%{r:2.9;fill:#bbf7d0;} 55%,100%{r:2.1;fill:#4ade80;} }
+  .rls-d4{ animation-name: rlsg4; } @keyframes rlsg4{ 0%,43%{r:2.1;fill:#4ade80;} 45%,64%{r:2.9;fill:#bbf7d0;} 66%,100%{r:2.1;fill:#4ade80;} }
+  .rls-d5{ animation-name: rlsg5; } @keyframes rlsg5{ 0%,55%{r:2.1;fill:#4ade80;} 57%,75%{r:2.9;fill:#bbf7d0;} 77%,100%{r:2.1;fill:#4ade80;} }
+  .rls-d6{ animation-name: rlsg6; } @keyframes rlsg6{ 0%,66%{r:2.1;fill:#4ade80;} 68%,86%{r:2.9;fill:#bbf7d0;} 88%,100%{r:2.1;fill:#4ade80;} }
+  @media (prefers-reduced-motion: reduce){ .rls-window,.rls-dot{ animation:none; } }
+</style>
+```
+
+::::
+
+::::group-item[Sliding window counter]
+
+```renderhtml
+<div class="rlviz">
+  <p class="rlviz-title">Sliding window counter</p>
+  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
+    <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
+    <rect x="20" y="17" width="16" height="21" rx="1.2" fill="#64748b"/>
+    <text x="28" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">previous</text>
+    <rect class="rlc-cur" x="42" width="16" rx="1.2" fill="#60a5fa" y="38" height="0"/>
+    <text x="50" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">current</text>
+    <rect class="rlc-est" x="64" width="16" rx="1.2" fill="#4ade80" y="17" height="21"/>
+    <text x="72" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">blended estimate</text>
+  </svg>
+  <p class="rlviz-caption">The estimate blends the frozen <strong>previous</strong> count with the still-growing <strong>current</strong> count. It moves smoothly instead of snapping to 0 — no boundary-doubling trick, at the cost of being an approximation.</p>
+</div>
+<style>
+  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
+  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
+  .rlc-cur{ animation: rlcCur 6s linear infinite; }
+  @keyframes rlcCur{ 0%{height:0;y:38;} 100%{height:27;y:11;} }
+  .rlc-est{ animation: rlcEst 6s linear infinite; }
+  @keyframes rlcEst{ 0%{height:21;y:17;} 25%{height:23;y:15;} 50%{height:24;y:14;} 75%{height:26;y:12;} 100%{height:27;y:11;} }
+  @media (prefers-reduced-motion: reduce){ .rlc-cur,.rlc-est{ animation:none; } .rlc-cur{height:14;y:24;} .rlc-est{height:22;y:16;} }
+</style>
+```
+
+::::
+
+::::group-item[Token bucket]
+
+```renderhtml
+<div class="rlviz">
+  <p class="rlviz-title">Token bucket</p>
+  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
+    <circle class="rlt-refill" cx="20" cy="8" r="1.6" fill="#60a5fa"/>
+    <text x="24" y="9.5" font-size="3" fill="#7d94c4">refill, +1 token/sec</text>
+    <rect x="35" y="8" width="30" height="30" rx="2.5" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
+    <clipPath id="bucketClip"><rect x="35" y="8" width="30" height="30" rx="2.5"/></clipPath>
+    <rect class="rlt-fill" x="35" width="30" clip-path="url(#bucketClip)" fill="#60a5fa" y="28" height="10"/>
+    <text class="rlt-reject" x="80" y="24" font-size="4" fill="#f87171" text-anchor="middle" opacity="0">429</text>
+  </svg>
+  <p class="rlviz-caption">Tokens refill steadily; each request spends one. Requests can <strong>burst</strong> up to whatever is in the bucket, but once it's empty, everything is rejected until the next refill.</p>
+</div>
+<style>
+  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
+  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
+  .rlt-refill{ animation: rltPulse 1s ease-in-out infinite; }
+  @keyframes rltPulse{ 0%,100%{opacity:.4;r:1.4;} 50%{opacity:1;r:1.9;} }
+  .rlt-fill{ animation: rltSaw 6s linear infinite; }
+  @keyframes rltSaw{
+    0%    { height:10; y:28; }
+    18%   { height:24; y:14; }
+    18.5% { height:12; y:26; }
+    40%   { height:27; y:11; }
+    40.5% { height:14; y:24; }
+    62%   { height:30; y:8;  }
+    62.5% { height:6;  y:32; }
+    82%   { height:18; y:20; }
+    82.5% { height:0;  y:38; }
+    92%   { height:0;  y:38; }
+    100%  { height:10; y:28; }
+  }
+  .rlt-reject{ animation: rltReject 6s linear infinite; }
+  @keyframes rltReject{ 0%,81%,93%,100%{opacity:0;} 84%,90%{opacity:1;} }
+  @media (prefers-reduced-motion: reduce){ .rlt-fill,.rlt-reject,.rlt-refill{ animation:none; } .rlt-fill{height:18;y:20;} }
+</style>
+```
+
+::::
+
+::::group-item[Leaky bucket]
+
+```renderhtml
+<div class="rlviz">
+  <p class="rlviz-title">Leaky bucket</p>
+  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
+    <path d="M25,8 L75,8 L58,34 L42,34 Z" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
+    <clipPath id="funnelClip"><path d="M25,8 L75,8 L58,34 L42,34 Z"/></clipPath>
+    <rect class="rll-fill" x="25" width="50" clip-path="url(#funnelClip)" fill="#60a5fa" y="30" height="4"/>
+    <circle class="rll-in rll-i1" cx="47" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
+    <circle class="rll-in rll-i2" cx="52" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
+    <circle class="rll-in rll-i3" cx="57" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
+    <circle class="rll-in rll-i4" cx="62" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
+    <circle class="rll-out rll-o1" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
+    <circle class="rll-out rll-o2" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
+    <circle class="rll-out rll-o3" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
+    <circle class="rll-out rll-o4" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
+    <text x="50" y="42" font-size="3" fill="#7d94c4" text-anchor="middle">drains at a fixed rate</text>
+  </svg>
+  <p class="rlviz-caption">Requests can arrive in a <strong>bursty</strong> clump and queue up, but they drain out one at a time at a constant rate. A full queue rejects anything new, at the cost of added latency for whatever's waiting.</p>
+</div>
+<style>
+  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
+  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
+  .rll-fill{ animation: rllLevel 6s linear infinite; }
+  @keyframes rllLevel{ 0%,15%{height:4;y:30;} 30%{height:22;y:12;} 80%,100%{height:4;y:30;} }
+  .rll-in{ animation-duration:6s; animation-iteration-count:infinite; animation-timing-function:ease-in; }
+  .rll-i1{ animation-name:rlli1; } @keyframes rlli1{ 0%,14%{opacity:0;cy:2;} 16%{opacity:1;cy:2;} 22%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
+  .rll-i2{ animation-name:rlli2; } @keyframes rlli2{ 0%,16%{opacity:0;cy:2;} 18%{opacity:1;cy:2;} 24%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
+  .rll-i3{ animation-name:rlli3; } @keyframes rlli3{ 0%,18%{opacity:0;cy:2;} 20%{opacity:1;cy:2;} 26%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
+  .rll-i4{ animation-name:rlli4; } @keyframes rlli4{ 0%,20%{opacity:0;cy:2;} 22%{opacity:1;cy:2;} 28%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
+  .rll-out{ animation-duration:1.2s; animation-iteration-count:infinite; animation-timing-function:linear; }
+  .rll-o1{ animation-name:rllo; animation-delay:0s; }
+  .rll-o2{ animation-name:rllo; animation-delay:.3s; }
+  .rll-o3{ animation-name:rllo; animation-delay:.6s; }
+  .rll-o4{ animation-name:rllo; animation-delay:.9s; }
+  @keyframes rllo{ 0%{ opacity:0; cy:34; } 10%{ opacity:1; cy:34; } 100%{ opacity:0; cy:44; } }
+  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{height:14;y:20;} }
+</style>
+```
+
+::::
+
+:::::
+
+**Where to enforce**
+
+| Layer | Good for | Watch out |
+| --- | --- | --- |
+| **CDN / edge** | Blocking abuse-scale traffic before it reaches your infra | Coarse — usually keyed by IP, not by account or API key |
+| **API gateway** | One shared enforcement point for per-key/per-tenant quotas, before any backend does work | If the gateway runs as multiple instances, they all need to share one counter store |
+| **Service / application** | Fine-grained limits tied to business rules (e.g. "5 password resets per hour per account") | Enforcing the same key again here duplicates work the gateway may have already done |
+
+**HTTP-native signaling**
+
+- **`429 Too Many Requests`** — the status clients should branch on, distinct from a generic `4xx`/`5xx`.
+- **`Retry-After`** — tells the client exactly when to try again instead of making it guess (and possibly guess too aggressively).
+- **`RateLimit-Limit` / `RateLimit-Remaining` / `RateLimit-Reset`** (or the vendor-prefixed `X-RateLimit-*` equivalents) — let a well-behaved client back off *before* it gets a 429 at all, by watching how much budget it has left.
+
+**Where this breaks**
+
+- **Distributed enforcement** — this only bites when the gateway or service runs as more than one instance and each instance counts requests in its own local memory. The real limit then becomes `(per-instance limit × instance count)`, not the number you configured, because no single instance ever sees the full picture. Fix by moving the counter to a shared store (Redis `INCR` + `EXPIRE`, or a dedicated rate-limiting service), at the cost of a network round trip on every request and that store now needing to be fast and available.
+- **Synchronized reset stampede** — if every client's window resets on the same wall-clock boundary (e.g. daily quotas at midnight UTC), everyone who was throttled retries at the same instant, which looks exactly like the cache stampede pattern above. Mitigate by staggering each client's own window start (e.g. from their first request) instead of aligning everyone to the same clock boundary.
+- **Non-atomic counter updates** — a naive "read count, check limit, write count+1" done as three separate steps lets two concurrent requests both read the old count before either writes, so more requests get through than the configured limit under load. Use an atomic increment (`INCR` in Redis, or a Lua script for check-and-increment in one step) instead of a manual read-then-write.
+
+**Avoid**
+
+- A single global limit with no per-key granularity — one noisy or abusive caller exhausts the budget that every other caller was relying on.
+- Returning `429` with no `Retry-After` — the client has no signal for when to retry, so it either hammers immediately or backs off far more than necessary.
+- Rate-limiting the gateway and the service independently on the same key without coordinating the numbers — a caller can get a confusing mix of "allowed at the gateway, rejected at the service" for what looks like the same request pattern.
+
+---
+
 3. Idempotency and retry semantics
 4. Timeouts, retries, and circuit breaking
 5. Consistency and concurrency control
@@ -1638,4 +2000,3 @@ Web **APIs** and **SPAs** persist state in the **browser** in several mechanisms
 ## Governance and Compliance
 1. API governance and lifecycle management
 2. Multi-tenancy, privacy, and compliance
-

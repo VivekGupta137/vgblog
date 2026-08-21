@@ -1770,23 +1770,20 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 ::::group-item[Fixed window]{active}
 
 ```renderhtml
-<div class="rlviz">
-  <p class="rlviz-title">Fixed window counter</p>
+<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
+  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Fixed window counter</p>
   <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <line x1="8" y1="10" x2="92" y2="10" stroke="#f87171" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
-    <text x="92" y="7" font-size="3.2" fill="#f87171" text-anchor="end">limit</text>
-    <line x1="50" y1="6" x2="50" y2="38" stroke="#3a4a6b" stroke-width="0.5" stroke-dasharray="1.2 1.2"/>
-    <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
-    <text x="50" y="43.5" font-size="3" fill="#7d94c4" text-anchor="middle">window boundary</text>
-    <rect class="rlf-bar" x="42" width="16" rx="1.2" fill="#60a5fa" y="6" height="32"/>
-    <circle class="rlf-reject" cx="50" cy="5.5" r="1.8" fill="#f87171" opacity="0"/>
+    <line x1="8" y1="10" x2="92" y2="10" class="stroke-red-400" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
+    <text x="92" y="7" font-size="3.2" class="fill-red-400" text-anchor="end">limit</text>
+    <line x1="50" y1="6" x2="50" y2="38" class="stroke-slate-600" stroke-width="0.5" stroke-dasharray="1.2 1.2"/>
+    <line x1="8" y1="38" x2="92" y2="38" class="stroke-slate-600" stroke-width="0.5"/>
+    <text x="50" y="43.5" font-size="3" class="fill-slate-400" text-anchor="middle">window boundary</text>
+    <rect class="rlf-bar fill-blue-400" x="42" width="16" rx="1.2" y="6" height="32"/>
+    <circle class="rlf-reject fill-red-400" cx="50" cy="5.5" r="1.8" opacity="0"/>
   </svg>
-  <p class="rlviz-caption">The count snaps to <strong>0</strong> at every boundary. A burst just before the reset and another just after can let close to <strong>2×</strong> the limit through within a short real span.</p>
+  <p class="text-sm text-slate-300 leading-relaxed mt-3">The count snaps to <strong>0</strong> at every boundary. A burst just before the reset and another just after can let close to <strong>2×</strong> the limit through within a short real span.</p>
 </div>
 <style>
-  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
-  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
   .rlf-bar{ transform-box:fill-box; transform-origin:bottom; animation: rlfFill 4s linear infinite; }
   @keyframes rlfFill{
     0%   { transform: scaleY(0);    }
@@ -1807,25 +1804,22 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 ::::group-item[Sliding window log]
 
 ```renderhtml
-<div class="rlviz">
-  <p class="rlviz-title">Sliding window log</p>
+<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
+  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Sliding window log</p>
   <svg viewBox="0 0 100 40" width="100%" height="160" preserveAspectRatio="xMidYMid meet">
-    <line x1="6" y1="24" x2="96" y2="24" stroke="#3a4a6b" stroke-width="0.5"/>
-    <rect class="rls-window" x="-26" y="14" width="26" height="16" rx="2" fill="#60a5fa" opacity="0.16" stroke="#60a5fa" stroke-width="0.4"/>
-    <circle class="rls-dot rls-d1" cx="14" cy="24" r="2.1" fill="#4ade80"/>
-    <circle class="rls-dot rls-d2" cx="28" cy="24" r="2.1" fill="#4ade80"/>
-    <circle class="rls-dot rls-d3" cx="42" cy="24" r="2.1" fill="#4ade80"/>
-    <circle class="rls-dot rls-d4" cx="56" cy="24" r="2.1" fill="#4ade80"/>
-    <circle class="rls-dot rls-d5" cx="70" cy="24" r="2.1" fill="#4ade80"/>
-    <circle class="rls-dot rls-d6" cx="84" cy="24" r="2.1" fill="#4ade80"/>
-    <text x="6" y="8" font-size="3" fill="#7d94c4">trailing window, sliding right with "now" →</text>
+    <line x1="6" y1="24" x2="96" y2="24" class="stroke-slate-600" stroke-width="0.5"/>
+    <rect class="rls-window fill-blue-400/15 stroke-blue-400" x="-26" y="14" width="26" height="16" rx="2" stroke-width="0.4"/>
+    <circle class="rls-dot rls-d1 fill-green-400" cx="14" cy="24" r="2.1"/>
+    <circle class="rls-dot rls-d2 fill-green-400" cx="28" cy="24" r="2.1"/>
+    <circle class="rls-dot rls-d3 fill-green-400" cx="42" cy="24" r="2.1"/>
+    <circle class="rls-dot rls-d4 fill-green-400" cx="56" cy="24" r="2.1"/>
+    <circle class="rls-dot rls-d5 fill-green-400" cx="70" cy="24" r="2.1"/>
+    <circle class="rls-dot rls-d6 fill-green-400" cx="84" cy="24" r="2.1"/>
+    <text x="6" y="8" font-size="3" class="fill-slate-400">trailing window, sliding right with "now" →</text>
   </svg>
-  <p class="rlviz-caption">Every request's timestamp is kept. The window is exactly "now minus the limit's duration," so the count is <strong>always exact</strong> — never off by a boundary trick — at the cost of storing one entry per request.</p>
+  <p class="text-sm text-slate-300 leading-relaxed mt-3">Every request's timestamp is kept. The window is exactly "now minus the limit's duration," so the count is <strong>always exact</strong> — never off by a boundary trick — at the cost of storing one entry per request.</p>
 </div>
 <style>
-  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
-  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
   .rls-window{ animation: rlsSlide 8s linear infinite; }
   @keyframes rlsSlide{ 0%{ x:-26; } 100%{ x:100; } }
   .rls-dot{ animation-duration:8s; animation-iteration-count:infinite; animation-timing-function:linear; }
@@ -1844,23 +1838,20 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 ::::group-item[Sliding window counter]
 
 ```renderhtml
-<div class="rlviz">
-  <p class="rlviz-title">Sliding window counter</p>
+<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
+  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Sliding window counter</p>
   <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
-    <rect x="20" y="17" width="16" height="21" rx="1.2" fill="#64748b"/>
-    <text x="28" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">previous</text>
-    <rect class="rlc-cur" x="42" width="16" rx="1.2" fill="#60a5fa" y="11" height="27"/>
-    <text x="50" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">current</text>
-    <rect class="rlc-est" x="64" width="16" rx="1.2" fill="#4ade80" y="11" height="27"/>
-    <text x="72" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">blended estimate</text>
+    <line x1="8" y1="38" x2="92" y2="38" class="stroke-slate-600" stroke-width="0.5"/>
+    <rect class="fill-slate-500" x="20" y="17" width="16" height="21" rx="1.2"/>
+    <text x="28" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">previous</text>
+    <rect class="rlc-cur fill-blue-400" x="42" width="16" rx="1.2" y="11" height="27"/>
+    <text x="50" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">current</text>
+    <rect class="rlc-est fill-green-400" x="64" width="16" rx="1.2" y="11" height="27"/>
+    <text x="72" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">blended estimate</text>
   </svg>
-  <p class="rlviz-caption">The estimate blends the frozen <strong>previous</strong> count with the still-growing <strong>current</strong> count. It moves smoothly instead of snapping to 0 — no boundary-doubling trick, at the cost of being an approximation.</p>
+  <p class="text-sm text-slate-300 leading-relaxed mt-3">The estimate blends the frozen <strong>previous</strong> count with the still-growing <strong>current</strong> count. It moves smoothly instead of snapping to 0 — no boundary-doubling trick, at the cost of being an approximation.</p>
 </div>
 <style>
-  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
-  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
   .rlc-cur{ transform-box:fill-box; transform-origin:bottom; animation: rlcCur 6s linear infinite; }
   @keyframes rlcCur{ 0%{transform:scaleY(0);} 100%{transform:scaleY(1);} }
   .rlc-est{ transform-box:fill-box; transform-origin:bottom; animation: rlcEst 6s linear infinite; }
@@ -1874,22 +1865,19 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 ::::group-item[Token bucket]
 
 ```renderhtml
-<div class="rlviz">
-  <p class="rlviz-title">Token bucket</p>
+<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
+  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Token bucket</p>
   <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <circle class="rlt-refill" cx="20" cy="8" r="1.6" fill="#60a5fa"/>
-    <text x="24" y="9.5" font-size="3" fill="#7d94c4">refill, +1 token/sec</text>
-    <rect x="35" y="8" width="30" height="30" rx="2.5" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
+    <circle class="rlt-refill fill-blue-400" cx="20" cy="8" r="1.6"/>
+    <text x="24" y="9.5" font-size="3" class="fill-slate-400">refill, +1 token/sec</text>
+    <rect x="35" y="8" width="30" height="30" rx="2.5" fill="none" class="stroke-slate-400" stroke-width="0.6"/>
     <clipPath id="bucketClip"><rect x="35" y="8" width="30" height="30" rx="2.5"/></clipPath>
-    <rect class="rlt-fill" x="35" y="8" width="30" height="30" clip-path="url(#bucketClip)" fill="#60a5fa"/>
-    <text class="rlt-reject" x="80" y="24" font-size="4" fill="#f87171" text-anchor="middle" opacity="0">429</text>
+    <rect class="rlt-fill fill-blue-400" x="35" y="8" width="30" height="30" clip-path="url(#bucketClip)"/>
+    <text class="rlt-reject fill-red-400" x="80" y="24" font-size="4" text-anchor="middle" opacity="0">429</text>
   </svg>
-  <p class="rlviz-caption">Tokens refill steadily; each request spends one. Requests can <strong>burst</strong> up to whatever is in the bucket, but once it's empty, everything is rejected until the next refill.</p>
+  <p class="text-sm text-slate-300 leading-relaxed mt-3">Tokens refill steadily; each request spends one. Requests can <strong>burst</strong> up to whatever is in the bucket, but once it's empty, everything is rejected until the next refill.</p>
 </div>
 <style>
-  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
-  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
   .rlt-refill{ animation: rltPulse 1s ease-in-out infinite; }
   @keyframes rltPulse{ 0%,100%{opacity:.4;r:1.4;} 50%{opacity:1;r:1.9;} }
   .rlt-fill{ transform-box:fill-box; transform-origin:bottom; animation: rltSaw 6s linear infinite; }
@@ -1917,30 +1905,30 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 ::::group-item[Leaky bucket]
 
 ```renderhtml
-<div class="rlviz">
-  <p class="rlviz-title">Leaky bucket</p>
+<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
+  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Leaky bucket</p>
   <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <path d="M25,8 L75,8 L58,34 L42,34 Z" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
-    <clipPath id="funnelClip"><path d="M25,8 L75,8 L58,34 L42,34 Z"/></clipPath>
-    <rect class="rll-fill" x="25" y="8" width="50" height="26" clip-path="url(#funnelClip)" fill="#60a5fa"/>
-    <circle class="rll-in rll-i1" cx="47" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
-    <circle class="rll-in rll-i2" cx="52" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
-    <circle class="rll-in rll-i3" cx="57" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
-    <circle class="rll-in rll-i4" cx="62" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
-    <circle class="rll-out rll-o1" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
-    <circle class="rll-out rll-o2" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
-    <circle class="rll-out rll-o3" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
-    <circle class="rll-out rll-o4" cx="50" cy="34" r="1.6" fill="#60a5fa"/>
-    <text x="50" y="42" font-size="3" fill="#7d94c4" text-anchor="middle">drains at a fixed rate</text>
+    <path d="M25,8 L75,8 L58,34 L42,34 Z" fill="none" class="stroke-slate-400" stroke-width="0.6"/>
+    <path class="rll-fill fill-blue-400" d="M42,34 L58,34 L60.62,30 L39.38,30 Z"/>
+    <circle class="rll-in rll-i1 fill-green-400" cx="47" cy="2" r="1.7" opacity="0"/>
+    <circle class="rll-in rll-i2 fill-green-400" cx="52" cy="2" r="1.7" opacity="0"/>
+    <circle class="rll-in rll-i3 fill-green-400" cx="57" cy="2" r="1.7" opacity="0"/>
+    <circle class="rll-in rll-i4 fill-green-400" cx="62" cy="2" r="1.7" opacity="0"/>
+    <circle class="rll-out rll-o1 fill-blue-400" cx="50" cy="34" r="1.6"/>
+    <circle class="rll-out rll-o2 fill-blue-400" cx="50" cy="34" r="1.6"/>
+    <circle class="rll-out rll-o3 fill-blue-400" cx="50" cy="34" r="1.6"/>
+    <circle class="rll-out rll-o4 fill-blue-400" cx="50" cy="34" r="1.6"/>
+    <text x="50" y="42" font-size="3" class="fill-slate-400" text-anchor="middle">drains at a fixed rate</text>
   </svg>
-  <p class="rlviz-caption">Requests can arrive in a <strong>bursty</strong> clump and queue up, but they drain out one at a time at a constant rate. A full queue rejects anything new, at the cost of added latency for whatever's waiting.</p>
+  <p class="text-sm text-slate-300 leading-relaxed mt-3">Requests can arrive in a <strong>bursty</strong> clump and queue up, but they drain out one at a time at a constant rate. A full queue rejects anything new, at the cost of added latency for whatever's waiting.</p>
 </div>
 <style>
-  .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
-  .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
-  .rll-fill{ transform-box:fill-box; transform-origin:bottom; animation: rllLevel 6s linear infinite; }
-  @keyframes rllLevel{ 0%,15%{transform:scaleY(.154);} 30%{transform:scaleY(.846);} 80%,100%{transform:scaleY(.154);} }
+  .rll-fill{ animation: rllLevel 6s linear infinite; }
+  @keyframes rllLevel{
+    0%,15%   { d: path("M42,34 L58,34 L60.62,30 L39.38,30 Z"); }
+    30%      { d: path("M42,34 L58,34 L72.385,12 L27.615,12 Z"); }
+    80%,100% { d: path("M42,34 L58,34 L60.62,30 L39.38,30 Z"); }
+  }
   .rll-in{ animation-duration:6s; animation-iteration-count:infinite; animation-timing-function:ease-in; }
   .rll-i1{ animation-name:rlli1; } @keyframes rlli1{ 0%,14%{opacity:0;cy:2;} 16%{opacity:1;cy:2;} 22%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
   .rll-i2{ animation-name:rlli2; } @keyframes rlli2{ 0%,16%{opacity:0;cy:2;} 18%{opacity:1;cy:2;} 24%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
@@ -1952,7 +1940,7 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rll-o3{ animation-name:rllo; animation-delay:.6s; }
   .rll-o4{ animation-name:rllo; animation-delay:.9s; }
   @keyframes rllo{ 0%{ opacity:0; cy:34; } 10%{ opacity:1; cy:34; } 100%{ opacity:0; cy:44; } }
-  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{ transform:scaleY(.538); } }
+  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{ d: path("M42,34 L58,34 L67.15,20 L32.15,20 Z"); } }
 </style>
 ```
 

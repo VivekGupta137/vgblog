@@ -1778,7 +1778,7 @@ The behavior that actually matters for each algorithm — where it resets abrupt
     <line x1="50" y1="6" x2="50" y2="38" stroke="#3a4a6b" stroke-width="0.5" stroke-dasharray="1.2 1.2"/>
     <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
     <text x="50" y="43.5" font-size="3" fill="#7d94c4" text-anchor="middle">window boundary</text>
-    <rect class="rlf-bar" x="42" width="16" rx="1.2" fill="#60a5fa" y="38" height="0"/>
+    <rect class="rlf-bar" x="42" width="16" rx="1.2" fill="#60a5fa" y="6" height="32"/>
     <circle class="rlf-reject" cx="50" cy="5.5" r="1.8" fill="#f87171" opacity="0"/>
   </svg>
   <p class="rlviz-caption">The count snaps to <strong>0</strong> at every boundary. A burst just before the reset and another just after can let close to <strong>2×</strong> the limit through within a short real span.</p>
@@ -1787,18 +1787,18 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
   .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
   .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
-  .rlf-bar{ animation: rlfFill 4s linear infinite; }
+  .rlf-bar{ transform-box:fill-box; transform-origin:bottom; animation: rlfFill 4s linear infinite; }
   @keyframes rlfFill{
-    0%   { height:0;  y:38; }
-    33%  { height:25; y:13; }
-    44%  { height:29; y:9;  }
-    50%  { height:0;  y:38; }
-    82%  { height:27; y:11; }
-    100% { height:0;  y:38; }
+    0%   { transform: scaleY(0);    }
+    33%  { transform: scaleY(.781); }
+    44%  { transform: scaleY(.906); }
+    50%  { transform: scaleY(0);    }
+    82%  { transform: scaleY(.844); }
+    100% { transform: scaleY(0);    }
   }
   .rlf-reject{ animation: rlfReject 4s linear infinite; }
   @keyframes rlfReject{ 0%,42%,54%,100%{opacity:0;} 45%,50%{opacity:1;} }
-  @media (prefers-reduced-motion: reduce){ .rlf-bar,.rlf-reject{ animation:none; } .rlf-bar{ height:20; y:18; } }
+  @media (prefers-reduced-motion: reduce){ .rlf-bar,.rlf-reject{ animation:none; } .rlf-bar{ transform:scaleY(.6); } }
 </style>
 ```
 
@@ -1850,9 +1850,9 @@ The behavior that actually matters for each algorithm — where it resets abrupt
     <line x1="8" y1="38" x2="92" y2="38" stroke="#3a4a6b" stroke-width="0.5"/>
     <rect x="20" y="17" width="16" height="21" rx="1.2" fill="#64748b"/>
     <text x="28" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">previous</text>
-    <rect class="rlc-cur" x="42" width="16" rx="1.2" fill="#60a5fa" y="38" height="0"/>
+    <rect class="rlc-cur" x="42" width="16" rx="1.2" fill="#60a5fa" y="11" height="27"/>
     <text x="50" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">current</text>
-    <rect class="rlc-est" x="64" width="16" rx="1.2" fill="#4ade80" y="17" height="21"/>
+    <rect class="rlc-est" x="64" width="16" rx="1.2" fill="#4ade80" y="11" height="27"/>
     <text x="72" y="43" font-size="2.8" fill="#7d94c4" text-anchor="middle">blended estimate</text>
   </svg>
   <p class="rlviz-caption">The estimate blends the frozen <strong>previous</strong> count with the still-growing <strong>current</strong> count. It moves smoothly instead of snapping to 0 — no boundary-doubling trick, at the cost of being an approximation.</p>
@@ -1861,11 +1861,11 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
   .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
   .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
-  .rlc-cur{ animation: rlcCur 6s linear infinite; }
-  @keyframes rlcCur{ 0%{height:0;y:38;} 100%{height:27;y:11;} }
-  .rlc-est{ animation: rlcEst 6s linear infinite; }
-  @keyframes rlcEst{ 0%{height:21;y:17;} 25%{height:23;y:15;} 50%{height:24;y:14;} 75%{height:26;y:12;} 100%{height:27;y:11;} }
-  @media (prefers-reduced-motion: reduce){ .rlc-cur,.rlc-est{ animation:none; } .rlc-cur{height:14;y:24;} .rlc-est{height:22;y:16;} }
+  .rlc-cur{ transform-box:fill-box; transform-origin:bottom; animation: rlcCur 6s linear infinite; }
+  @keyframes rlcCur{ 0%{transform:scaleY(0);} 100%{transform:scaleY(1);} }
+  .rlc-est{ transform-box:fill-box; transform-origin:bottom; animation: rlcEst 6s linear infinite; }
+  @keyframes rlcEst{ 0%{transform:scaleY(.778);} 25%{transform:scaleY(.852);} 50%{transform:scaleY(.889);} 75%{transform:scaleY(.963);} 100%{transform:scaleY(1);} }
+  @media (prefers-reduced-motion: reduce){ .rlc-cur,.rlc-est{ animation:none; } .rlc-cur{transform:scaleY(.52);} .rlc-est{transform:scaleY(.815);} }
 </style>
 ```
 
@@ -1881,7 +1881,7 @@ The behavior that actually matters for each algorithm — where it resets abrupt
     <text x="24" y="9.5" font-size="3" fill="#7d94c4">refill, +1 token/sec</text>
     <rect x="35" y="8" width="30" height="30" rx="2.5" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
     <clipPath id="bucketClip"><rect x="35" y="8" width="30" height="30" rx="2.5"/></clipPath>
-    <rect class="rlt-fill" x="35" width="30" clip-path="url(#bucketClip)" fill="#60a5fa" y="28" height="10"/>
+    <rect class="rlt-fill" x="35" y="8" width="30" height="30" clip-path="url(#bucketClip)" fill="#60a5fa"/>
     <text class="rlt-reject" x="80" y="24" font-size="4" fill="#f87171" text-anchor="middle" opacity="0">429</text>
   </svg>
   <p class="rlviz-caption">Tokens refill steadily; each request spends one. Requests can <strong>burst</strong> up to whatever is in the bucket, but once it's empty, everything is rejected until the next refill.</p>
@@ -1892,23 +1892,23 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
   .rlt-refill{ animation: rltPulse 1s ease-in-out infinite; }
   @keyframes rltPulse{ 0%,100%{opacity:.4;r:1.4;} 50%{opacity:1;r:1.9;} }
-  .rlt-fill{ animation: rltSaw 6s linear infinite; }
+  .rlt-fill{ transform-box:fill-box; transform-origin:bottom; animation: rltSaw 6s linear infinite; }
   @keyframes rltSaw{
-    0%    { height:10; y:28; }
-    18%   { height:24; y:14; }
-    18.5% { height:12; y:26; }
-    40%   { height:27; y:11; }
-    40.5% { height:14; y:24; }
-    62%   { height:30; y:8;  }
-    62.5% { height:6;  y:32; }
-    82%   { height:18; y:20; }
-    82.5% { height:0;  y:38; }
-    92%   { height:0;  y:38; }
-    100%  { height:10; y:28; }
+    0%    { transform: scaleY(.333); }
+    18%   { transform: scaleY(.8);   }
+    18.5% { transform: scaleY(.4);   }
+    40%   { transform: scaleY(.9);   }
+    40.5% { transform: scaleY(.467); }
+    62%   { transform: scaleY(1);    }
+    62.5% { transform: scaleY(.2);   }
+    82%   { transform: scaleY(.6);   }
+    82.5% { transform: scaleY(0);    }
+    92%   { transform: scaleY(0);    }
+    100%  { transform: scaleY(.333); }
   }
   .rlt-reject{ animation: rltReject 6s linear infinite; }
   @keyframes rltReject{ 0%,81%,93%,100%{opacity:0;} 84%,90%{opacity:1;} }
-  @media (prefers-reduced-motion: reduce){ .rlt-fill,.rlt-reject,.rlt-refill{ animation:none; } .rlt-fill{height:18;y:20;} }
+  @media (prefers-reduced-motion: reduce){ .rlt-fill,.rlt-reject,.rlt-refill{ animation:none; } .rlt-fill{ transform:scaleY(.6); } }
 </style>
 ```
 
@@ -1922,7 +1922,7 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
     <path d="M25,8 L75,8 L58,34 L42,34 Z" fill="none" stroke="#7d94c4" stroke-width="0.6"/>
     <clipPath id="funnelClip"><path d="M25,8 L75,8 L58,34 L42,34 Z"/></clipPath>
-    <rect class="rll-fill" x="25" width="50" clip-path="url(#funnelClip)" fill="#60a5fa" y="30" height="4"/>
+    <rect class="rll-fill" x="25" y="8" width="50" height="26" clip-path="url(#funnelClip)" fill="#60a5fa"/>
     <circle class="rll-in rll-i1" cx="47" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
     <circle class="rll-in rll-i2" cx="52" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
     <circle class="rll-in rll-i3" cx="57" cy="2" r="1.7" fill="#4ade80" opacity="0"/>
@@ -1939,8 +1939,8 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rlviz{max-width:460px;margin:0 auto;padding:1.1rem 1.4rem 1rem;border-radius:14px;background:#0f1729;color:#e7edf9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
   .rlviz-title{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7d94c4;margin:0 0 .4rem;}
   .rlviz-caption{font-size:.86rem;color:#b6c4e6;line-height:1.45;margin:.6rem 0 0;}
-  .rll-fill{ animation: rllLevel 6s linear infinite; }
-  @keyframes rllLevel{ 0%,15%{height:4;y:30;} 30%{height:22;y:12;} 80%,100%{height:4;y:30;} }
+  .rll-fill{ transform-box:fill-box; transform-origin:bottom; animation: rllLevel 6s linear infinite; }
+  @keyframes rllLevel{ 0%,15%{transform:scaleY(.154);} 30%{transform:scaleY(.846);} 80%,100%{transform:scaleY(.154);} }
   .rll-in{ animation-duration:6s; animation-iteration-count:infinite; animation-timing-function:ease-in; }
   .rll-i1{ animation-name:rlli1; } @keyframes rlli1{ 0%,14%{opacity:0;cy:2;} 16%{opacity:1;cy:2;} 22%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
   .rll-i2{ animation-name:rlli2; } @keyframes rlli2{ 0%,16%{opacity:0;cy:2;} 18%{opacity:1;cy:2;} 24%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
@@ -1952,7 +1952,7 @@ The behavior that actually matters for each algorithm — where it resets abrupt
   .rll-o3{ animation-name:rllo; animation-delay:.6s; }
   .rll-o4{ animation-name:rllo; animation-delay:.9s; }
   @keyframes rllo{ 0%{ opacity:0; cy:34; } 10%{ opacity:1; cy:34; } 100%{ opacity:0; cy:44; } }
-  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{height:14;y:20;} }
+  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{ transform:scaleY(.538); } }
 </style>
 ```
 

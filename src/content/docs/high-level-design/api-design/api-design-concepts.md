@@ -1761,187 +1761,267 @@ Rate limit to protect shared capacity from any one caller and to keep usage fair
 | **Token bucket** | A bucket holds tokens up to a capacity and refills at a fixed rate; each request consumes one token and is rejected if the bucket is empty | Allows controlled bursts up to the bucket size while still enforcing a steady average rate — the usual default |
 | **Leaky bucket** | Requests queue and drain out at a fixed rate; a full queue rejects new requests | Smooths bursts into a steady output rate, at the cost of added latency for anything sitting in the queue |
 
-**Watch each algorithm run**
+**Each algorithm's decision flow**
 
-The behavior that actually matters for each algorithm — where it resets abruptly, where it stays smooth, where it rejects — is easier to see moving than described in prose:
+The behavior that actually matters for each algorithm — where it resets abruptly, where it stays smooth, where it rejects — is easier to follow as a flow than described in prose:
 
 :::::group-container
 
 ::::group-item[Fixed window]{active}
 
-```renderhtml
-<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
-  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Fixed window counter</p>
-  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <line x1="8" y1="10" x2="92" y2="10" class="stroke-red-400" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
-    <text x="92" y="7" font-size="3.2" class="fill-red-400" text-anchor="end">limit</text>
-    <line x1="50" y1="6" x2="50" y2="38" class="stroke-slate-600" stroke-width="0.5" stroke-dasharray="1.2 1.2"/>
-    <line x1="8" y1="38" x2="92" y2="38" class="stroke-slate-600" stroke-width="0.5"/>
-    <text x="50" y="43.5" font-size="3" class="fill-slate-400" text-anchor="middle">window boundary</text>
-    <rect class="rlf-bar fill-blue-400" x="42" width="16" rx="1.2" y="6" height="32"/>
-    <circle class="rlf-reject fill-red-400" cx="50" cy="5.5" r="1.8" opacity="0"/>
-  </svg>
-  <p class="text-sm text-slate-300 leading-relaxed mt-3">The count snaps to <strong>0</strong> at every boundary. A burst just before the reset and another just after can let close to <strong>2×</strong> the limit through within a short real span.</p>
-</div>
-<style>
-  .rlf-bar{ transform-box:fill-box; transform-origin:bottom; animation: rlfFill 4s linear infinite; }
-  @keyframes rlfFill{
-    0%   { transform: scaleY(0);    }
-    33%  { transform: scaleY(.781); }
-    44%  { transform: scaleY(.906); }
-    50%  { transform: scaleY(0);    }
-    82%  { transform: scaleY(.844); }
-    100% { transform: scaleY(0);    }
-  }
-  .rlf-reject{ animation: rlfReject 4s linear infinite; }
-  @keyframes rlfReject{ 0%,42%,54%,100%{opacity:0;} 45%,50%{opacity:1;} }
-  @media (prefers-reduced-motion: reduce){ .rlf-bar,.rlf-reject{ animation:none; } .rlf-bar{ transform:scaleY(.6); } }
-</style>
+```diagramsnet
+<mxfile>
+  <diagram id="fixed-window" name="Fixed Window Counter">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Request arrives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Increment counter&#10;(current fixed window)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="260" y="60" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="count &#8804; limit?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="500" y="45" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Allow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="30" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="429 Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="700" y="110" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="Counter resets to 0 at a fixed clock boundary, independent of when requests actually arrived — a burst right before and another right after the reset can total close to 2x the limit." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="260" y="190" width="420" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
 ```
 
 ::::
 
 ::::group-item[Sliding window log]
 
-```renderhtml
-<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
-  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Sliding window log</p>
-  <svg viewBox="0 0 100 40" width="100%" height="160" preserveAspectRatio="xMidYMid meet">
-    <line x1="6" y1="24" x2="96" y2="24" class="stroke-slate-600" stroke-width="0.5"/>
-    <rect class="rls-window fill-blue-400/15 stroke-blue-400" x="-26" y="14" width="26" height="16" rx="2" stroke-width="0.4"/>
-    <circle class="rls-dot rls-d1 fill-green-400" cx="14" cy="24" r="2.1"/>
-    <circle class="rls-dot rls-d2 fill-green-400" cx="28" cy="24" r="2.1"/>
-    <circle class="rls-dot rls-d3 fill-green-400" cx="42" cy="24" r="2.1"/>
-    <circle class="rls-dot rls-d4 fill-green-400" cx="56" cy="24" r="2.1"/>
-    <circle class="rls-dot rls-d5 fill-green-400" cx="70" cy="24" r="2.1"/>
-    <circle class="rls-dot rls-d6 fill-green-400" cx="84" cy="24" r="2.1"/>
-    <text x="6" y="8" font-size="3" class="fill-slate-400">trailing window, sliding right with "now" →</text>
-  </svg>
-  <p class="text-sm text-slate-300 leading-relaxed mt-3">Every request's timestamp is kept. The window is exactly "now minus the limit's duration," so the count is <strong>always exact</strong> — never off by a boundary trick — at the cost of storing one entry per request.</p>
-</div>
-<style>
-  .rls-window{ animation: rlsSlide 8s linear infinite; }
-  @keyframes rlsSlide{ 0%{ x:-26; } 100%{ x:100; } }
-  .rls-dot{ animation-duration:8s; animation-iteration-count:infinite; animation-timing-function:linear; }
-  .rls-d1{ animation-name: rlsg1; } @keyframes rlsg1{ 0%,10%{r:2.1;fill:#4ade80;} 12%,31%{r:2.9;fill:#bbf7d0;} 33%,100%{r:2.1;fill:#4ade80;} }
-  .rls-d2{ animation-name: rlsg2; } @keyframes rlsg2{ 0%,21%{r:2.1;fill:#4ade80;} 23%,42%{r:2.9;fill:#bbf7d0;} 44%,100%{r:2.1;fill:#4ade80;} }
-  .rls-d3{ animation-name: rlsg3; } @keyframes rlsg3{ 0%,32%{r:2.1;fill:#4ade80;} 34%,53%{r:2.9;fill:#bbf7d0;} 55%,100%{r:2.1;fill:#4ade80;} }
-  .rls-d4{ animation-name: rlsg4; } @keyframes rlsg4{ 0%,43%{r:2.1;fill:#4ade80;} 45%,64%{r:2.9;fill:#bbf7d0;} 66%,100%{r:2.1;fill:#4ade80;} }
-  .rls-d5{ animation-name: rlsg5; } @keyframes rlsg5{ 0%,55%{r:2.1;fill:#4ade80;} 57%,75%{r:2.9;fill:#bbf7d0;} 77%,100%{r:2.1;fill:#4ade80;} }
-  .rls-d6{ animation-name: rlsg6; } @keyframes rlsg6{ 0%,66%{r:2.1;fill:#4ade80;} 68%,86%{r:2.9;fill:#bbf7d0;} 88%,100%{r:2.1;fill:#4ade80;} }
-  @media (prefers-reduced-motion: reduce){ .rls-window,.rls-dot{ animation:none; } }
-</style>
+```diagramsnet
+<mxfile>
+  <diagram id="sliding-window-log" name="Sliding Window Log">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1160" pageHeight="320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Request arrives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Append timestamp&#10;to the request log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="260" y="60" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Count log entries in&#10;[now &#8722; window, now]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="count &#8804; limit?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="45" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Allow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="30" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="429 Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="110" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="The trailing window boundary moves continuously with &#8220;now,&#8221; so the count is always exact — never off by a fixed-boundary trick — at the cost of storing one entry per request." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="260" y="190" width="480" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
 ```
 
 ::::
 
 ::::group-item[Sliding window counter]
 
-```renderhtml
-<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
-  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Sliding window counter</p>
-  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <line x1="8" y1="38" x2="92" y2="38" class="stroke-slate-600" stroke-width="0.5"/>
-    <rect class="fill-slate-500" x="20" y="17" width="16" height="21" rx="1.2"/>
-    <text x="28" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">previous</text>
-    <rect class="rlc-cur fill-blue-400" x="42" width="16" rx="1.2" y="11" height="27"/>
-    <text x="50" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">current</text>
-    <rect class="rlc-est fill-green-400" x="64" width="16" rx="1.2" y="11" height="27"/>
-    <text x="72" y="43" font-size="2.8" class="fill-slate-400" text-anchor="middle">blended estimate</text>
-  </svg>
-  <p class="text-sm text-slate-300 leading-relaxed mt-3">The estimate blends the frozen <strong>previous</strong> count with the still-growing <strong>current</strong> count. It moves smoothly instead of snapping to 0 — no boundary-doubling trick, at the cost of being an approximation.</p>
-</div>
-<style>
-  .rlc-cur{ transform-box:fill-box; transform-origin:bottom; animation: rlcCur 6s linear infinite; }
-  @keyframes rlcCur{ 0%{transform:scaleY(0);} 100%{transform:scaleY(1);} }
-  .rlc-est{ transform-box:fill-box; transform-origin:bottom; animation: rlcEst 6s linear infinite; }
-  @keyframes rlcEst{ 0%{transform:scaleY(.778);} 25%{transform:scaleY(.852);} 50%{transform:scaleY(.889);} 75%{transform:scaleY(.963);} 100%{transform:scaleY(1);} }
-  @media (prefers-reduced-motion: reduce){ .rlc-cur,.rlc-est{ animation:none; } .rlc-cur{transform:scaleY(.52);} .rlc-est{transform:scaleY(.815);} }
-</style>
+```diagramsnet
+<mxfile>
+  <diagram id="sliding-window-counter" name="Sliding Window Counter">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1060" pageHeight="320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Previous window count&#10;(frozen)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Current window count&#10;(still growing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Weighted estimate =&#10;current + previous &#215; (1 &#8722; elapsed/window)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="70" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="estimate &#8804; limit?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="640" y="65" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Allow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="840" y="50" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="429 Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="840" y="130" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Blends the two counts into a smooth estimate instead of snapping to 0 at the boundary — an approximation, but it avoids the fixed-window's boundary-burst problem." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="300" y="200" width="480" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
 ```
 
 ::::
 
 ::::group-item[Token bucket]
 
-```renderhtml
-<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
-  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Token bucket</p>
-  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <circle class="rlt-refill fill-blue-400" cx="20" cy="8" r="1.6"/>
-    <text x="24" y="9.5" font-size="3" class="fill-slate-400">refill, +1 token/sec</text>
-    <rect x="35" y="8" width="30" height="30" rx="2.5" fill="none" class="stroke-slate-400" stroke-width="0.6"/>
-    <clipPath id="bucketClip"><rect x="35" y="8" width="30" height="30" rx="2.5"/></clipPath>
-    <rect class="rlt-fill fill-blue-400" x="35" y="8" width="30" height="30" clip-path="url(#bucketClip)"/>
-    <text class="rlt-reject fill-red-400" x="80" y="24" font-size="4" text-anchor="middle" opacity="0">429</text>
-  </svg>
-  <p class="text-sm text-slate-300 leading-relaxed mt-3">Tokens refill steadily; each request spends one. Requests can <strong>burst</strong> up to whatever is in the bucket, but once it's empty, everything is rejected until the next refill.</p>
-</div>
-<style>
-  .rlt-refill{ animation: rltPulse 1s ease-in-out infinite; }
-  @keyframes rltPulse{ 0%,100%{opacity:.4;r:1.4;} 50%{opacity:1;r:1.9;} }
-  .rlt-fill{ transform-box:fill-box; transform-origin:bottom; animation: rltSaw 6s linear infinite; }
-  @keyframes rltSaw{
-    0%    { transform: scaleY(.333); }
-    18%   { transform: scaleY(.8);   }
-    18.5% { transform: scaleY(.4);   }
-    40%   { transform: scaleY(.9);   }
-    40.5% { transform: scaleY(.467); }
-    62%   { transform: scaleY(1);    }
-    62.5% { transform: scaleY(.2);   }
-    82%   { transform: scaleY(.6);   }
-    82.5% { transform: scaleY(0);    }
-    92%   { transform: scaleY(0);    }
-    100%  { transform: scaleY(.333); }
-  }
-  .rlt-reject{ animation: rltReject 6s linear infinite; }
-  @keyframes rltReject{ 0%,81%,93%,100%{opacity:0;} 84%,90%{opacity:1;} }
-  @media (prefers-reduced-motion: reduce){ .rlt-fill,.rlt-reject,.rlt-refill{ animation:none; } .rlt-fill{ transform:scaleY(.6); } }
-</style>
+```diagramsnet
+<mxfile>
+  <diagram id="token-bucket" name="Token Bucket">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="820" pageHeight="340" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Refill timer:&#10;+1 token/sec, up to capacity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Token bucket" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Request arrives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Token available?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="320" y="155" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Consume 1 token &#8594; forward request (Allow)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="560" y="140" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="429 Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="560" y="230" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Requests can burst up to whatever is currently in the bucket; once it's empty, everything is rejected until the next refill." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="440" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="bucket state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
 ```
 
 ::::
 
 ::::group-item[Leaky bucket]
 
-```renderhtml
-<div class="max-w-[460px] mx-auto rounded-2xl bg-slate-900 text-slate-100 p-5 pb-4 font-sans">
-  <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Leaky bucket</p>
-  <svg viewBox="0 0 100 46" width="100%" height="180" preserveAspectRatio="xMidYMid meet">
-    <path d="M25,8 L75,8 L58,34 L42,34 Z" fill="none" class="stroke-slate-400" stroke-width="0.6"/>
-    <path class="rll-fill fill-blue-400" d="M42,34 L58,34 L60.62,30 L39.38,30 Z"/>
-    <circle class="rll-in rll-i1 fill-green-400" cx="47" cy="2" r="1.7" opacity="0"/>
-    <circle class="rll-in rll-i2 fill-green-400" cx="52" cy="2" r="1.7" opacity="0"/>
-    <circle class="rll-in rll-i3 fill-green-400" cx="57" cy="2" r="1.7" opacity="0"/>
-    <circle class="rll-in rll-i4 fill-green-400" cx="62" cy="2" r="1.7" opacity="0"/>
-    <circle class="rll-out rll-o1 fill-blue-400" cx="50" cy="34" r="1.6"/>
-    <circle class="rll-out rll-o2 fill-blue-400" cx="50" cy="34" r="1.6"/>
-    <circle class="rll-out rll-o3 fill-blue-400" cx="50" cy="34" r="1.6"/>
-    <circle class="rll-out rll-o4 fill-blue-400" cx="50" cy="34" r="1.6"/>
-    <text x="50" y="42" font-size="3" class="fill-slate-400" text-anchor="middle">drains at a fixed rate</text>
-  </svg>
-  <p class="text-sm text-slate-300 leading-relaxed mt-3">Requests can arrive in a <strong>bursty</strong> clump and queue up, but they drain out one at a time at a constant rate. A full queue rejects anything new, at the cost of added latency for whatever's waiting.</p>
-</div>
-<style>
-  .rll-fill{ animation: rllLevel 6s linear infinite; }
-  @keyframes rllLevel{
-    0%,15%   { d: path("M42,34 L58,34 L60.62,30 L39.38,30 Z"); }
-    30%      { d: path("M42,34 L58,34 L72.385,12 L27.615,12 Z"); }
-    80%,100% { d: path("M42,34 L58,34 L60.62,30 L39.38,30 Z"); }
-  }
-  .rll-in{ animation-duration:6s; animation-iteration-count:infinite; animation-timing-function:ease-in; }
-  .rll-i1{ animation-name:rlli1; } @keyframes rlli1{ 0%,14%{opacity:0;cy:2;} 16%{opacity:1;cy:2;} 22%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
-  .rll-i2{ animation-name:rlli2; } @keyframes rlli2{ 0%,16%{opacity:0;cy:2;} 18%{opacity:1;cy:2;} 24%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
-  .rll-i3{ animation-name:rlli3; } @keyframes rlli3{ 0%,18%{opacity:0;cy:2;} 20%{opacity:1;cy:2;} 26%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
-  .rll-i4{ animation-name:rlli4; } @keyframes rlli4{ 0%,20%{opacity:0;cy:2;} 22%{opacity:1;cy:2;} 28%{opacity:0;cy:12;} 100%{opacity:0;cy:2;} }
-  .rll-out{ animation-duration:1.2s; animation-iteration-count:infinite; animation-timing-function:linear; }
-  .rll-o1{ animation-name:rllo; animation-delay:0s; }
-  .rll-o2{ animation-name:rllo; animation-delay:.3s; }
-  .rll-o3{ animation-name:rllo; animation-delay:.6s; }
-  .rll-o4{ animation-name:rllo; animation-delay:.9s; }
-  @keyframes rllo{ 0%{ opacity:0; cy:34; } 10%{ opacity:1; cy:34; } 100%{ opacity:0; cy:44; } }
-  @media (prefers-reduced-motion: reduce){ .rll-fill,.rll-in,.rll-out{ animation:none; } .rll-fill{ d: path("M42,34 L58,34 L67.15,20 L32.15,20 Z"); } }
-</style>
+```diagramsnet
+<mxfile>
+  <diagram id="leaky-bucket" name="Leaky Bucket">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="860" pageHeight="400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Requests arrive (bursty)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Queue full?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="140" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Queue (bounded)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Drain timer:&#10;fixed rate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="180" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Dequeue &#8594; forward request (Allow)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="560" y="180" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="429 Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Bursts get absorbed into the queue; output still drains at a constant rate regardless of how bursty the input was. A full queue rejects anything new, at the cost of added latency for whatever's waiting." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="300" y="280" width="480" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="no (space available)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
 ```
 
 ::::
@@ -1950,11 +2030,11 @@ The behavior that actually matters for each algorithm — where it resets abrupt
 
 **Where to enforce**
 
-| Layer | Good for | Watch out |
-| --- | --- | --- |
-| **CDN / edge** | Blocking abuse-scale traffic before it reaches your infra | Coarse — usually keyed by IP, not by account or API key |
-| **API gateway** | One shared enforcement point for per-key/per-tenant quotas, before any backend does work | If the gateway runs as multiple instances, they all need to share one counter store |
-| **Service / application** | Fine-grained limits tied to business rules (e.g. "5 password resets per hour per account") | Enforcing the same key again here duplicates work the gateway may have already done |
+| Layer | Good for | Watch out | Used in practice |
+| --- | --- | --- | --- |
+| **CDN / edge** | Blocking abuse-scale traffic before it reaches your infra | Coarse — usually keyed by IP, not by account or API key | Cloudflare Rate Limiting Rules, AWS WAF rate-based rules, Akamai App & API Protector, Fastly |
+| **API gateway** | One shared enforcement point for per-key/per-tenant quotas, before any backend does work | If the gateway runs as multiple instances, they all need to share one counter store | Kong (rate-limiting plugin), Envoy (local/global rate limit filter), AWS API Gateway usage plans, Apigee, Tyk, NGINX (`limit_req`/`limit_conn`) |
+| **Service / application** | Fine-grained limits tied to business rules (e.g. "5 password resets per hour per account") | Enforcing the same key again here duplicates work the gateway may have already done | Redis (`INCR`/`EXPIRE`, or a Lua script) as the shared counter; language-level libraries on top of it — Bucket4j (Java), resilience4j `RateLimiter` (Java), Guava `RateLimiter` (single-instance only), `express-rate-limit` (Node), `django-ratelimit` (Python) |
 
 **HTTP-native signaling**
 

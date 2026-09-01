@@ -80,6 +80,12 @@ export function normalizeDocsPath(rawPath: string): string | null {
   return segments.join("/");
 }
 
+/** Same as normalizeDocsPath, but always lowercase (for create / save / move destinations). */
+export function writeDocsPath(rawPath: string): string | null {
+  const path = normalizeDocsPath(rawPath);
+  return path ? path.toLowerCase() : null;
+}
+
 export function ensureFrontmatter(content: string, relativePath: string): string {
   const trimmed = content.trimStart();
   if (trimmed.startsWith("---")) {

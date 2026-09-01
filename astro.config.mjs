@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import starlightSiteGraph from "starlight-site-graph";
 import starlightLinksValidator from "starlight-links-validator";
@@ -71,24 +72,27 @@ export default defineConfig({
   site: env.PUBLIC_DOMAIN || "http://localhost:4321/",
   
   markdown: {
-    remarkPlugins: [
-      [
-        remarkKroki,
-        {
-          server: krokiServer,
-          alias: KROKI_DIAGRAM_ALIASES,
-          output: "img-html-base64",
-          target: "html",
-        },
+    // Astro 7 defaults to Sätteri; keep remark/rehype plugins on the unified pipeline.
+    processor: unified({
+      remarkPlugins: [
+        [
+          remarkKroki,
+          {
+            server: krokiServer,
+            alias: KROKI_DIAGRAM_ALIASES,
+            output: "img-html-base64",
+            target: "html",
+          },
+        ],
+        remarkDirective,
+        remarkRenderHtml,
+        remarkCodeGroup,
+        remarkContentGroup,
+        remarkDataTable,
+        remarkMath,
       ],
-      remarkDirective,
-      remarkRenderHtml,
-      remarkCodeGroup,
-      remarkContentGroup,
-      remarkDataTable,
-      remarkMath,
-    ],
-    rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
+      rehypePlugins: [rehypeKatex, rehypeGitHubBadgeLinks],
+    }),
   },
   output: "static",
 
@@ -118,7 +122,9 @@ export default defineConfig({
         reactions: true,
         inputPosition: "top",
         lazy: false,
-        theme: "preferred_color_scheme"
+        theme: "preferred_color_scheme",
+        // Rapide replaces <starlight-theme-select>; missing node crashed Vite in Astro 7.
+        element: "starlight-rapide-theme-select",
       }),
       starlightPageActions({
         baseUrl: env.PUBLIC_DOMAIN || "",
@@ -153,42 +159,28 @@ export default defineConfig({
         items: [
           {
             label: "Guides",
-            autogenerate: {
-              directory: "guides",
-            },
+            items: [{ autogenerate: { directory: "guides" } }],
           },
           {
             label: "Coding",
-            autogenerate: {
-              directory: "coding",
-            },
+            items: [{ autogenerate: { directory: "coding" } }],
           },
           {
             label: "High Level Design",
-            autogenerate: {
-              directory: "high-level-design",
-            },
+            items: [{ autogenerate: { directory: "high-level-design" } }],
           },
           {
             label: "Low Level Design",
-            autogenerate: {
-              directory: "low-level-design",
-            },
+            items: [{ autogenerate: { directory: "low-level-design" } }],
           },
         ],
       },
       {
         label: "Connect",
-        autogenerate: {
-          directory: "connect",
-        },
+        items: [{ autogenerate: { directory: "connect" } }],
       },
       
     ],
   }), sitemap()],
-
-  experimental: {
-    contentIntellisense: true,
-  },
 
 });

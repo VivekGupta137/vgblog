@@ -12,7 +12,7 @@ import {
   formatCommitMessage,
   githubHeaders,
   json,
-  normalizeDocsPath,
+  writeDocsPath,
   requireEnv,
   timingSafeEqual,
   toBase64,
@@ -50,7 +50,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return json(400, { error: "Both path and content are required." });
   }
 
-  const relativePath = normalizeDocsPath(body.path);
+  const relativePath = writeDocsPath(body.path);
   if (!relativePath) {
     return json(400, {
       error:

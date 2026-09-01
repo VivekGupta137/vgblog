@@ -11,6 +11,7 @@ import {
   githubHeaders,
   json,
   normalizeDocsPath,
+  writeDocsPath,
   repoApi,
   requireEnv,
   timingSafeEqual,
@@ -104,8 +105,9 @@ async function upsertDoc(env: Env, body: DocsBody): Promise<Response> {
     return json(400, { error: "Both path and content are required." });
   }
 
-  const relativePath = normalizeDocsPath(body.path);
-  if (!relativePath) {
+  const originalPath = normalizeDocsPath(body.path);
+  const relativePath = writeDocsPath(body.path);
+  if (!originalPath || !relativePath) {
     return json(400, {
       error: "Invalid path. Use a relative path under docs ending in .md or .mdx (no ..).",
     });
@@ -117,6 +119,35 @@ async function upsertDoc(env: Env, body: DocsBody): Promise<Response> {
 
   const content = ensureFrontmatter(body.content, relativePath);
   const fullPath = `${DOCS_ROOT}/${relativePath}`;
+
+  if (originalPath !== relativePath) {
+    const source = await getFile(env, originalPath);
+    if (source && "error" in source) return source.error;
+
+    const dest = await getFile(env, relativePath);
+    if (dest && "error" in dest) return dest.error;
+
+    const message = formatCommitMessage(
+      (typeof body.message === "string" && body.message.trim()) ||
+        (source ? `Rename ${originalPath} → ${relativePath}` : `${dest ? "Update" : "Add"} ${relativePath}`),
+    );
+
+    const changes = [{ path: relativePath, content }];
+    if (source) changes.push({ path: originalPath, delete: true as const });
+
+    const result = await commitTreeChanges(env, message, changes);
+    if ("error" in result) return result.error;
+
+    return json(200, {
+      ok: true,
+      action: source ? "renamed" : dest ? "updated" : "created",
+      path: fullPath,
+      from: source ? `${DOCS_ROOT}/${originalPath}` : undefined,
+      commitUrl: result.html_url,
+      commitSha: result.sha,
+      note: REBUILD_NOTE,
+    });
+  }
   const branch = branchName(env);
   const headers = githubHeaders(env);
   const apiBase = contentsUrl(env, fullPath);
@@ -191,7 +222,7 @@ async function upsertManyDocs(env: Env, body: DocsBody): Promise<Response> {
     if (!item.content.trim()) {
       return json(400, { error: `Content must not be empty for ${item.path}.` });
     }
-    const relativePath = normalizeDocsPath(item.path);
+    const relativePath = writeDocsPath(item.path);
     if (!relativePath) {
       return json(400, { error: `Invalid path: ${item.path}` });
     }
@@ -284,7 +315,7 @@ async function moveDoc(env: Env, body: DocsBody): Promise<Response> {
   }
 
   const fromPath = normalizeDocsPath(body.from);
-  const toPath = normalizeDocsPath(body.to);
+  const toPath = writeDocsPath(body.to);
   if (!fromPath || !toPath) {
     return json(400, { error: "Invalid from/to path." });
   }

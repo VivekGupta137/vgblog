@@ -765,6 +765,7 @@
       function sanitizeSegment(value) {
         return value
           .trim()
+          .toLowerCase()
           .replace(/\\/g, "/")
           .split("/")
           .map((part) => part.trim())
@@ -1039,9 +1040,10 @@
         if (mode === "move") {
           moveFrom.value = path;
           const parts = splitPath(path);
-          if (SECTIONS.includes(parts.section)) moveSection.value = parts.section;
-          moveSubdir.value = parts.subdir;
-          moveFilename.value = parts.filename;
+          const sec = parts.section.toLowerCase();
+          if (SECTIONS.includes(sec)) moveSection.value = sec;
+          moveSubdir.value = parts.subdir.toLowerCase();
+          moveFilename.value = parts.filename.toLowerCase();
           updateMovePreview();
         }
 
@@ -1179,9 +1181,24 @@
         if (btn) selectFile(btn.dataset.path);
       });
 
+      function forceLowerInput(el) {
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const next = el.value.toLowerCase();
+        if (el.value === next) return;
+        el.value = next;
+        if (typeof start === "number" && typeof end === "number") {
+          el.setSelectionRange(start, end);
+        }
+      }
+
       section.addEventListener("change", updateCreatePreview);
-      subdir.addEventListener("input", updateCreatePreview);
+      subdir.addEventListener("input", () => {
+        forceLowerInput(subdir);
+        updateCreatePreview();
+      });
       filename.addEventListener("input", () => {
+        forceLowerInput(filename);
         const draft = getActiveDraft();
         if (draft) draft.name = normalizeDraftName(filename.value);
         else if (filename.value.trim() || createContent.value.trim()) {
@@ -1204,8 +1221,14 @@
         updateReadiness();
       });
       moveSection.addEventListener("change", updateMovePreview);
-      moveSubdir.addEventListener("input", updateMovePreview);
-      moveFilename.addEventListener("input", updateMovePreview);
+      moveSubdir.addEventListener("input", () => {
+        forceLowerInput(moveSubdir);
+        updateMovePreview();
+      });
+      moveFilename.addEventListener("input", () => {
+        forceLowerInput(moveFilename);
+        updateMovePreview();
+      });
       deleteConfirm.addEventListener("input", updateReadiness);
 
       draftTabs.addEventListener("click", (event) => {
@@ -1327,7 +1350,17 @@
             renderDrafts();
             await loadFiles();
           } else if (mode === "edit") {
-            showStatus("ok", "Saved", successBody(data, data.path || selectedPath));
+            const saved = String(data.path || "").replace(/^src\/content\/docs\//, "");
+            if (saved) {
+              selectedPath = saved;
+              editPathLabel.textContent = saved;
+            }
+            showStatus(
+              "ok",
+              data.action === "renamed" ? "Saved as lowercase" : "Saved",
+              successBody(data, data.path || selectedPath)
+            );
+            await loadFiles();
           } else if (mode === "move") {
             showStatus("ok", "Moved", successBody(data, (data.from || "") + " → " + (data.to || "")));
             selectedPath = "";

@@ -1,5 +1,7 @@
 ---
-title: Reliable Scalableand Maintainable Applications
+title: Reliable Scalable and Maintainable Applications
+sidebar:
+    order: 1
 ---
 
 # Chapter 1 - Reliable-Scalableand-Maintainable-Applications

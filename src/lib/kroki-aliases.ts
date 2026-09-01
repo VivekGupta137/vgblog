@@ -11,6 +11,7 @@ export const KROKI_DIAGRAM_ALIASES = [
   "ditaa",
   "erd",
   "excalidraw",
+  "goat",
   "graphviz",
   "mermaid",
   "nomnoml",

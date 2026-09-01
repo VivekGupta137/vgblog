@@ -1,0 +1,3 @@
+display_name: Write sdeway.com docs
+short_description: Starlight markdown, Kroki diagrams, and file conventions for this site
+default_prompt: Write or edit a docs page in src/content/docs following sdeway.com conventions.

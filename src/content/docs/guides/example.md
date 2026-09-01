@@ -85,7 +85,7 @@ For architecture diagrams authored in Draw.io, paste the uncompressed XML into a
 </mxfile>
 ```
 
-Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, and other [Kroki](https://kroki.io) types. Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
+Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, `c4`, `vega` / `vegalite`, `goat`, and other [Kroki](https://kroki.io) types listed on [AI skills](/guides/ai-skills/). Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
 
 ### HTML diagrams (`renderhtml`)
 

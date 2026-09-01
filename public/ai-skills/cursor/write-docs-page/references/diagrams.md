@@ -8,7 +8,7 @@ Fence with the language in the **Fence** column. These are the types Kroki can d
 |---------|--------|
 | Block diagram | `blockdiag` |
 | Sequence diagram | `plantuml`, `mermaid`, `seqdiag` |
-| Activity diagram | `plantuml`, `mermaid` |
+| Activity diagram | `plantuml`, `mermaid`, `actdiag` |
 | Network diagram | `nwdiag` |
 | Use case diagram | `plantuml` |
 | Class diagram | `plantuml`, `mermaid` |

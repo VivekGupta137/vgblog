@@ -20,6 +20,7 @@ import starlightMarkdownBlocks, { Aside } from "starlight-markdown-blocks";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import rehypeGitHubBadgeLinks from "./src/lib/rehype-github-badge-links";
 import { KROKI_DIAGRAM_ALIASES } from "./src/lib/kroki-aliases";
+import { remarkKrokiLangMap } from "./src/lib/remark-kroki-lang-map";
 import { remarkCodeGroup } from "./src/lib/remark-code-group";
 import { remarkContentGroup } from "./src/lib/remark-content-group";
 import { remarkDataTable } from "./src/lib/remark-data-table";
@@ -75,6 +76,7 @@ export default defineConfig({
     // Astro 7 defaults to Sätteri; keep remark/rehype plugins on the unified pipeline.
     processor: unified({
       remarkPlugins: [
+        remarkKrokiLangMap,
         [
           remarkKroki,
           {

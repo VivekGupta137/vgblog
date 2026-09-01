@@ -51,7 +51,7 @@ Fence with the language. Full mapping: [diagram types](/ai-skills/write-docs-pag
 
 - Block → `blockdiag`
 - Sequence → `plantuml`, `mermaid`, `seqdiag`
-- Activity → `plantuml`, `mermaid`
+- Activity → `plantuml`, `mermaid`, `actdiag`
 - Network → `nwdiag`
 - Use case / class / state / object / deployment → `plantuml` (class and state also `mermaid`)
 - Timing → `plantuml`, `wavedrom`

@@ -85,7 +85,65 @@ For architecture diagrams authored in Draw.io, paste the uncompressed XML into a
 </mxfile>
 ```
 
-Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, `c4`, `vega` / `vegalite`, `goat`, and other [Kroki](https://kroki.io) types listed on [AI skills](/guides/ai-skills/). Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
+Also works: `mermaid`, `graphviz`, `excalidraw`, `structurizr`, `diagramsnet`, `c4` / `c4plantuml`, `vega` / `vegalite`, `goat`, and the types below. Point `PUBLIC_KROKI_SERVER_URL` at a core that has the diagramsnet companion enabled.
+
+### Supported diagram types
+
+Fence with the language in **Fence**. Friendly names `c4`, `vega-lite`, and `drawio` are remapped to Kroki’s API types.
+
+:::data-table{perPage=50}
+
+| Category | Diagram | Fence |
+|----------|---------|--------|
+| UML | Block diagram | `blockdiag` |
+| UML | Sequence diagram | `plantuml`, `mermaid`, `seqdiag` |
+| UML | Activity diagram | `plantuml`, `mermaid`, `actdiag` |
+| UML | Network diagram | `nwdiag` |
+| UML | Use case diagram | `plantuml` |
+| UML | Class diagram | `plantuml`, `mermaid` |
+| UML | State diagram | `plantuml`, `mermaid` |
+| UML | Object diagram | `plantuml` |
+| UML | Deployment diagram | `plantuml` |
+| UML | Timing diagram | `plantuml`, `wavedrom` |
+| UML | Entity relationship diagram | `erd`, `plantuml`, `mermaid` |
+| C4 | C4 context diagram | `c4plantuml` / `c4` |
+| C4 | C4 container diagram | `c4plantuml` / `c4` |
+| C4 | C4 component diagram | `c4plantuml` / `c4` |
+| C4 | Software architecture (Structurizr DSL) | `structurizr` |
+| C4 | System landscape diagram | `structurizr` |
+| C4 | System context diagram | `structurizr` |
+| C4 | Container diagram | `structurizr` |
+| C4 | Component diagram | `structurizr` |
+| C4 | Dynamic diagram | `structurizr` |
+| C4 | Deployment diagram | `structurizr` |
+| Diagram | Object oriented graph | `graphviz` / `dot`, `d2` |
+| Diagram | Work breakdown structure | `plantuml` |
+| Diagram | Mind map diagram | `plantuml`, `mermaid` |
+| Diagram | Gantt diagram | `mermaid`, `plantuml` |
+| Diagram | Ditaa diagram | `ditaa` |
+| Diagram | Packet diagram | `packetdiag` |
+| Diagram | Rack diagram | `rackdiag` |
+| Diagram | Digital timing diagram (waveform) | `wavedrom` |
+| Diagram | BPMN diagram | `bpmn` |
+| Diagram | Bytefield diagram | `bytefield` |
+| Diagram | HDL component diagram | `symbolator` |
+| Diagram | Excalidraw | `excalidraw` |
+| Diagram | diagrams.net | `diagramsnet` / `drawio` |
+| Diagram | WireViz | `wireviz` |
+| Diagram | GoAT | `goat` |
+| Visualization | Bar charts | `vegalite` / `vega` |
+| Visualization | Line and area charts | `vegalite` / `vega` |
+| Visualization | Circular charts | `vegalite` / `vega` |
+| Visualization | Scatter plots | `vegalite` / `vega` |
+| Visualization | Distributions | `vegalite` / `vega` |
+| Visualization | Geographic maps | `vegalite` / `vega` |
+| Visualization | Tree diagrams | `vegalite` / `vega` |
+| Visualization | Network diagrams | `vegalite` / `vega` |
+| Visualization | Heatmaps | `vegalite` / `vega` |
+| Visualization | Word clouds | `vegalite` / `vega` |
+| Visualization | Beeswarm plots | `vegalite` / `vega` |
+
+:::
 
 ### HTML diagrams (`renderhtml`)
 

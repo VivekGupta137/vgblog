@@ -107,7 +107,7 @@ Supported fence aliases on this site: `actdiag`, `blockdiag`, `bpmn`, `bytefield
 |---------|--------|
 | Block diagram | `blockdiag` |
 | Sequence diagram | `plantuml`, `mermaid`, `seqdiag` |
-| Activity diagram | `plantuml`, `mermaid` |
+| Activity diagram | `plantuml`, `mermaid`, `actdiag` |
 | Network diagram | `nwdiag` |
 | Use case diagram | `plantuml` |
 | Class diagram | `plantuml`, `mermaid` |

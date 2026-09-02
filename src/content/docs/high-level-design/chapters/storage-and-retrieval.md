@@ -430,6 +430,58 @@ Values in one column usually have the same type and repeat often, making them ea
 - **Vectorized processing** applies one CPU instruction to batches of values, using SIMD and CPU caches efficiently.
 - Bitwise `AND` and `OR` can filter compressed bitmaps directly.
 
+#### Bitmap encoding example
+
+Suppose a `product` column contains six rows:
+
+| Row | Product |
+| ---: | --- |
+| 1 | Tea |
+| 2 | Rice |
+| 3 | Tea |
+| 4 | Milk |
+| 5 | Rice |
+| 6 | Tea |
+
+Bitmap encoding creates one bitmap for each distinct value. A `1` means that the row contains that value, and a `0` means that it does not.
+
+| Bitmap | Row 1 | Row 2 | Row 3 | Row 4 | Row 5 | Row 6 |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Tea | 1 | 0 | 1 | 0 | 0 | 1 |
+| Rice | 0 | 1 | 0 | 0 | 1 | 0 |
+| Milk | 0 | 0 | 0 | 1 | 0 | 0 |
+
+To find rows containing either Tea or Milk, the database applies bitwise `OR`:
+
+```text
+Tea       1 0 1 0 0 1
+Milk      0 0 0 1 0 0
+          ----------- OR
+Result    1 0 1 1 0 1   → rows 1, 3, 4, and 6
+```
+
+This is efficient because the CPU can compare many bits in one operation.
+
+#### Run-length encoding example
+
+Run-length encoding (**RLE**) stores a repeated value once, together with the number of times it occurs.
+
+```text
+Original:  Tea Tea Tea Milk Milk Rice Rice Rice Rice
+
+RLE:       (Tea, 3) (Milk, 2) (Rice, 4)
+```
+
+It can also compress a bitmap directly:
+
+```text
+Bitmap:    1 1 1 1 0 0 0 0 0 1 1
+
+RLE:       (1, 4) (0, 5) (1, 2)
+```
+
+RLE works best when identical values appear in long consecutive runs. This is why sorting a column before compressing it can greatly reduce its size.
+
 ### Sort order
 
 Columns cannot be sorted independently because the value at position $k$ in each file must still belong to the same logical row. The engine sorts complete rows using chosen sort keys.

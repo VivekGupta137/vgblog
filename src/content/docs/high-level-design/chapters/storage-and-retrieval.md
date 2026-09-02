@@ -160,21 +160,213 @@ A **B-tree** is a widely used index in relational and non-relational databases. 
 
 Unlike an LSM-tree, a B-tree divides storage into fixed-size **pages**—commonly 4 KiB—and reads or writes one page at a time. Pages refer to other pages using disk addresses.
 
-```blockdiag
-blockdiag {
-  orientation = portrait
-  default_node_color = "#dae8fc"
-  root [label = "Root page\n1–999"];
-  left [label = "Branch page\n1–499"];
-  right [label = "Branch page\n500–999"];
-  l1 [label = "Leaf\n1–249"];
-  l2 [label = "Leaf\n250–499"];
-  l3 [label = "Leaf\n500–749"];
-  l4 [label = "Leaf\n750–999"];
-  root -> left, right;
-  left -> l1, l2;
-  right -> l3, l4;
-}
+```renderhtml
+<style>
+  .btree-frame {
+    margin: 0;
+    padding: 1.25rem 1rem;
+    overflow-x: auto;
+    color: #172033;
+    background: linear-gradient(145deg, #f8fafc, #eef4ff);
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .btree-tree {
+    min-width: 760px;
+    text-align: center;
+  }
+
+  .btree-tree ul {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 32px 0 0;
+    list-style: none;
+  }
+
+  .btree-tree > ul {
+    padding-top: 0;
+  }
+
+  .btree-tree li {
+    position: relative;
+    flex: 1 1 0;
+    padding: 32px 8px 0;
+  }
+
+  .btree-tree > ul > li {
+    padding-top: 0;
+  }
+
+  .btree-tree li::before,
+  .btree-tree li::after {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 32px;
+    border-top: 2px solid #94a3b8;
+    content: "";
+  }
+
+  .btree-tree li::before {
+    right: 50%;
+  }
+
+  .btree-tree li::after {
+    left: 50%;
+    border-left: 2px solid #94a3b8;
+  }
+
+  .btree-tree li:only-child::before,
+  .btree-tree li:only-child::after,
+  .btree-tree > ul > li::before,
+  .btree-tree > ul > li::after {
+    display: none;
+  }
+
+  .btree-tree li:first-child::before,
+  .btree-tree li:last-child::after {
+    border: 0;
+  }
+
+  .btree-tree li:last-child::before {
+    border-right: 2px solid #94a3b8;
+    border-radius: 0 8px 0 0;
+  }
+
+  .btree-tree li:first-child::after {
+    border-radius: 8px 0 0 0;
+  }
+
+  .btree-tree ul ul::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 32px;
+    border-left: 2px solid #94a3b8;
+    content: "";
+  }
+
+  .btree-page {
+    display: inline-block;
+    min-width: 150px;
+    padding: 0.65rem;
+    background: #fff;
+    border: 2px solid #64748b;
+    border-radius: 9px;
+    box-shadow: 0 3px 8px rgb(15 23 42 / 10%);
+  }
+
+  .btree-root {
+    border-color: #7c3aed;
+    background: #f3e8ff;
+  }
+
+  .btree-branch {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+
+  .btree-leaf {
+    border-color: #059669;
+    background: #ecfdf5;
+  }
+
+  .btree-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .btree-keys {
+    display: flex;
+    justify-content: center;
+  }
+
+  .btree-key {
+    min-width: 34px;
+    padding: 0.3rem 0.45rem;
+    color: #0f172a;
+    background: rgb(255 255 255 / 75%);
+    border: 1px solid #94a3b8;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-weight: 700;
+  }
+
+  .btree-key + .btree-key {
+    border-left: 0;
+  }
+
+  .btree-caption {
+    margin-top: 1rem;
+    color: #475569;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+</style>
+
+<figure class="btree-frame" aria-label="A balanced B-tree with one root page, two branch pages, and four leaf pages">
+  <div class="btree-tree">
+    <ul>
+      <li>
+        <div class="btree-page btree-root">
+          <span class="btree-label">Root page</span>
+          <div class="btree-keys"><span class="btree-key">500</span></div>
+        </div>
+        <ul>
+          <li>
+            <div class="btree-page btree-branch">
+              <span class="btree-label">Branch page</span>
+              <div class="btree-keys"><span class="btree-key">250</span></div>
+            </div>
+            <ul>
+              <li>
+                <div class="btree-page btree-leaf">
+                  <span class="btree-label">Leaf page</span>
+                  <div class="btree-keys"><span class="btree-key">100</span><span class="btree-key">180</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="btree-page btree-leaf">
+                  <span class="btree-label">Leaf page</span>
+                  <div class="btree-keys"><span class="btree-key">300</span><span class="btree-key">420</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <div class="btree-page btree-branch">
+              <span class="btree-label">Branch page</span>
+              <div class="btree-keys"><span class="btree-key">750</span></div>
+            </div>
+            <ul>
+              <li>
+                <div class="btree-page btree-leaf">
+                  <span class="btree-label">Leaf page</span>
+                  <div class="btree-keys"><span class="btree-key">540</span><span class="btree-key">680</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="btree-page btree-leaf">
+                  <span class="btree-label">Leaf page</span>
+                  <div class="btree-keys"><span class="btree-key">810</span><span class="btree-key">940</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <figcaption class="btree-caption">Follow separator keys from the root to one branch, then to the leaf containing the requested key.</figcaption>
+</figure>
 ```
 
 The number of child references in a page is the **branching factor**. A high branching factor keeps the tree shallow.

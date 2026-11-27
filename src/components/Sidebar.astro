@@ -1,0 +1,140 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+---
+
+<div class="sb-tools">
+  <div class="sb-search">
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="sb-filter" type="search" placeholder="Filter sidebar…" aria-label="Filter sidebar" autocomplete="off" spellcheck="false" />
+    <kbd aria-hidden="true">\</kbd>
+  </div>
+  <div class="sb-actions">
+    <button type="button" id="sb-expand">Expand all</button>
+    <button type="button" id="sb-collapse">Collapse all</button>
+  </div>
+  <p id="sb-empty" hidden>No matching pages</p>
+</div>
+
+<Default {...Astro.props}><slot /></Default>
+
+<script>
+  const input = document.getElementById('sb-filter') as HTMLInputElement | null;
+  const empty = document.getElementById('sb-empty');
+  const root = document.querySelector<HTMLElement>('.sidebar-content');
+
+  if (input && root) {
+    const details = () => [...root.querySelectorAll<HTMLDetailsElement>('details')];
+    let saved: Map<HTMLDetailsElement, boolean> | null = null;
+
+    const reset = () => {
+      root.querySelectorAll<HTMLElement>('[data-sb-hidden]').forEach((el) => {
+        el.hidden = false;
+        el.removeAttribute('data-sb-hidden');
+      });
+      root.querySelectorAll('mark.sb-mark').forEach((m) => m.replaceWith(m.textContent ?? ''));
+      saved?.forEach((open, d) => (d.open = open));
+      saved = null;
+      if (empty) empty.hidden = true;
+    };
+
+    const hide = (el: HTMLElement) => {
+      el.hidden = true;
+      el.setAttribute('data-sb-hidden', '');
+    };
+
+    const apply = () => {
+      const q = input.value.trim().toLowerCase();
+      reset();
+      if (!q) return;
+      saved = new Map(details().map((d) => [d, d.open]));
+      const terms = q.split(/\s+/);
+      let hits = 0;
+
+      const links = [...root.querySelectorAll<HTMLAnchorElement>('li > a')];
+      for (const a of links) {
+        const li = a.closest('li') as HTMLElement;
+        const path = [...(function* () {
+          let p: Element | null = li;
+          while (p && p !== root) {
+            if (p.tagName === 'DETAILS') yield p.querySelector('summary')?.textContent ?? '';
+            p = p.parentElement;
+          }
+        })()].join(' ');
+        const text = (a.textContent ?? '').toLowerCase();
+        const full = (text + ' ' + path).toLowerCase();
+        if (terms.every((t) => full.includes(t))) {
+          hits++;
+          let p: Element | null = li.parentElement;
+          while (p && p !== root) {
+            if (p.tagName === 'DETAILS') (p as HTMLDetailsElement).open = true;
+            p = p.parentElement;
+          }
+          if (terms.length === 1 && text.includes(terms[0])) {
+            const span = a.querySelector('span') ?? a;
+            const t = span.textContent ?? '';
+            const i = t.toLowerCase().indexOf(terms[0]);
+            if (span.children.length === 0 && i >= 0) {
+              span.innerHTML = '';
+              span.append(t.slice(0, i));
+              const m = document.createElement('mark');
+              m.className = 'sb-mark';
+              m.textContent = t.slice(i, i + terms[0].length);
+              span.append(m, t.slice(i + terms[0].length));
+            }
+          }
+        } else {
+          hide(li);
+        }
+      }
+      // hide groups with no visible leaf links
+      details().reverse().forEach((d) => {
+        const li = d.closest('li') as HTMLElement | null;
+        if (!d.querySelector('li > a:not([hidden]):not(li[hidden] a)')) {
+          if (li) hide(li);
+        }
+      });
+      if (empty) empty.hidden = hits > 0;
+    };
+
+    input.addEventListener('input', apply);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { input.value = ''; apply(); }
+      if (e.key === 'Enter') {
+        const first = root.querySelector<HTMLAnchorElement>('li:not([hidden]) > a');
+        if (first) location.href = first.href;
+      }
+    });
+    document.getElementById('sb-expand')?.addEventListener('click', () => { reset(); input.value = ''; details().forEach((d) => (d.open = true)); });
+    document.getElementById('sb-collapse')?.addEventListener('click', () => {
+      reset(); input.value = '';
+      details().forEach((d) => (d.open = !!d.querySelector('a[aria-current="page"]')));
+    });
+    document.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if (e.key === '\\' && !/INPUT|TEXTAREA|SELECT/.test(t.tagName) && !t.isContentEditable) {
+        e.preventDefault(); input.focus(); input.select();
+      }
+    });
+
+    // keep the current page visible in a long sidebar
+    root.querySelector('a[aria-current="page"]')?.scrollIntoView({ block: 'center' });
+  }
+</script>
+
+<style is:global>
+  .sb-tools { position: sticky; top: 0; z-index: 2; margin: -1rem -1rem 0.75rem; padding: 0.75rem 1rem 0.5rem; background: var(--sl-color-bg-nav, var(--sl-color-bg)); border-bottom: 1px solid var(--sl-color-hairline-light); }
+  .sb-search { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; border: 1px solid var(--sl-color-gray-5); border-radius: 0.5rem; background: var(--sl-color-black); color: var(--sl-color-gray-3); }
+  .sb-search:focus-within { border-color: var(--sl-color-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--sl-color-accent) 30%, transparent); }
+  .sb-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--sl-color-white); font: inherit; font-size: var(--sl-text-sm); }
+  .sb-search kbd { font-size: 0.7rem; padding: 0 0.35rem; border: 1px solid var(--sl-color-gray-5); border-radius: 0.25rem; color: var(--sl-color-gray-3); }
+  .sb-search input:not(:placeholder-shown) ~ kbd { display: none; }
+  .sb-actions { display: flex; gap: 0.75rem; margin-top: 0.4rem; }
+  .sb-actions button { all: unset; cursor: pointer; font-size: 0.72rem; color: var(--sl-color-gray-3); }
+  .sb-actions button:hover, .sb-actions button:focus-visible { color: var(--sl-color-accent-high); text-decoration: underline; }
+  #sb-empty { margin: 0.5rem 0 0; font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
+  mark.sb-mark { background: color-mix(in srgb, var(--sl-color-accent) 35%, transparent); color: inherit; border-radius: 2px; }
+  .sidebar-content summary { cursor: pointer; }
+  .sidebar-content details > summary:hover { color: var(--sl-color-white); }
+  .sidebar-content a[aria-current='page'] { font-weight: 600; }
+  .sidebar-content { scrollbar-width: thin; }
+</style>

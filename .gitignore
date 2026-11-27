@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+# large local reference PDF
+codingref.pdf

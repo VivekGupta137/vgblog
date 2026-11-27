@@ -271,23 +271,21 @@ SB is "Empty"
 @+1
 CC is "Hold: -$100\n(still reserved)"
 MA is "No funds\nreceived yet"
-SB is "Capture queued:\n$100 for txn_abc"
-
-note over CC, SB : T+1 hour:\nMerchant ships order.\nSends CAPTURE request.\nFinalises the charge.
+SB is "Capture queued:\n$100 for txn_abc\nT+1 hour: merchant ships and sends CAPTURE"
 
 @+8
-CC is "Hold released.\nFunds transferred\nout in batch."
+CC is "Hold released.\nFunds transferred\nout in batch.\nT+end of day"
 MA is "Awaiting\nfunding"
 SB is "Batch file sent\nto card network.\n$100 included."
 
-note over CC, SB : T+end of day:\nSettlement batch runs.\nAll captured transactions\nbundled into one file\nand sent to card network.
+
 
 @+58
 CC is "Transaction\ncomplete."
-MA is "$97.20 deposited\n($100 minus 2.8% fee)"
+MA is "$97.20 deposited\n($100 minus 2.8% fee)\nT+2 business days"
 SB is "Settled"
 
-note over CC, SB : T+2 business days:\nAcquirer deposits funds\nminus merchant discount rate.
+
 
 @enduml
 ```

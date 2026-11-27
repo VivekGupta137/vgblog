@@ -761,15 +761,9 @@ skinparam noteBorderColor #d97706
 
 [*] --> CLOSED : System starts
 
-state CLOSED {
-  : All requests pass through to processor.\nSuccess/failure tracked in rolling window.
-}
-state OPEN {
-  : Requests rejected immediately.\nReturns error without calling processor.\nTimer starts (e.g. 60 seconds).
-}
-state HALF_OPEN {
-  : Allow 1 test request through.\nIf success: reset to CLOSED.\nIf failure: back to OPEN.
-}
+state "CLOSED\nAll requests pass through; failures tracked in a rolling window" as CLOSED
+state "OPEN\nReject requests immediately; timer starts (e.g. 60 seconds)" as OPEN
+state "HALF-OPEN\nAllow one test request; success closes, failure reopens" as HALF_OPEN
 
 CLOSED --> OPEN : Failure rate > threshold\n(e.g. 50% of last 100 requests\nfailed or timed out)
 OPEN --> HALF_OPEN : Timer expires\n(try again)

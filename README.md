@@ -55,4 +55,13 @@ Supported aliases include PlantUML, Mermaid, D2, GraphViz, C4, Excalidraw, Diagr
 
 For diagrams that only work as HTML/CSS/SVG, use `` ```renderhtml `` (renders in the page). Regular `` ```html `` fences still show highlighted source.
 
-Set `PUBLIC_KROKI_SERVER_URL` to your Kroki core (e.g. `http://localhost:8000`). Diagrams.net needs the companion `yuzutech/kroki-diagramsnet` service and `KROKI_DIAGRAMSNET_HOST=diagramsnet` on core.
+For local builds, use the included Docker Compose stack instead of the rate-limited public service:
+
+```bash
+docker compose -f kroki-local/docker-compose.yaml up -d
+cp .env.example .env  # if you don't already have a local .env
+# Set PUBLIC_KROKI_SERVER_URL=http://localhost:8000 in .env
+bun run build
+```
+
+The stack includes the Kroki core plus Mermaid, BPMN, and diagrams.net companions; PlantUML runs through the core. Stop it with `docker compose -f kroki-local/docker-compose.yaml down`. Set `PUBLIC_KROKI_SERVER_URL` to your Kroki core for other environments. Diagrams.net requires the `yuzutech/kroki-diagramsnet` companion and `KROKI_DIAGRAMSNET_HOST=diagramsnet` on core.

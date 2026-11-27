@@ -232,7 +232,7 @@ answer = 4
 Sequences will be : (1,1,1,1), (1,1,2), (2,2), (1,3)
 ```
 
-```java
+```java title="Combinations (order ignored)" showLineNumbers mark={6-7}
 int[][] dp = new int[nums.length][target+1];
 
 for (int i = 0; i < nums.length; i++) {
@@ -254,7 +254,7 @@ answer = 7
 Sequences will be: (1, 1, 1, 1), (1, 1, 2), (1, 2, 1), (1, 3), (2, 1, 1), (2, 2), (3, 1)
 ```
 
-```java
+```java title="Sequences (order matters)" showLineNumbers mark={5}
 for (int i = 0; i < nums.length; i++) {
     dp[i][0] = 1;
     for (int j = 1; j <= target; j++)
@@ -269,7 +269,7 @@ Trick in the second method lies in checking all the sequences whose last term wi
 
 If different sequences are counted as different combinations:
 
-```java
+```java title="Forward (push)" showLineNumbers mark={6}
 int dp[] = new int[target+1];
 dp[0] = 1;
 for (int i = 0; i <= target; i++)
@@ -283,7 +283,7 @@ for (int i = 0; i <= target; i++)
 
 Another approach is to find the current `dp[i]` using the previous values. This is given by:
 
-```java
+```java title="Backward (pull)" showLineNumbers mark={6}
 int dp[] = new int[target+1];
 dp[0] = 1;
 for (int i = 1; i <= target; i++)
@@ -294,7 +294,6 @@ for (int i = 1; i <= target; i++)
 return dp[target];
 ```
 
-If different sequences are not counted as different combinations.
 ## Double counting problem
 
 :::warn
@@ -309,7 +308,7 @@ What we can do is to take one representation of every group, i.e., for group `[ 
 
 Handwritten notes (figure): top shows `[1, 2, 5]` with index labels `0 1 ...`; `N = 5`; rows `5` (x1 marker), `2+2+1`, `2+1+1+1` (x4 marker), `1+1+1+1+1` (x1 marker). The `2+2+1` group is circled with the crossed-out ordering `2+2+1 / 2+1+2 / 1+2+2` and a count of `3`. The boxed result is `4`.
 
-```java
+```java showLineNumbers mark={1}
 int dp[][] = new int[target+1][nums.length];
 // initial: take every one as first term of series
 for (int i = 0; i < nums.length; i++)
@@ -438,7 +437,7 @@ Solution: we find all possible ways to fill 3xN correctly, it turns out that we 
 
 ![Handwritten P/Q state-transition diagram for 3xN coloring](/coding-ref/i-023-027.webp)
 
-**[Figure]** Handwritten `P/Q` state-transition diagram for the 3xN coloring: a 3-cell strip splits into P (strip 1 2 3, all different) and Q (strip 1 2 1, two equal), with lists of next-column patterns (P side: 11 patterns 214, 231, 234, 241, 312, 314, 341, 342, 412, 431, 432 and 6 patterns 212, 232, 242, 313, 414, 434; Q side: 10 patterns 213, 214, 234, 243, 312, 314, 342, 412, 413, 432 and 7 patterns 212, 232, 242, 313, 343, 414, 434) and the coefficient pairs 11 / 6 (P side) and 10 / 7 (Q side). Recurrence written as P_{+1} = 11·`P + 10`·Q and Q_{+1} = 5·`P + 7`·Q.
+**[Figure]** Handwritten `P/Q` state-transition diagram for the 3xN coloring: a 3-cell strip splits into P (strip 1 2 3, all different) and Q (strip 1 2 1, two equal), with lists of next-column patterns (P side: 11 patterns 214, 231, 234, 241, 312, 314, 341, 342, 412, 431, 432 and 6 patterns 212, 232, 242, 313, 414, 434; Q side: 10 patterns 213, 214, 234, 243, 312, 314, 342, 412, 413, 432 and 7 patterns 212, 232, 242, 313, 343, 414, 434) and the coefficient pairs 11 / 6 (P side) and 10 / 7 (Q side). Recurrence written as `P_{+1} = 11·P + 10·Q` and `Q_{+1} = 5·P + 7·Q`.
 
 Handwritten recurrence (partially legible): `P_{+1} = 11·P + 10·Q`, `Q_{+1} = 5·P + 7·Q`.
 
@@ -463,7 +462,8 @@ number 'C'.
 */
 ```
 
-```java
+:::group
+```java title="Recursive" showLineNumbers mark={3,6-8,10}
 public int knapsackRecursive(int currentIndex, int capacity,int[] profits,int[] weights){
     if(currentIndex >= profits.length || capacity <= 0) return 0;
     int profit1=0,profit2=0;
@@ -478,9 +478,7 @@ weights);
 }
 ```
 
-Bottom up
-
-```java
+```java title="Bottom-up (2D)" showLineNumbers mark={7-11,13}
 public int knapsack(int capacity, int[] profits, int[] weights){
     int[][] dp = new int[profits.length][capacity+1];
     for(int i = 0; i < profits.length; i++){
@@ -498,9 +496,7 @@ public int knapsack(int capacity, int[] profits, int[] weights){
 }
 ```
 
-Bottom up, Space: `O(capacity)`
-
-```java
+```java title="Bottom-up (1D, O(capacity))" showLineNumbers mark={5,6-9}
 public int knapsack(int capacity, int[] profits, int[] weights){
     int[] dp = new int[capacity+1];
     for(int i = 0; i < profits.length; i++){
@@ -516,6 +512,11 @@ public int knapsack(int capacity, int[] profits, int[] weights){
     return dp[capacity];
 }
 ```
+:::
+
+:::caution
+In the 1-D version the capacity loop runs **downwards** (`c = capacity … 1`) so each item is used at most once.
+:::
 
 ### Equal Subset Sum Partition
 
@@ -525,9 +526,9 @@ If total `S` is odd → `false`; otherwise find a subset with sum `S/2` (Subset 
 
 Given a set of positive numbers, find if we can partition it into two subsets such that the sum of elements in both the subsets is equal.
 
-Input: `{1, 1, 3, 4, 7}`
-Output: True
-Explanation: The given set can be partitioned into two subsets with equal sum: `{1, 3, 4}` & `{1, 7}`
+- **Input:** `{1, 1, 3, 4, 7}`
+- **Output:** True
+- **Explanation:** The given set can be partitioned into two subsets with equal sum: `{1, 3, 4}` & `{1, 7}`
 
 Solutions: Assume if S represents the total sum of all the given numbers, then the two equal subsets must have a sum equal to `S/2`. This essentially transforms our problem to: "Find a subset of the given numbers that has a total sum of `S/2`". If such partition exists return `true`. Test: `{1,3}`. The given array can be thought of weights array in knapsack problem.
 
@@ -539,8 +540,8 @@ Boolean knapsack: `dp[c] = dp[c] || dp[c - num]`.
 
 Given a set of positive numbers, determine if there exists a subset whose sum is equal to a given number 'S'.
 
-Input: `{1, 2, 7, 1, 5}`, S=10
-Output: True
+- **Input:** `{1, 2, 7, 1, 5}`, S=10
+- **Output:** True
 The given set has a subset whose sum is '10': `{1, 2, 7}`
 
 ### Minimum Subset Sum Difference
@@ -551,9 +552,9 @@ Find achievable subset sums up to `S/2`; answer = `S - 2·best`.
 
 Given a set of positive numbers, partition the set into two subsets with a minimum difference between their subset sums.
 
-Input: `{1, 2, 7, 1, 5}`
-Output: 0
-Explanation: We can partition the given set into two subsets where minimum absolute difference between the sum of number is '0'. Following are the two subsets: `{1, 2, 5}` & `{7, 1}`.
+- **Input:** `{1, 2, 7, 1, 5}`
+- **Output:** 0
+- **Explanation:** We can partition the given set into two subsets where minimum absolute difference between the sum of number is '0'. Following are the two subsets: `{1, 2, 5}` & `{7, 1}`.
 
 Solution: Let's assume 'S' represents the total sum of all the numbers. So what we are trying to achieve in this problem is to find a subset whose sum is as close to '`S/2`' as possible, because if we can partition the given set into two subsets of an equal sum, we get the minimum difference i.e. zero. This transforms our problem to Subset Sum, where we try to find a subset whose sum is equal to a given number--'`S/2`' in our case. If we can't find such a subset, then we will take the subset which has the sum closest to '`S/2`'.
 
@@ -565,8 +566,8 @@ Same as Subset Sum but add counts instead of OR: `dp[c] += dp[c - num]`.
 
 Given a set of positive numbers, find the total number of subsets whose sum is equal to a given number 'S'.
 
-Input: `{1, 2, 7, 1, 5}`, S=9
-Output: 3
+- **Input:** `{1, 2, 7, 1, 5}`, S=9
+- **Output:** 3
 The given set has '3' subsets whose sum is '9': `{2, 7}`, `{1, 7, 1}`, `{1, 2, 1, 5}`
 
 ### Target Sum
@@ -577,9 +578,9 @@ Assigning `+`/`-` reduces to counting subsets with sum `(S + target) / 2`.
 
 Given a set of positive numbers (non zero) and a target sum 'S'. Each number should be assigned either a '+' or '-' sign. We need to find out total ways to assign symbols to make the sum of numbers equal to target 'S'.
 
-Input: `{1, 1, 2, 3}`, S=1
-Output: 3
-Explanation: The given set has '3' ways to make a sum of '1': `{+1-1-2+3}` & `{-1+1-2+3}` & `{+1+1+2-3}`
+- **Input:** `{1, 1, 2, 3}`, S=1
+- **Output:** 3
+- **Explanation:** The given set has '3' ways to make a sum of '1': `{+1-1-2+3}` & `{-1+1-2+3}` & `{+1+1+2-3}`
 
 This problem follows the 0/1 Knapsack pattern and can be converted into Count of Subset Sum.
 
@@ -617,7 +618,7 @@ Brute Force T.C:
 
 For regular Knapsack problem it's `O(2^N)`. Inside recursive function we do recursion twice, so we could visualize call stack as a binary tree (left-> using item, right child-> not using item). To find number of nodes (recursive calls) we use formula (2^(`N+1`)) - 1 (asymptotically `O(2^N)`). In the unbound knapsack we have more items than N (as we can reuse them), so it's equal `O(2^(N+X))`, where X is number of times we reused items. The sum of reused items (X) can't be more than C (capacity), so if we reused the smallest item (worst case), it would be `C/S` (S - smallest item). In case if `S == 1`, like we have in the problem, C/`S == C` == X, so `O(2^(N+X))` == `O(2^(N+C))`.
 
-```java
+```java showLineNumbers mark={7}
 public static int unboundedKnapsack(int[] profits, int[] weights, int capacity){
     int[] dp = new int[capacity+1];
 
@@ -651,7 +652,7 @@ Given an infinite supply of 'n' coin denominations and a total money amount, we 
 
 Denominations: `{1,2,3}`
 Total amount: 5
-Output: 5
+- **Output:** 5
 
 This problem is quite similar to Count of Subset Sum. The only difference here is that after including the item (i.e. coin), we recursively call to process all the items (including the current coin). In 'Count of Subset Sum', however, we were recursively calling to process only the remaining items.
 
@@ -675,7 +676,7 @@ Plain recursion is exponential (`O(2^N)`); memoization or two rolling variables 
 
 Write a function to calculate the nth Fibonacci number.
 
-```java
+```java showLineNumbers mark={4-5,7}
 public int nthfib(int n){
     if(n <= 2)      return n-1;   // 0 1
     int[] dp = new int[n+1];
@@ -707,7 +708,7 @@ Given a sequence, find the length of its Longest Palindromic Subsequence (LPS). 
 
 This form of solution is hard to reduce the space complexity:
 
-```java
+```java showLineNumbers mark={7-9}
 public static int longestPalindromicSubsequence(String s){
     int n = s.length();
     int[][] dp = new int[n][n];
@@ -725,7 +726,7 @@ public static int longestPalindromicSubsequence(String s){
 
 Another form would be to use the fact that in order to fill the current entry I need 3 pieces of information: left cell, bottom cell and bottom-left cell (when `charAt[i]` == `charAt[j]`). This is done by bottom up filling table. This solution can be space optimised to `O(n)`.
 
-```java
+```java showLineNumbers mark={3-5}
 for(int i = n-1; i >= 0; i--)
     for(int j = i; j < n; j++){
         if(i == j)   dp[i][j] = 1;
@@ -745,7 +746,7 @@ For input String `"abdbca"` we have the following dp table (rows i, columns j):
 5    0, 0, 0, 0, 0, 1,
 ```
 
-Output: 5
+- **Output:** 5
 
 ### Longest Palindromic Substring
 
@@ -755,9 +756,9 @@ Output: 5
 
 Given a string, find the length of its Longest Palindromic Substring (LPS). In a palindromic string, elements read the same backward and forward.
 
-Input: `"abdbca"`
-Output: 3
-Explanation: LPS is `"bdb"`.
+- **Input:** `"abdbca"`
+- **Output:** 3
+- **Explanation:** LPS is `"bdb"`.
 
 ![Handwritten DP table for abdbca longest palindromic subsequence](/coding-ref/i-031-028.webp)
 
@@ -769,9 +770,9 @@ Figure: DP table over `a b d b c a` (rows and columns), with entries `3` in the 
 
 Given a string, find the total number of palindromic substrings in it. Please note we need to find the total number of substrings and not subsequences.
 
-Input: `"abdbca"`
-Output: 7
-Explanation: Here are the palindromic substrings, `"a"`, `"b"`, `"d"`, `"b"`, `"c"`, `"a"`, `"bdb"`.
+- **Input:** `"abdbca"`
+- **Output:** 7
+- **Explanation:** Here are the palindromic substrings, `"a"`, `"b"`, `"d"`, `"b"`, `"c"`, `"a"`, `"bdb"`.
 
 ![Handwritten boolean palindrome table for cddpd](/coding-ref/i-032-029.webp)
 
@@ -787,9 +788,9 @@ Answer = `len - LPS` (longest palindromic subsequence).
 
 Given a string, find the minimum number of characters that we can remove to make it a palindrome.
 
-Input: `"abdbca"`
-Output: 1
-Explanation: By removing `"c"`, we get a palindrome `"abdba"`.
+- **Input:** `"abdbca"`
+- **Output:** 1
+- **Explanation:** By removing `"c"`, we get a palindrome `"abdba"`.
 
 Solution: This problem can be easily converted to the Longest Palindromic Subsequence (LPS) problem. We can use the fact that LPS is the best subsequence we can have, so any character that is not part of LPS must be removed.
 
@@ -803,9 +804,9 @@ Precompute `isPalindrome[i][j]`, then `dp[i] = min cuts` over all palindromic pr
 
 Given a string, we want to cut it into pieces such that each piece is a palindrome. Write a function to return the minimum number of cuts needed.
 
-Input: `"abdbca"`
-Output: 3
-Explanation: Palindrome pieces are `"a"`, `"bdb"`, `"c"`, `"a"`.
+- **Input:** `"abdbca"`
+- **Output:** 3
+- **Explanation:** Palindrome pieces are `"a"`, `"bdb"`, `"c"`, `"a"`.
 
 The following solution is wrong, for Input: `"ababb"` correct answer will be 1 with `"aba"`, `"bb"` as pieces.
 
@@ -844,7 +845,7 @@ Substring means contiguous: reset to `0` on mismatch and track the max over the 
 
 Given two strings 's1' and 's2', find the length of the longest substring which is common in both the strings.
 
-```java
+```java showLineNumbers mark={7-8}
 public static int LCSubstring(char[] s1, char[] s2){
     int mx = 0, n1 = s1.length, n2 = s2.length;
     int[][] dp = new int[n1+1][n2+1];
@@ -867,9 +868,9 @@ Match → `1 + dp[i-1][j-1]`; mismatch → `max(dp[i-1][j], dp[i][j-1])`. `O(N·
 
 Given two strings 's1' and 's2', find the length of the longest subsequence which is common in both the strings.
 
-Input: s1 = `"abdca"`, s2 = `"cbda"`
-Output: 3
-Explanation: The longest common subsequence is `"bda"`.
+- **Input:** s1 = `"abdca"`, s2 = `"cbda"`
+- **Output:** 3
+- **Explanation:** The longest common subsequence is `"bda"`.
 
 Since we want to match all the subsequences of the given two strings, we can use a two-dimensional array to store our results. The lengths of the two strings will define the size of the array's two dimensions. So for every index 'i' in string 's1' and 'j' in string 's2', we will choose one of the following two options:
 
@@ -890,9 +891,9 @@ With `c = LCS(s1, s2)`: deletions = `len1 - c`, insertions = `len2 - c`.
 
 Given strings s1 and s2, we need to transform s1 into s2 by deleting and inserting characters. Write a function to calculate the count of the minimum number of deletion and insertion operations.
 
-Input: s1 = `"abdca"`, s2 = `"cbda"`
-Output: 2 deletions and 1 insertion.
-Explanation: We need to delete `{'a', 'c'}` and insert `{'c'}` to s1 to transform it into s2.
+- **Input:** s1 = `"abdca"`, s2 = `"cbda"`
+- **Output:** 2 deletions and 1 insertion.
+- **Explanation:** We need to delete `{'a', 'c'}` and insert `{'c'}` to s1 to transform it into s2.
 
 If we can find the LCS of the two input strings, we can easily find how many characters we need to insert and delete from s1.
 
@@ -909,9 +910,9 @@ If we can find the LCS of the two input strings, we can easily find how many cha
 
 Given a number sequence, find the length of its Longest Increasing Subsequence (LIS). In an increasing subsequence, all the elements are in increasing order (from lowest to highest).
 
-Input: `{4,2,3,6,10,1,12}`
-Output: 5
-Explanation: The LIS is `{2,3,6,10,12}`.
+- **Input:** `{4,2,3,6,10,1,12}`
+- **Output:** 5
+- **Explanation:** The LIS is `{2,3,6,10,12}`.
 
 Solution: if `num[i]` > `num[j]` => `dp[i]` = `dp[j]` + 1 if there is no bigger LIS for 'i', for all (`j < i`).
 
@@ -923,9 +924,9 @@ Length = `len1 + len2 - LCS`.
 
 Given two sequences 's1' and 's2', write a method to find the length of the shortest sequence which has 's1' and 's2' as subsequences.
 
-Input: s1: `"abcf"`, s2: `"bdcf"`
-Output: 5
-Explanation: The shortest common super-sequence (SCS) is `"abdcf"`.
+- **Input:** s1: `"abcf"`, s2: `"bdcf"`
+- **Output:** 5
+- **Explanation:** The shortest common super-sequence (SCS) is `"abdcf"`.
 
 1. If the character `s1[i]` matches `s2[j]`, the length of the SCS would be one plus the length of the SCS till `i-1` and `j-1` indexes in the two strings.
 2. If the character `s1[i]` does not match `s2[j]`, we will consider two SCS: one without `s1[i]` and one without `s2[j]`. Our required SCS length will be the shortest of these two super-sequences plus one.
@@ -938,9 +939,9 @@ Answer = `n - LIS`.
 
 Given a number sequence, find the minimum number of elements that should be deleted to make the remaining sequence sorted.
 
-Input: `{4,2,3,6,10,1,12}`
-Output: 2
-Explanation: We need to delete `{4,1}` to make the remaining sequence sorted `{2,3,6,10,12}`.
+- **Input:** `{4,2,3,6,10,1,12}`
+- **Output:** 2
+- **Explanation:** We need to delete `{4,1}` to make the remaining sequence sorted `{2,3,6,10,12}`.
 
 Alternately, we can convert this problem into a Longest Increasing Subsequence (LIS) problem. As we know that LIS will give us the length of the longest increasing subsequence (in the sorted order!). So, subtracting the length of LIS from the length of the input array:
 
@@ -954,8 +955,8 @@ Like LCS of the string with itself, but characters at the same index cannot matc
 
 Given a sequence, find the length of its longest repeating subsequence (LRS). A repeating subsequence will be the one that appears at least twice in the original sequence and is not overlapping (i.e. none of the corresponding characters in the repeating subsequences have the same index).
 
-Input: `"a a b d b c e c"`
-Output: 3
+- **Input:** `"a a b d b c e c"`
+- **Output:** 3
 The longest repeating subsequence is “a b c” from `a a b d b c e c`.
 
 1. If `i1` and `i2` are different and the character `str[i1]` matches the character `str[i2]`, then the length of the LRS is one plus the length of the LRS up to indexes `i1-1` and `i2-1`.
@@ -969,9 +970,9 @@ The longest repeating subsequence is “a b c” from `a a b d b c e c`.
 
 Given a string and a pattern, write a method to count the number of times the pattern appears in the string as a subsequence.
 
-Input: string: “tomorrow”, pattern: “tor”
-Output: 4
-Explanation: Following are the four occurrences: `{tomorrow, tomorrow, tomorrow, tomorrow}`.
+- **Input:** string: “tomorrow”, pattern: “tor”
+- **Output:** 4
+- **Explanation:** Following are the four occurrences: `{tomorrow, tomorrow, tomorrow, tomorrow}`.
 
 1. If the character at `strIndex` equals the one at `patIndex`, then the count will be `dp[patIndex-1][strIndex-1]`.
 2. At every step we skip a character from the string and try matching the remaining string with the pattern, so we add to the count by ignoring the current `strIndex`: `dp[patIndex][strIndex-1]`.
@@ -995,9 +996,9 @@ DP table (rows = pattern prefixes ϕ, t, to, tor; columns = string prefix ϕ, t,
 
 Given a number sequence, find the length of its Longest Bitonic Subsequence (LBS). A subsequence is considered bitonic if it is monotonically increasing and then monotonically decreasing.
 
-Input: `{4,2,5,9,7,6,10,3,1}`
-Output: 7
-Explanation: The LBS is `{4,5,9,7,6,3,1}`.
+- **Input:** `{4,2,5,9,7,6,10,3,1}`
+- **Output:** 7
+- **Explanation:** The LBS is `{4,5,9,7,6,3,1}`.
 
 ### Approach 1
 
@@ -1022,9 +1023,9 @@ A three element sequence `(a1, a2, a3)` will be an alternating sequence if its e
 
 `{a1 > a2 < a3 }` or `{ a1 < a2 > a3}`.
 
-Input: `{1,2,3,4}`
-Output: 2
-Explanation: There are many LAS: `{1,2}`, `{3,4}`, `{1,3}`, `{1,4}`.
+- **Input:** `{1,2,3,4}`
+- **Output:** 2
+- **Explanation:** There are many LAS: `{1,2}`, `{3,4}`, `{1,3}`, `{1,4}`.
 
 If `i` represents the `currentIndex` and `j` represents the `previousIndex`, our recursive formula would look like:
 
@@ -1049,10 +1050,10 @@ Match → `dp[i-1][j-1]`; else `1 + min(insert, delete, replace)`. `O(N·M)`.
 
 Given strings `s1` and `s2`, we need to transform `s1` into `s2` by deleting, inserting, or replacing characters. Write a function to calculate the count of the minimum number of edit operations.
 
-Input: `s1 = "abdca"`
+- **Input:** `s1 = "abdca"`
 `s2 = "cbda"`
-Output: 2
-Explanation: We can replace the first 'a' with 'c' and delete the second 'c'.
+- **Output:** 2
+- **Explanation:** We can replace the first 'a' with 'c' and delete the second 'c'.
 
 1. If the character `s1[i1]` matches `s2[i2]`, the count of the edit operations is equal to the count of the edit operations for the remaining strings.
 2. If the character `s1[i1]` does not match `s2[i2]`, we take the minimum count from the remaining strings after performing any of the three edit operations.
@@ -1074,9 +1075,9 @@ else
 
 Given three strings `m`, `n`, and `p`, write a method to find out if `p` has been formed by interleaving `m` and `n`. `p` would be considered interleaving `m` and `n` if it contains all the letters from `m` and `n` and the order of letters is preserved too.
 
-Input: `m="abd", n="cef", p="abcdef"`
-Output: `true`
-Explanation: 'p' contains all the letters from 'm' and 'n' and preserves their order too.
+- **Input:** `m="abd", n="cef", p="abcdef"`
+- **Output:** `true`
+- **Explanation:** 'p' contains all the letters from 'm' and 'n' and preserves their order too.
 
 1. If the character `m[mIndex]` matches the character `p[pIndex]`, we take the matching result up to `mIndex-1` and `nIndex`.
 2. If the character `n[nIndex]` matches the character `p[pIndex]`, we take the matching result up to `mIndex` and `nIndex-1`.

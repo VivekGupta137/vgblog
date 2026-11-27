@@ -462,7 +462,7 @@ It performs two useful operations:
 - FIND: determine which subset a particular element is in.
 - UNION: join the two subsets into a single subset.
 
-```java
+```java showLineNumbers mark={2,5-6}
 public static void union(int u,int v, int[] ufds){
      ufds[find(u,ufds)] = find(v,ufds);
 }
@@ -948,7 +948,7 @@ We have stored `INF` into `int` `dType` which can store only upto: `INF`*2. Whil
 System.out.println(INF*3);
 ```
 
-Output: `-1294967275`
+- **Output:** `-1294967275`
 
 For such situations we use the long `dType` which is 64 bits. It can even store `INF`*`INF` without overflow.
 
@@ -957,7 +957,7 @@ long n = INF*((long)INF);
 System.out.println(n);
 ```
 
-Output: `1000000014000000049`
+- **Output:** `1000000014000000049`
 
 ### Formulas
 
@@ -1076,7 +1076,7 @@ Image (last set bit isolated), page 72:
 If the given input is 5, then `BIT[5]` (iteration 1) + `BIT[4]` (iteration 2) will be returned as the sum.
 Or prefix sum till index `idx`. The loop will remove the rightmost set bit until the `idx` doesn't have any more set bits.
 
-```java
+```java showLineNumbers mark={8}
 int get(int idx)
 {
      int sum = 0;
@@ -1095,7 +1095,7 @@ int get(int idx)
 Here the `idx` is being updated until the `idx` becomes greater than `N`. The rightmost bit is added.
 If we update `idx: 1`, this change will be added to every sub range which includes this `idx: 1`.
 
-```java
+```java showLineNumbers mark={5-6}
 void update(int idx, int val)
 {
     idx = idx + 1; // if your query is one based then remove this
@@ -1273,7 +1273,7 @@ public int find(TreeNode root, int p,int q){
 
 Page 91 (image):
 
-```java
+```java showLineNumbers mark={13}
 private boolean recurseTree(TreeNode currentNode, TreeNode p, TreeNode q) {
     // If reached the end of a branch, return false.
     if (currentNode == null)
@@ -1375,7 +1375,7 @@ else
 
 ### Simple Binary Search
 
-```java
+```java showLineNumbers mark={6,10,12}
 int binarySearch(int Arr[], int n, int target) {
    //set starting and ending index
    int start = 0, end = n-1;
@@ -1439,13 +1439,13 @@ So, we use binary search on interval [1, INT_MAX]. So, total complexity is $O(30
 
 The ceiling of the 'key' will be the smallest element in the given array greater than or equal to the 'key'.
 
-Input: [1, 3, 8, 10, 15], key = 12
-Output: 4
-Explanation: The smallest number greater than or equal to '12' is '15' having index '4'.
+- **Input:** [1, 3, 8, 10, 15], key = 12
+- **Output:** 4
+- **Explanation:** The smallest number greater than or equal to '12' is '15' having index '4'.
 
 If we find the 'key', we return its index as the ceiling. If we can't find the 'key', the next big number will be pointed out by the index start.
 
-```java
+```java showLineNumbers mark={5,7-8}
 // arr is sorted in ascending order
 public static int ceiling(int[] arr, int key){
     int l = 0, r = arr.length-1;
@@ -1467,14 +1467,14 @@ make r = l-1. This means A[r] <= key and A[l] >= key.
 
 Find the smallest letter in the given array greater than a given 'key'. Given array is a circular list.
 
-Input: ['a', 'c', 'f', 'h'], key = 'f'
-Output: 'h'
-Explanation: The smallest letter greater than 'f' is 'h' in the given array.
+- **Input:** ['a', 'c', 'f', 'h'], key = 'f'
+- **Output:** 'h'
+- **Explanation:** The smallest letter greater than 'f' is 'h' in the given array.
 
 1. The array is considered circular, which means if the 'key' is bigger than the last letter of the array or if it is smaller than the first letter of the array, the key's next letter will be the first letter of the array.
 2. The other difference is that we have to find the next biggest letter which can't be equal to the 'key'. This means that we will ignore the case where key == `arr[middle]`. To handle this case, we can update our start range to start = middle +1.
 
-```java
+```java showLineNumbers mark={6-8}
 public int nextGreater(int[] arr, int x){
     if(x > arr[arr.length-1] || x < arr[0])
          return 0;
@@ -1511,7 +1511,7 @@ We can break when `start == end`.
 
 Image (page 98):
 
-```java
+```java showLineNumbers mark={4,6,8}
 public int find_max_bitonic(int[] arr){
     int l = 0, r = arr.length-1;
     while(l < r){
@@ -1566,7 +1566,7 @@ Image (search walkthrough for key = 10, page 100):
 
 Image (page 101):
 
-```java
+```java showLineNumbers mark={4,8,10,14,16}
 public int search(int[] nums, int target) {
     int l = 0, r = nums.length-1;
     while(l <= r){
@@ -1609,7 +1609,7 @@ To adjust the ranges:
 
 Image (page 102):
 
-```java
+```java showLineNumbers mark={4,11,13}
 public int findMin(int[] nums) {
     int l = 0, r = nums.length-1;
     while(l < r){
@@ -1638,9 +1638,9 @@ We deal with sorted arrays (or LinkedLists) and need to find a set of elements t
 
 Q. Given an array of sorted numbers and a target sum, find a pair in the array whose sum is equal to the given target.
 
-Input: [1, 2, 3, 4, 6], target=6
-Output: [1, 3]
-Explanation: The numbers at index 1 and 3 add up to 6: 2+4=6
+- **Input:** [1, 2, 3, 4, 6], target=6
+- **Output:** [1, 3]
+- **Explanation:** The numbers at index 1 and 3 add up to 6: 2+4=6
 
 Given that the input array is sorted, an efficient way would be to start with one pointer in the beginning and another pointer at the end. At every step, we will see if the numbers pointed by the two pointers add up to the target sum.
 
@@ -1816,7 +1816,7 @@ Using BFS
 
 Image (BFS solution, page 107):
 
-```java
+```java showLineNumbers mark={9,25}
 public int[][] updateMatrix(int[][] matrix) {
     if(matrix.length == 0)
       return matrix;
@@ -1915,7 +1915,7 @@ Pacific ~   ~   ~   ~   ~
            *   *   *   *   *
 ```
 
-Output: `[[0, 4], [1, 3], [1, 4], [2, 2], [3, 0], [3, 1], [4, 0]]` (positions with parentheses in above matrix).
+- **Output:** `[[0, 4], [1, 3], [1, 4], [2, 2], [3, 0], [3, 1], [4, 0]]` (positions with parentheses in above matrix).
 
 ### Code
 
@@ -1989,7 +1989,7 @@ First build the graph by connecting stones in same row/col, then we can reduce a
 
 ### Code
 
-```java
+```java showLineNumbers mark={19,24-25,30}
 static int[] nodes; // nodes[i] is no. of nodes in connected component with root "i"
 public int removeStones(int[][] stones) {
     if(stones.length == 0)  return 0;
@@ -2058,7 +2058,7 @@ Explanation: You have to take all the cards. Your score is the sum of points of 
 
 ### Code
 
-```java
+```java showLineNumbers mark={4,7-8}
 public int maxScore(int[] cards, int k) {
     int[] dp = new int[k+1];
     int ans = 0;
@@ -2115,7 +2115,7 @@ Other lists of favorite companies are not a subset of another list, therefore, t
 
 ### Code
 
-```java
+```java showLineNumbers mark={13-14,18,23}
 static int[] ufds;
 public List<Integer> peopleIndexes(List<List<String>> fc) {
     Set<String>[] ps = new Set[fc.size()];
@@ -2528,7 +2528,7 @@ T.C: `O(N^2)`, S.C.: `O(N)`
 
 We can use the `hashMap` for remembering the sum values along a path.
 
-```java
+```java showLineNumbers mark={8,22,27}
 static int count,target;
 static Map<Integer,Integer> map;
 public int pathSum(TreeNode root, int sum) {
@@ -2558,7 +2558,7 @@ public void prefixTree(TreeNode root,TreeNode parent){
     map.put(root.val, map.get(root.val) - 1);
 }
 ```
-```java
+```java showLineNumbers mark={8,13}
 public void prefixTree(TreeNode root,TreeNode parent){
     if(root == null)    return;
 
@@ -2589,7 +2589,7 @@ Given a binary tree, find the length of its diameter. The diameter of a tree is 
 
 **Example 2:**
 
-Output: 7
+- **Output:** 7
 
 Explaination: The diameter of the tree is: [10, 8, 5, 3, 6, 9, 11]
 
@@ -2988,7 +2988,7 @@ Level 5:  ((())  (()()  (())(  ()()(  ()(()
 Level 6:  ((()))  (()())  (())()  ()()()  ()(())
 ```
 
-```java
+```java showLineNumbers mark={4,13,17}
 public static List<String> generateValidParentheses(int num) {
     List<String> result = new ArrayList<String>();
     Queue<ParenthesesString> queue = new LinkedList<>();
@@ -3067,7 +3067,7 @@ Output: []
 Explanation: The tasks have cyclic dependency, therefore they cannot be scheduled.
 ```
 
-```java
+```java showLineNumbers mark={7,15}
 // graph here represents the tasks graph
 public List<Integer> topo_sort(HashMap<Integer, List<Integer>> graph,
                                HashMap<Integer, Integer> indegree){
@@ -3251,7 +3251,7 @@ public int minNumberOperations(int[] target) {
 }
 ```
 
-```java
+```java showLineNumbers mark={4,8,10-12}
 public int[] solve(int A, int B, int C, int D) {
     int[] dp = new int[D+1];
     int[] ans = new int[D]; // just for returning in correct form
@@ -3280,7 +3280,7 @@ Given an Array of numbers find the longest Arithmetic sequence.
 Usually the constraints are weak for this problem.
 
 Eg. A = [ 9, 4, 2, 7, 10 ]
-Output: 3 as [ 4, 7, 10 ] is aritmetic sequence with `difference == 3`
+- **Output:** 3 as [ 4, 7, 10 ] is aritmetic sequence with `difference == 3`
 
 ### Solution
 
@@ -3311,7 +3311,7 @@ public static int longestArithSeqLength(int[] A) {
 
 We can also do another thing, we find the maximum difference possible.
 
-```java
+```java showLineNumbers mark={17-18}
 public static int longestArithSeqLength(int[] A) {
     int mx = Integer.MIN_VALUE, mn = Integer.MAX_VALUE;
     for (int i = 0; i < A.length; i++) {
@@ -3368,7 +3368,7 @@ t:0->`j-1` `max(prices[j]-prices[t]+dp[i-1][t-1])` is same as
 
 Second part of the above expression `maxTemp` = t:0->`j-1` `max(dp[i-1][t-1]-prices[t])` can be included in the dp loop by keeping track of the maximum value till `j-1`.
 
-```java
+```java showLineNumbers mark={8,13}
 public int maxProfit(final int[] A) {
     int n = A.length;
     int[][] dp = new int[2][n];
@@ -3413,7 +3413,7 @@ Output = 4
 For A = "())()"
 Output = 2
 
-```java
+```java showLineNumbers mark={6,9,11}
 public int longestValidParentheses(String s) {
     int l = 0, r = 0, ans = 0, c = 0;
     char[] ss = s.toCharArray();
@@ -3448,13 +3448,13 @@ Eg.
  5 -8 9
 ```
 
-Output : 2
+- **Output:** 2
 
 ### Explanation
 
 The approach is like, we create a new matrix `dp[][]`, where `dp[i][j]` == sum of all elements of the matrix whose bottom-right corner is `(i,j)`. Then for each element in the matrix we find all the submatrices, but instead of this we find all the submatrices where any element `(i,j)` is the bottom-right (or any other) corner element.
 
-```java
+```java showLineNumbers mark={10-13}
 public int solve(ArrayList<ArrayList<Integer>> A) {
     int m = A.size();
     if(m == 0)  return 0;
@@ -3504,15 +3504,15 @@ Your task is to collect maximum number of cherries
 
 Similar : 1463. Cherry Pickup II
 
-Input: grid =
+- **Input:** grid =
 ```text
 [[0, 1, -1],
  [1, 0, -1],
  [1, 1, 1]]
 ```
-Output: 5
+- **Output:** 5
 
-```java
+```java showLineNumbers mark={38}
 static int[][][][] dp;
 public int cherryPickup(int[][] grid) {
     // 0 -> cell is empty
@@ -3604,7 +3604,7 @@ This problem is very tricky!. It can be solved using DFS, but it would result in
 
 NOTE: The Dijkstra algorithm in previous post was not working, I've to remove the line if(`visited[x][y]`) continue; Don't know why it wasn't working.
 
-```java
+```java showLineNumbers mark={18}
 static int INF = (int)1e9;
 static int[][] dir = {{0,1},{0,-1},{1,0},{-1,0}};
 public int minCost(int[][] grid) {
@@ -3652,7 +3652,7 @@ Map tired days to `+1` and others to `-1`; find the longest subarray with positi
 Given an array find the longest subarray positive (>0) sum subarray containing 1 and -1 only.
 
 Eg. -1 -1 -1 1 1 -1 -1 -1 1 1 1
-Output : 9
+- **Output:** 9
 
 ![Hand-drawn sketch of the well-performing interval on a price-like line](/coding-ref/i-151-175.webp)
 
@@ -3660,7 +3660,7 @@ Sketch (hand-drawn, image): a price-like line plotted over indices 0 to 10 on th
 
 Yellow portions are useless, as once we reached a sum state for the first time, we will store it in Map. Then if incase the sum till now is positive, then I update the answer to `i+1`. Otherwise, if we reached this sum for the first time we store it in map, then check if we have reached the sum of (sum-1) earlier coz, the sum from prev (sum-1) till i will be 1 (excluding the sum-1) as sum - (sum-1) == 1.
 
-```java
+```java showLineNumbers mark={7}
 for(int i = 0; i < n; i++){
     s+= A[i];
     if(s > 0)   ans = i+1;
@@ -3674,8 +3674,8 @@ for(int i = 0; i < n; i++){
 
 ## Generalized Problem: Find Longest Subarray With Sum >= K
 
-Input: array arr in which elements are arbitrary integers.
-Output: length of a longest subarray arr[i, j) with sum(`arr[i]`, ... , `arr[j-1]`) >= K.
+- **Input:** array arr in which elements are arbitrary integers.
+- **Output:** length of a longest subarray arr[i, j) with sum(`arr[i]`, ... , `arr[j-1]`) >= K.
 
 1. Compute prefix sum of arr as `prefixSum` where `prefixSum[i]` = sum(`arr[0]`, ... `arr[i-1]`) for i > 0 and `prefixSum[0]` = 0.
 2. Iterate through `prefixSum` from begin to end and build a strictly monotone decreasing stack `smdStack`. (`smdStack.top()` is the smallest)
@@ -3697,8 +3697,8 @@ For simplicity, call `(i, j)` a valid pair if the inequation `prefixSum[j]` - `p
 
 Implement next permutation, which rearranges numbers into the lexicographically next greater permutation of numbers.
 
-Input: nums = [3,2,1]
-Output: [1,2,3]
+- **Input:** nums = [3,2,1]
+- **Output:** [1,2,3]
 
 ![Swap example: 1 2 5 4 | 8 7 6 3 becomes 1 2 5 6 | 3 4 7 8](/coding-ref/i-153-177.webp)
 

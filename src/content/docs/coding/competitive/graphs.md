@@ -62,7 +62,7 @@ G.get(u).add(v);
 Queue-based, level by level; gives shortest paths in unweighted graphs. **Time:** `O(V+E)`.
 :::
 
-```java
+```java showLineNumbers mark={4,12}
 public static void bfs(Graph G, int s) {
     Queue<Integer> q = new LinkedList<>();
     boolean[] visited = new boolean[G.g.length];
@@ -126,7 +126,7 @@ public void dfs(String start, Map<String, Integer> visited, Map<String, List<Str
 
 ### Level Order Traversal
 
-```java
+```java showLineNumbers mark={2-3,10,13-14}
 Queue<TreeNode> q = new LinkedList<>();
 q.add(root);
 q.add(new TreeNode(-1));        // to mark the new level
@@ -146,7 +146,7 @@ while(!q.isEmpty()){
 
 ### Another implementation for level order traversal
 
-```java
+```java showLineNumbers mark={2,7-8}
 Queue<TreeNode> queue = new LinkedList<>();
 queue.add(root);
 while (!queue.isEmpty()) {
@@ -170,7 +170,7 @@ In normal BFS of a graph all edges have equal weight, but in 0-1 BFS some edges 
 
 Algorithm: while performing BFS, if an edge having weight = 0 is found, the node is pushed at the front of the double-ended queue; if an edge having weight = 1 is found, it is pushed at the back of the double-ended queue.
 
-Explanation: It is very similar to Dijkstra, i.e. we add a node's children only once we have found the shortest path to that node, and we traverse the graph the same way. This is guaranteed because:
+- **Explanation:** It is very similar to Dijkstra, i.e. we add a node's children only once we have found the shortest path to that node, and we traverse the graph the same way. This is guaranteed because:
 
 1. If the child's edge weight is 0, then the child is at the same distance from the source as the node is, so it is safe to visit the child next. Thus we add this child to the front of the queue.
 2. If the child's edge weight is 1, then this child is the most distant to the node (and distant to all the nodes present in the queue, as all the other nodes are either at the same distance as the popped node or are most distant children of previously popped nodes), so we add this child to the end of the queue.
@@ -184,7 +184,7 @@ E.g. Given a graph where every edge has weight either 0 or 1, find the shortest 
 
 **Figure (example graph, start = 0):** nodes 0–8; edge weights: 0–1 = 0, 0–7 = 1, 1–2 = 1, 1–7 = 1, 2–3 = 0, 2–5 = 0, 2–8 = 1, 3–5 = 1, 3–4 = 1, 4–5 = 1, 5–6 = 1, 6–7 = 1, 6–8 = 1, 7–8 = 1. Resulting shortest distances for nodes 0..8: `0 0 1 1 2 1 2 1 2`.
 
-```java
+```java showLineNumbers mark={10,23}
 // List<int[]> g; .. v: int[0], weight: int[1]
 public int[] zeroOneBFS(int src) {
   int[] dist = new int[g.length];
@@ -409,7 +409,7 @@ Undirected graph: ignore the parent edge. Directed graph: track nodes on the cur
 
 // cycle detection algorithm for directed graph using dfs
 
-```java
+```java showLineNumbers mark={14,17-18}
 // for undirected graph
 public static void unionfind(List<Pair> g, int V){
     // disjoint set datastructure
@@ -512,7 +512,7 @@ public static List<Integer> getTopologicalOrder(List<Integer>[] g, int[] indegre
 }
 ```
 
-```java
+```java showLineNumbers mark={6,14}
 public List<Integer> topo_sort(HashMap<Integer, List<Integer>> graph,
                                HashMap<Integer, Integer> indegree){
     Queue<Integer> q = new LinkedList<>();
@@ -686,7 +686,7 @@ DFS tree figure (nodes 0 to 5; 0 is the root with children 1 and 5; 1 has childr
          4
 ```
 
-```java
+```java showLineNumbers mark={5,15,23,28,30}
 private static void dfs(int u, List<Integer>[] g, boolean[] ap, boolean[] visited,
                          int[] disc, int[] low, int[] parent) {
     visited[u] = true;
@@ -755,7 +755,7 @@ Negative edges break Dijkstra; use Bellman-Ford.
 
 Image (Dijkstra with `PriorityQueue`, page 73):
 
-```java
+```java title="Dijkstra.java" showLineNumbers mark={31-33}
 static final int INF = (int)(1e9+7);
 public static int[] dijkstra(int[][] edges, int N, int s) {
     List<int[]>[] g = new List[N+1];
@@ -799,7 +799,7 @@ public static int[] dijkstra(int[][] edges, int N, int s) {
 
 In this approach: was getting error (leetcode: 1368) when using `if(visited[u]) continue;` removing it worked fine.
 
-```java
+```java showLineNumbers mark={15,44}
 public static void dijkstra(List<Pair>[] g) {
        // for storing distances from node = 0 (Source)
        int[] dist = new int[g.length];
@@ -922,7 +922,7 @@ closest[find(i,ufds)].w > p.w)
 Relax all edges `V-1` times; one more pass that still relaxes means a negative cycle. **Time:** `O(V·E)`.
 :::
 
-```java
+```java showLineNumbers mark={8,15}
 // used to find the shortest path in O(VE) and detect -ve weight cycle
    public static void bellmanford(List<Edge> g, int V) {
           // dist[] contains the shortest distance to node[i] from source( node[0] )
@@ -1111,7 +1111,7 @@ public void updateWeight(int[] h){
 Process vertices in topological order and relax outgoing edges: `O(V+E)`, negative weights allowed.
 :::
 
-```java
+```java showLineNumbers mark={8,21}
 public static void shortestPath(List<Pair>[] g, int s) {
         // By finding the topological order
         int[] topologicalOrder = topologicalSort(g);
@@ -1141,7 +1141,7 @@ public static void shortestPath(List<Pair>[] g, int s) {
 
 ### Shortest path with exactly k edges in a directed and weighted graph
 
-```java
+```java showLineNumbers mark={17}
    private static void shortestDistance(List<Pair>[] g, int k) {
          int[] dist = new int[g.length];
          Arrays.fill(dist, INF);
@@ -1200,7 +1200,7 @@ n=7
 
 Image (Java: smallest multiple using BFS over remainders, page 85):
 
-```java
+```java showLineNumbers mark={5,12,16}
 public static String multiple(int A) {
         if(A <= 1)  return Integer.toString(A);
         Queue<Integer> q = new LinkedList<>();
@@ -1236,7 +1236,7 @@ Use when we get graph in form of edge list.
 
 Image (Kruskal's with union-find, page 86):
 
-```java
+```java showLineNumbers mark={27-28,31}
 public class Solution {
     static int[] ufds;
     public List<int[]> kruskal(int numIslands, int[][] edges) {

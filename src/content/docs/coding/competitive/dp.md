@@ -7,14 +7,18 @@ description: "Dynamic programming notes: digit DP, patterns, knapsack, subsequen
 
 ## Digit DP
 
-The problem is generally of the following type: we need to find the count of numbers in range `[0, R]` such that they satisfy a boolean function `f(x)` where `0 <= x <= R`.
+:::note[Digit DP idea]
+Count numbers in `[0, R]` satisfying a property by filling digits from the most significant side. State usually includes remaining digits, running info (e.g. sum), a `tight` flag and sometimes a `leading zero` flag. For `[L, R]` use `G(R) - G(L-1)`.
+:::
+
+The problem is generally of the following type: we need to find the count of numbers in range `[0, R]` such that they satisfy a `boolean` function `f(x)` where `0 <= x <= R`.
 
 We can extend this to range `[L, R]` by finding `G[L,R] = G[R] - G[L]`, where `G[x]` = count of numbers from `[0, x]` satisfying the function f.
 
-Problem: find all the numbers between `[L, R]` that have sum of digits == X.
+Problem: find all the numbers between `[L, R]` that have sum of `digits == X`.
 Constraints: `1 <= L <= R <= 10^18`, `1 <= X <= 180`
 
-Solution: consider the boolean function `f(i) = (sum of digits of i == X)`. Now, I want to count all the numbers from 0 to R which satisfy f(i) where `0 <= i <= R`.
+Solution: consider the `boolean` function `f(i) = (sum of digits of i == X)`. Now, I want to count all the numbers from 0 to R which satisfy `f(i)` where `0 <= i <= R`.
 
 Let's simplify: new problem -> find the count of all 5 digit numbers whose sum of digits is X. Note: 1 is also a 5 digit number as it can be written as 00001.
 
@@ -24,7 +28,7 @@ So, coming to the problem, we have 5 slots: `_ _ _ _ _`. We start with the first
 
 To further generalize: we need to solve for `dp(N,X)` -> count of numbers with N digits having digit sum = X.
 
-If the first slot is set to 0, then the result will be `dp(N-1, X)`, i.e. we need sum of X from the remaining N-1 digits. If the first slot is set to 1, then the result will be `dp(N-1, X-1)`.
+If the first slot is set to 0, then the result will be `dp(N-1, X)`, i.e. we need sum of X from the remaining `N-1` digits. If the first slot is set to 1, then the result will be `dp(N-1, X-1)`.
 
 `dp(N, X) = dp(N-1, X) + dp(N-1, X-1) + dp(N-1, X-2) + ... + dp(N-1, X-9)`
 
@@ -34,7 +38,7 @@ Let's see how to solve for R = 5273. The earlier solution won't work as we now h
 
 We have 4 slots: `_ _ _ _`. If in the first slot I put any digit from [0-4], then in the rest of the slots I can fill [0-9] without restriction. However, if I place 5 in the first slot, then there is a tight constraint on the values to be filled in the next slot.
 
-To generalize: we now have another dimension in our dp for the tight constraint, i.e. `dp(N, X, 1)` -> count of numbers with N digits having digit sum == X and having a tight constraint in the next slot.
+To generalize: we now have another dimension in our dp for the tight constraint, i.e. `dp(N, X, 1)` -> count of numbers with N digits having digit `sum == X` and having a tight constraint in the next slot.
 
 `dp(N, X, 1) = dp(N-1, X, 0) + dp(N-1, X-1, 0) + ... + dp(N-1, X-4, 0) + dp(N-1, X-5, 1)`
 (the last term `dp(N-1, X-5, 1)` carries the tight constraint)
@@ -63,13 +67,13 @@ int solve(string& num, int n, int x, bool tight){
 
 P2: find the count of boring numbers from `[ L, R ]`. A number is called boring if all the even places have even digits and odd places have odd digits. The indexing starts from 1 from the left.
 
-Here the boolean function is `f(i)` => tells if the number `i` is a boring number or not.
+Here the `boolean` function is `f(i)` => tells if the number `i` is a boring number or not.
 
 `dp [ N, even, leading zero, tight ]`
 - N -> number of digits
-- even -> [boolean] is the current slot an even position or odd position (0 -> even, 1 -> odd)
-- Leading zero -> [boolean] is the slots from start till current position all zeros
-- Tight -> [boolean] comes in effect when the range is tight
+- even -> [`boolean`] is the current slot an even position or odd position (0 -> even, 1 -> odd)
+- Leading zero -> [`boolean`] is the slots from start till current position all zeros
+- Tight -> [`boolean`] comes in effect when the range is tight
 
 `Dp[ N, 1, 1, 1 ] = dp[ N-1, 0, 1, 0 ] + dp[ N-1, 0, 0, 0] + ...`
 
@@ -140,6 +144,10 @@ class Solution {
 
 ## Dynamic programming patterns
 
+:::tip[Three question types]
+1. Count ways (combinatorics) 2. Minimize/maximize 3. Yes/No feasibility. After writing part of a solution, ask: *what information do I still need?* — that is the state.
+:::
+
 Dynamic Programming Patterns - LeetCode Discuss.
 
 3 types of problems in DP (https://www.youtube.com/watch?v=YBSt1jYwVfU):
@@ -202,6 +210,10 @@ public int solve(int target, int[] A){
 
 ## 377. Combination Sum IV (LeetCode)
 
+:::caution[Combinations vs permutations]
+Coins in the **outer** loop → order does not matter (combinations). Target in the **outer** loop and coins in the inner loop → order matters (sequences).
+:::
+
 Given an integer array with all positive numbers and no duplicates, find the number of possible combinations that add up to a positive integer target.
 
 ```java
@@ -251,7 +263,7 @@ for (int i = 0; i < nums.length; i++) {
 }
 ```
 
-Trick in the second method lies in checking all the sequences whose last term will be nums[j2].
+Trick in the second method lies in checking all the sequences whose last term will be `nums[j2]`.
 
 ## Reverse way
 
@@ -267,9 +279,9 @@ for (int i = 0; i <= target; i++)
 // Here, dp[] = 1 1 2 4 7
 ```
 
-dp[i] is the no. of ways for making the sum "i", or "i" represents the sum. What we are doing is that upon reaching any index i, I'll check what other sums I can make using all the other numbers in nums. Eg. at index 10, we can form sums of 11, 12, 13 using the nums=[1,2,3] array. Here we already know dp[i] and we are using it to update the future dp values. This is known as the forward approach.
+`dp[i]` is the no. of ways for making the sum "`i`", or "`i`" represents the sum. What we are doing is that upon reaching any index `i`, I'll check what other sums I can make using all the other numbers in nums. Eg. at index 10, we can form sums of 11, 12, 13 using the nums=[1,2,3] array. Here we already know `dp[i]` and we are using it to update the future dp values. This is known as the forward approach.
 
-Another approach is to find the current dp[i] using the previous values. This is given by:
+Another approach is to find the current `dp[i]` using the previous values. This is given by:
 
 ```java
 int dp[] = new int[target+1];
@@ -284,6 +296,10 @@ return dp[target];
 
 If different sequences are not counted as different combinations.
 ## Double counting problem
+
+:::warn
+Counting `[1,2]` and `[2,1]` as different is double counting when order should not matter. Fix it by enforcing a canonical order (e.g. non-decreasing coins).
+:::
 
 What we can do is to take one representation of every group, i.e., for group `[ (2,2,1), (2,1,2), (1,2,2) ]` take any one, but can't do this randomly as we need to do this for every group. We propose the rule of taking the lexicographically sorted manner, i.e. we select `(1,2,2)` as the representation of the above group.
 
@@ -334,6 +350,10 @@ Answer = 4
 
 
 ## Patterns
+
+:::info[Cheat sheet]
+LIS · min/max path to target · distinct ways · merging intervals · DP on strings · decision making. Match the problem to one of these before coding.
+:::
 
 1. LIS
 2. Minimum (Maximum) Path to Reach a Target
@@ -408,19 +428,29 @@ Answer = 4
 
 ## Ways to color a 3xN Board
 
+:::note
+Split column states into two types (`P`: all three colours different, `Q`: two equal). Each type transitions into both types with fixed counts, giving a 2-variable linear recurrence.
+:::
+
 Given a 3 x A board, find the number of ways to color it using at most 4 colors such that no 2 adjacent boxes have same color.
 
 Solution: we find all possible ways to fill 3xN correctly, it turns out that we can split them into two groups, p and q. P represents all different, Q represents only two are different. We chose a random sequence from p and find the all the possible sequence for the next adjacent 3x1 block. Similarly, we find those for Q. Now we split the results found for P and Q into two groups one with all different and other with 2 of them different terms. Using this we find the recursive equation.
 
 ![Handwritten P/Q state-transition diagram for 3xN coloring](/coding-ref/i-023-027.webp)
 
-**[Figure]** Handwritten P/Q state-transition diagram for the 3xN coloring: a 3-cell strip splits into P (strip 1 2 3, all different) and Q (strip 1 2 1, two equal), with lists of next-column patterns (P side: 11 patterns 214, 231, 234, 241, 312, 314, 341, 342, 412, 431, 432 and 6 patterns 212, 232, 242, 313, 414, 434; Q side: 10 patterns 213, 214, 234, 243, 312, 314, 342, 412, 413, 432 and 7 patterns 212, 232, 242, 313, 343, 414, 434) and the coefficient pairs 11 / 6 (P side) and 10 / 7 (Q side). Recurrence written as P_{+1} = 11·P + 10·Q and Q_{+1} = 5·P + 7·Q.
+**[Figure]** Handwritten `P/Q` state-transition diagram for the 3xN coloring: a 3-cell strip splits into P (strip 1 2 3, all different) and Q (strip 1 2 1, two equal), with lists of next-column patterns (P side: 11 patterns 214, 231, 234, 241, 312, 314, 341, 342, 412, 431, 432 and 6 patterns 212, 232, 242, 313, 414, 434; Q side: 10 patterns 213, 214, 234, 243, 312, 314, 342, 412, 413, 432 and 7 patterns 212, 232, 242, 313, 343, 414, 434) and the coefficient pairs 11 / 6 (P side) and 10 / 7 (Q side). Recurrence written as P_{+1} = 11·`P + 10`·Q and Q_{+1} = 5·`P + 7`·Q.
 
 Handwritten recurrence (partially legible): `P_{+1} = 11·P + 10·Q`, `Q_{+1} = 5·P + 7·Q`.
 
 ## Problems
 
 ### 0/1 Knapsack
+
+:::note
+Each item is taken or skipped. `dp[i][c] = max(dp[i-1][c], profit[i] + dp[i-1][c-w[i]])`.
+
+**Time:** `O(N·C)` · **Space:** `O(C)` with a 1-D array iterating capacity **downwards**.
+:::
 
 ```java
 /**
@@ -468,7 +498,7 @@ public int knapsack(int capacity, int[] profits, int[] weights){
 }
 ```
 
-Bottom up, Space: O(capacity)
+Bottom up, Space: `O(capacity)`
 
 ```java
 public int knapsack(int capacity, int[] profits, int[] weights){
@@ -489,15 +519,23 @@ public int knapsack(int capacity, int[] profits, int[] weights){
 
 ### Equal Subset Sum Partition
 
+:::tip
+If total `S` is odd → `false`; otherwise find a subset with sum `S/2` (Subset Sum).
+:::
+
 Given a set of positive numbers, find if we can partition it into two subsets such that the sum of elements in both the subsets is equal.
 
 Input: `{1, 1, 3, 4, 7}`
 Output: True
 Explanation: The given set can be partitioned into two subsets with equal sum: `{1, 3, 4}` & `{1, 7}`
 
-Solutions: Assume if S represents the total sum of all the given numbers, then the two equal subsets must have a sum equal to S/2. This essentially transforms our problem to: "Find a subset of the given numbers that has a total sum of S/2". If such partition exists return true. Test: `{1,3}`. The given array can be thought of weights array in knapsack problem.
+Solutions: Assume if S represents the total sum of all the given numbers, then the two equal subsets must have a sum equal to `S/2`. This essentially transforms our problem to: "Find a subset of the given numbers that has a total sum of `S/2`". If such partition exists return `true`. Test: `{1,3}`. The given array can be thought of weights array in knapsack problem.
 
 ### Subset Sum
+
+:::note
+Boolean knapsack: `dp[c] = dp[c] || dp[c - num]`.
+:::
 
 Given a set of positive numbers, determine if there exists a subset whose sum is equal to a given number 'S'.
 
@@ -507,15 +545,23 @@ The given set has a subset whose sum is '10': `{1, 2, 7}`
 
 ### Minimum Subset Sum Difference
 
+:::tip
+Find achievable subset sums up to `S/2`; answer = `S - 2·best`.
+:::
+
 Given a set of positive numbers, partition the set into two subsets with a minimum difference between their subset sums.
 
 Input: `{1, 2, 7, 1, 5}`
 Output: 0
 Explanation: We can partition the given set into two subsets where minimum absolute difference between the sum of number is '0'. Following are the two subsets: `{1, 2, 5}` & `{7, 1}`.
 
-Solution: Let's assume 'S' represents the total sum of all the numbers. So what we are trying to achieve in this problem is to find a subset whose sum is as close to 'S/2' as possible, because if we can partition the given set into two subsets of an equal sum, we get the minimum difference i.e. zero. This transforms our problem to Subset Sum, where we try to find a subset whose sum is equal to a given number--'S/2' in our case. If we can't find such a subset, then we will take the subset which has the sum closest to 'S/2'.
+Solution: Let's assume 'S' represents the total sum of all the numbers. So what we are trying to achieve in this problem is to find a subset whose sum is as close to '`S/2`' as possible, because if we can partition the given set into two subsets of an equal sum, we get the minimum difference i.e. zero. This transforms our problem to Subset Sum, where we try to find a subset whose sum is equal to a given number--'`S/2`' in our case. If we can't find such a subset, then we will take the subset which has the sum closest to '`S/2`'.
 
 ### Count of Subset Sum
+
+:::note
+Same as Subset Sum but add counts instead of OR: `dp[c] += dp[c - num]`.
+:::
 
 Given a set of positive numbers, find the total number of subsets whose sum is equal to a given number 'S'.
 
@@ -524,6 +570,10 @@ Output: 3
 The given set has '3' subsets whose sum is '9': `{2, 7}`, `{1, 7, 1}`, `{1, 2, 1, 5}`
 
 ### Target Sum
+
+:::tip
+Assigning `+`/`-` reduces to counting subsets with sum `(S + target) / 2`.
+:::
 
 Given a set of positive numbers (non zero) and a target sum 'S'. Each number should be assigned either a '+' or '-' sign. We need to find out total ways to assign symbols to make the sum of numbers equal to target 'S'.
 
@@ -557,11 +607,15 @@ $$\frac{S + Sum(num)}{2}$$
 
 ### Unbounded Knapsack
 
+:::caution
+Items can be reused, so iterate capacity **upwards** in the 1-D version (opposite of 0/1 knapsack).
+:::
+
 The only difference between the 0/1 Knapsack problem and this problem is that we are allowed to use an unlimited quantity of an item.
 
 Brute Force T.C:
 
-For regular Knapsack problem it's O(2^N). Inside recursive function we do recursion twice, so we could visualize call stack as a binary tree (left-> using item, right child-> not using item). To find number of nodes (recursive calls) we use formula (2^(N+1)) - 1 (asymptotically O(2^N)). In the unbound knapsack we have more items than N (as we can reuse them), so it's equal O(2^(N+X)), where X is number of times we reused items. The sum of reused items (X) can't be more than C (capacity), so if we reused the smallest item (worst case), it would be C/S (S - smallest item). In case if S == 1, like we have in the problem, C/S == C == X, so O(2^(N+X)) == O(2^(N+C)).
+For regular Knapsack problem it's `O(2^N)`. Inside recursive function we do recursion twice, so we could visualize call stack as a binary tree (left-> using item, right child-> not using item). To find number of nodes (recursive calls) we use formula (2^(`N+1`)) - 1 (asymptotically `O(2^N)`). In the unbound knapsack we have more items than N (as we can reuse them), so it's equal `O(2^(N+X))`, where X is number of times we reused items. The sum of reused items (X) can't be more than C (capacity), so if we reused the smallest item (worst case), it would be `C/S` (S - smallest item). In case if `S == 1`, like we have in the problem, C/`S == C` == X, so `O(2^(N+X))` == `O(2^(N+C))`.
 
 ```java
 public static int unboundedKnapsack(int[] profits, int[] weights, int capacity){
@@ -577,6 +631,10 @@ public static int unboundedKnapsack(int[] profits, int[] weights, int capacity){
 ```
 
 ### Rod Cutting
+
+:::note
+Unbounded knapsack with length as weight and price as profit.
+:::
 
 Given a rod of length 'n', we are asked to cut the rod and sell the pieces in a way that will maximize the profit. We are also given the price of every piece of length 'i' where `1 <= i <= n`.
 
@@ -599,6 +657,10 @@ This problem is quite similar to Count of Subset Sum. The only difference here i
 
 ### Minimum Coin Change
 
+:::note
+`dp[c] = min(dp[c], dp[c - coin] + 1)`; unreachable amounts stay at infinity.
+:::
+
 Given an infinite supply of 'n' coin denominations and a total money amount, we are asked to find the minimum number of coins needed to make up that amount.
 
 ### Maximum Ribbon Cut
@@ -606,6 +668,10 @@ Given an infinite supply of 'n' coin denominations and a total money amount, we 
 We are given a ribbon of length 'n' and a set of possible ribbon lengths. Now we need to cut the ribbon into the maximum number of pieces that comply with the above-mentioned possible lengths. Write a method that will return the count of pieces.
 
 ### Fibonacci numbers
+
+:::tip
+Plain recursion is exponential (`O(2^N)`); memoization or two rolling variables give `O(N)` time and `O(1)` space.
+:::
 
 Write a function to calculate the nth Fibonacci number.
 
@@ -629,9 +695,13 @@ $$F(n) = \frac{\left[\frac{\sqrt{5}+1}{2}\right]^n}{\sqrt{5}}$$
 // return (int) Math.round(Math.pow(phi, n)/ Math.sqrt(5));
 ```
 
-Also, sum of first n fibonacci numbers: F(n+2)
+Also, sum of first n fibonacci numbers: F(`n+2`)
 
 ### Longest Palindromic Subsequence
+
+:::note
+If `s[i] == s[j]`: `2 + dp[i+1][j-1]`; else `max(dp[i+1][j], dp[i][j-1])`. `O(N^2)`.
+:::
 
 Given a sequence, find the length of its Longest Palindromic Subsequence (LPS). In a palindromic subsequence, elements read the same backward and forward.
 
@@ -653,7 +723,7 @@ public static int longestPalindromicSubsequence(String s){
 }
 ```
 
-Another form would be to use the fact that in order to fill the current entry I need 3 pieces of information: left cell, bottom cell and bottom-left cell (when charAt[i] == charAt[j]). This is done by bottom up filling table. This solution can be space optimised to O(n).
+Another form would be to use the fact that in order to fill the current entry I need 3 pieces of information: left cell, bottom cell and bottom-left cell (when `charAt[i]` == `charAt[j]`). This is done by bottom up filling table. This solution can be space optimised to `O(n)`.
 
 ```java
 for(int i = n-1; i >= 0; i--)
@@ -679,6 +749,10 @@ Output: 5
 
 ### Longest Palindromic Substring
 
+:::note
+`dp[i][j]` is true when `s[i]==s[j]` and the inside `dp[i+1][j-1]` is a palindrome. Expand-around-centre is also `O(N^2)` with `O(1)` space.
+:::
+
 Given a string, find the length of its Longest Palindromic Substring (LPS). In a palindromic string, elements read the same backward and forward.
 
 Input: `"abdbca"`
@@ -687,7 +761,7 @@ Explanation: LPS is `"bdb"`.
 
 ![Handwritten DP table for abdbca longest palindromic subsequence](/coding-ref/i-031-028.webp)
 
-**[Figure]** Handwritten DP table for "abdbca" (columns a b d b c a, rows a b d b c a) with arrows tracing back from the cell for 3; green circles mark the matches "bdb" (length 3) and "bd"-side entries; the boxed word abdba is written at top right; the bottom shows the matched pairs (a-a, b-b, d-d) forming the palindrome.
+**[Figure]** Handwritten DP table for "abdbca" (columns a b d b c a, rows a b d b c a) with arrows tracing back from the cell for 3; green circles mark the matches "bdb" (length 3) and "bd"-side entries; the boxed word abdba is written at top right; the bottom shows the matched pairs (`a-a`, `b-b`, `d-d`) forming the palindrome.
 
 Figure: DP table over `a b d b c a` (rows and columns), with entries `3` in the `d`/`b` cells circled in green and red back-tracking arrows. Callouts: `"bdb"` and `"bd"`. Boxed result `abdba`.
 
@@ -701,11 +775,15 @@ Explanation: Here are the palindromic substrings, `"a"`, `"b"`, `"d"`, `"b"`, `"
 
 ![Handwritten boolean palindrome table for cddpd](/coding-ref/i-032-029.webp)
 
-**[Figure]** Handwritten boolean palindrome table for the word "cddpd" (columns c d d p d, rows c d d p d) with T/F entries, green circles on the palindromic results "ddpd" and "dpd" and arrows tracing the diagonal fill; title written as "cddpd" with "dpd" boxed.
+**[Figure]** Handwritten `boolean` palindrome table for the word "cddpd" (columns c d d p d, rows c d d p d) with `T/F` entries, green circles on the palindromic results "ddpd" and "dpd" and arrows tracing the diagonal fill; title written as "cddpd" with "dpd" boxed.
 
-Figure: boolean table over `c d d p d` with `T` on the diagonal, arrows showing `dpd` and `ddpd` as palindromic (green callouts `"ddpd"` and `"dpd"`).
+Figure: `boolean` table over `c d d p d` with `T` on the diagonal, arrows showing `dpd` and `ddpd` as palindromic (green callouts `"ddpd"` and `"dpd"`).
 
 ### Minimum Deletions in a String to make it a Palindrome
+
+:::tip
+Answer = `len - LPS` (longest palindromic subsequence).
+:::
 
 Given a string, find the minimum number of characters that we can remove to make it a palindrome.
 
@@ -719,6 +797,10 @@ Above Solution also works in case of Minimum insertions in a string to make it a
 
 ### Palindromic Partitioning
 
+:::note
+Precompute `isPalindrome[i][j]`, then `dp[i] = min cuts` over all palindromic prefixes/suffixes.
+:::
+
 Given a string, we want to cut it into pieces such that each piece is a palindrome. Write a function to return the minimum number of cuts needed.
 
 Input: `"abdbca"`
@@ -727,11 +809,11 @@ Explanation: Palindrome pieces are `"a"`, `"bdb"`, `"c"`, `"a"`.
 
 The following solution is wrong, for Input: `"ababb"` correct answer will be 1 with `"aba"`, `"bb"` as pieces.
 
-Solution: This problem is very similar to both Longest Palindromic Substring and Subsequence. First we find all the substring which are palindrome is store them in `isPalindrome[][]` array. Second, at each position dp[i][j] of new dp[][] array, we can place a partition before i+1 (ie. i|[i+1, ... j] ) or before j (ie. [i ... ,j-1]|j) or place a "0" incase [i ... j] represents a palindromic substring.
+Solution: This problem is very similar to both Longest Palindromic Substring and Subsequence. First we find all the substring which are palindrome is store them in `isPalindrome[][]` array. Second, at each position `dp[i][j]` of new `dp[][]` array, we can place a partition before `i+1` (ie. i|[`i+1`, ... j] ) or before j (ie. [i ... ,`j-1`]|j) or place a "0" incase [i ... j] represents a palindromic substring.
 
 ![Handwritten cut-placement diagram and DP table for abdbca](/coding-ref/i-033-030.webp)
 
-**[Figure]** Handwritten cut-placement diagram for "abdbca" split as a|bdb|c|a with the recurrence dp[i][j] = min(dp[i+1][j], dp[i][j-1]) + 1, and dp[i][j] = 0 if [i...j] is a palindrome; a 2D table with columns a b d b c a is filled with the resulting cut counts.
+**[Figure]** Handwritten cut-placement diagram for "abdbca" split as a|bdb|c|a with the recurrence `dp[i][j]` = `min(dp[i+1][j], dp[i][j-1])` + 1, and `dp[i][j]` = 0 if [i...j] is a palindrome; a 2D table with columns a b d b c a is filled with the resulting cut counts.
 
 Figure: DP table over `a b d b c a` with final answer cell `2` circled, and the handwritten recurrence:
 
@@ -743,18 +825,22 @@ if ([i...j] is a palindrome) dp[i][j] = 0
 The correct solution:
 
 Solution:
-1. First find all substring palindromes in O(n^2).
+1. First find all substring palindromes in `O(n^2)`.
 2. Now to find the minimum cuts we define `cuts[]` array, which store the minimum cuts required for `[i ... n-1]`.
 
 ![Handwritten isPalin() table and CUTS array for ababb](/coding-ref/i-034-031.webp)
 
-**[Figure]** Handwritten isPalin() table (rows and columns 0-4 for "ababb", with entries 1 = palindrome) and CUTS array with values 1 1 1 0 0 for indices 0-4; the word ababb is written below with a cut marked between "aba" and "bb".
+**[Figure]** Handwritten `isPalin()` table (rows and columns 0-4 for "ababb", with entries 1 = palindrome) and CUTS array with values 1 1 1 0 0 for indices 0-4; the word ababb is written below with a cut marked between "aba" and "bb".
 
-Figure: `isPalin()` boolean table over indices 0-4 of `ababb`, and `CUTS` array `[1, 1, 1, 0, 0]` for indices 0-4 (values shown as handwritten `1 1 1 0 0`), with a red cut marker between `aba` and `bb`.
+Figure: `isPalin()` `boolean` table over indices 0-4 of `ababb`, and `CUTS` array `[1, 1, 1, 0, 0]` for indices 0-4 (values shown as handwritten `1 1 1 0 0`), with a red cut marker between `aba` and `bb`.
 
 Now for each substring `[i ... n-1]` we find the minimum cuts by looping for `0 <= k < n-1`, then, checking if left part `[i ... k]` is a palindrome then the left part of partition needs 0 partition, otherwise left part will have `k-i` partitions; for right part we have already computed `cuts[i+1]`.
 
 ### Longest Common Substring
+
+:::caution
+Substring means contiguous: reset to `0` on mismatch and track the max over the table.
+:::
 
 Given two strings 's1' and 's2', find the length of the longest substring which is common in both the strings.
 
@@ -775,6 +861,10 @@ public static int LCSubstring(char[] s1, char[] s2){
 
 ### Longest Common Subsequence
 
+:::note
+Match → `1 + dp[i-1][j-1]`; mismatch → `max(dp[i-1][j], dp[i][j-1])`. `O(N·M)`.
+:::
+
 Given two strings 's1' and 's2', find the length of the longest subsequence which is common in both the strings.
 
 Input: s1 = `"abdca"`, s2 = `"cbda"`
@@ -783,8 +873,8 @@ Explanation: The longest common subsequence is `"bda"`.
 
 Since we want to match all the subsequences of the given two strings, we can use a two-dimensional array to store our results. The lengths of the two strings will define the size of the array's two dimensions. So for every index 'i' in string 's1' and 'j' in string 's2', we will choose one of the following two options:
 
-1. If the character s1[i] matches s2[j], the length of the common subsequence would be one plus the length of the common subsequence till the i-1 and j-1 indexes in the two respective strings.
-2. If the character s1[i] does not match s2[j], we will take the longest subsequence by either skipping ith or jth character from the respective strings.
+1. If the character `s1[i]` matches `s2[j]`, the length of the common subsequence would be one plus the length of the common subsequence till the `i-1` and `j-1` indexes in the two respective strings.
+2. If the character `s1[i]` does not match `s2[j]`, we will take the longest subsequence by either skipping ith or jth character from the respective strings.
 
 ![Handwritten LCS dynamic-programming table for abdca and cbda](/coding-ref/i-035-032.webp)
 
@@ -793,6 +883,10 @@ Since we want to match all the subsequences of the given two strings, we can use
 Figure: LCS table with rows `∅ c b d a` and columns `∅ a b d c a`; the traced matches form `b`, `d`, `a` (common subsequence `bda`), with `s1: "abd"` and `s2: "cb"` annotations.
 
 ### Minimum Deletions & Insertions to Transform a String into another
+
+:::tip
+With `c = LCS(s1, s2)`: deletions = `len1 - c`, insertions = `len2 - c`.
+:::
 
 Given strings s1 and s2, we need to transform s1 into s2 by deleting and inserting characters. Write a function to calculate the count of the minimum number of deletion and insertion operations.
 
@@ -809,15 +903,23 @@ If we can find the LCS of the two input strings, we can easily find how many cha
 
 ### Longest Increasing Subsequence
 
+:::tip
+`O(N^2)` DP, or `O(N log N)` with a tails array and binary search.
+:::
+
 Given a number sequence, find the length of its Longest Increasing Subsequence (LIS). In an increasing subsequence, all the elements are in increasing order (from lowest to highest).
 
 Input: `{4,2,3,6,10,1,12}`
 Output: 5
 Explanation: The LIS is `{2,3,6,10,12}`.
 
-Solution: if num[i] > num[j] => dp[i] = dp[j] + 1 if there is no bigger LIS for 'i', for all (j < i).
+Solution: if `num[i]` > `num[j]` => `dp[i]` = `dp[j]` + 1 if there is no bigger LIS for 'i', for all (`j < i`).
 
 ### Shortest Common Super-sequence
+
+:::tip
+Length = `len1 + len2 - LCS`.
+:::
 
 Given two sequences 's1' and 's2', write a method to find the length of the shortest sequence which has 's1' and 's2' as subsequences.
 
@@ -825,10 +927,14 @@ Input: s1: `"abcf"`, s2: `"bdcf"`
 Output: 5
 Explanation: The shortest common super-sequence (SCS) is `"abdcf"`.
 
-1. If the character s1[i] matches s2[j], the length of the SCS would be one plus the length of the SCS till i-1 and j-1 indexes in the two strings.
-2. If the character s1[i] does not match s2[j], we will consider two SCS: one without s1[i] and one without s2[j]. Our required SCS length will be the shortest of these two super-sequences plus one.
+1. If the character `s1[i]` matches `s2[j]`, the length of the SCS would be one plus the length of the SCS till `i-1` and `j-1` indexes in the two strings.
+2. If the character `s1[i]` does not match `s2[j]`, we will consider two SCS: one without `s1[i]` and one without `s2[j]`. Our required SCS length will be the shortest of these two super-sequences plus one.
 
 ### Minimum Deletions to Make a Sequence Sorted
+
+:::tip
+Answer = `n - LIS`.
+:::
 
 Given a number sequence, find the minimum number of elements that should be deleted to make the remaining sequence sorted.
 
@@ -841,6 +947,10 @@ Alternately, we can convert this problem into a Longest Increasing Subsequence (
 `Length-of-input-array - LIS()`
 
 ### Longest Repeating Subsequence
+
+:::note
+Like LCS of the string with itself, but characters at the same index cannot match.
+:::
 
 Given a sequence, find the length of its longest repeating subsequence (LRS). A repeating subsequence will be the one that appears at least twice in the original sequence and is not overlapping (i.e. none of the corresponding characters in the repeating subsequences have the same index).
 
@@ -879,6 +989,10 @@ DP table (rows = pattern prefixes ϕ, t, to, tor; columns = string prefix ϕ, t,
 
 ## Longest Bitonic Subsequence
 
+:::tip
+`LBS[i] = LIS ending at i + LDS starting at i - 1`; answer is the max over `i`.
+:::
+
 Given a number sequence, find the length of its Longest Bitonic Subsequence (LBS). A subsequence is considered bitonic if it is monotonically increasing and then monotonically decreasing.
 
 Input: `{4,2,5,9,7,6,10,3,1}`
@@ -904,7 +1018,7 @@ Explanation: The LBS is `{4,5,9,7,6,3,1}`.
 
 Given a number sequence, find the length of its Longest Alternating Subsequence (LAS). A subsequence is considered alternating if its elements are in alternating order.
 
-A three element sequence (a1, a2, a3) will be an alternating sequence if its elements hold one of the following conditions:
+A three element sequence `(a1, a2, a3)` will be an alternating sequence if its elements hold one of the following conditions:
 
 `{a1 > a2 < a3 }` or `{ a1 < a2 > a3}`.
 
@@ -912,7 +1026,7 @@ Input: `{1,2,3,4}`
 Output: 2
 Explanation: There are many LAS: `{1,2}`, `{3,4}`, `{1,3}`, `{1,4}`.
 
-If `i` represents the currentIndex and `j` represents the previousIndex, our recursive formula would look like:
+If `i` represents the `currentIndex` and `j` represents the `previousIndex`, our recursive formula would look like:
 
 - If `nums[i]` is bigger than `nums[j]`, then we consider the LAS ending at `j` where the last two elements were in descending order: if `nums[i] > nums[j]` then `dp[i][0] = 1 + dp[j][1]`, if there is no bigger LAS for `i`.
 - If `nums[i]` is smaller than `nums[j]`, then we consider the LAS ending at `j` where the last two elements were in ascending order: if `nums[i] < nums[j]` then `dp[i][1] = 1 + dp[j][0]`, if there is no bigger LAS for `i`.
@@ -928,6 +1042,10 @@ If `i` represents the currentIndex and `j` represents the previousIndex, our rec
 or
 
 ## Edit Distance
+
+:::note
+Match → `dp[i-1][j-1]`; else `1 + min(insert, delete, replace)`. `O(N·M)`.
+:::
 
 Given strings `s1` and `s2`, we need to transform `s1` into `s2` by deleting, inserting, or replacing characters. Write a function to calculate the count of the minimum number of edit operations.
 
@@ -950,10 +1068,14 @@ else
 
 ## Strings Interleaving
 
+:::note
+`dp[i][j]` is true if the first `i` chars of `s1` and `j` chars of `s2` interleave into the first `i+j` chars of `s3`.
+:::
+
 Given three strings `m`, `n`, and `p`, write a method to find out if `p` has been formed by interleaving `m` and `n`. `p` would be considered interleaving `m` and `n` if it contains all the letters from `m` and `n` and the order of letters is preserved too.
 
 Input: `m="abd", n="cef", p="abcdef"`
-Output: true
+Output: `true`
 Explanation: 'p' contains all the letters from 'm' and 'n' and preserves their order too.
 
 1. If the character `m[mIndex]` matches the character `p[pIndex]`, we take the matching result up to `mIndex-1` and `nIndex`.
@@ -965,5 +1087,5 @@ Explanation: 'p' contains all the letters from 'm' and 'n' and preserves their o
 
 ![T/F matching table aadbbcbcac](/coding-ref/i-042-039.webp)
 
-**Figure (T/F table):** matching table for string `aadbbcbcac` (indices 1–10 below the string), column headers ϕ, a, a, b, c, c, and row labels ϕ, d, b, c, a (handwritten, partly legible). A green box marks the pattern prefix; the highlighted T cell is annotated with the matched subsequence "a a b d b" (indices 1, 2, 3, 4, 5). Hand-drawn, partially legible.
+**Figure (`T/F` table):** matching table for string `aadbbcbcac` (indices 1–10 below the string), column headers ϕ, a, a, b, c, c, and row labels ϕ, d, b, c, a (handwritten, partly legible). A green box marks the pattern prefix; the highlighted T cell is annotated with the matched subsequence "a a b d b" (indices 1, 2, 3, 4, 5). Hand-drawn, partially legible.
 

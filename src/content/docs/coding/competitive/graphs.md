@@ -5,6 +5,10 @@ description: "Graph notes: representations, traversal, sparse table and binary l
 
 ## Graphs
 
+:::info
+Pick the representation by density: **edge list** (simple, Kruskal), **adjacency list** (sparse, `O(V+E)` space), **matrix** (dense, `O(1)` edge lookup, `O(V^2)` space).
+:::
+
 ### Edge List Representation
 
 ```java
@@ -54,6 +58,10 @@ G.get(u).add(v);
 
 ### BFS traversal
 
+:::note
+Queue-based, level by level; gives shortest paths in unweighted graphs. **Time:** `O(V+E)`.
+:::
+
 ```java
 public static void bfs(Graph G, int s) {
     Queue<Integer> q = new LinkedList<>();
@@ -74,6 +82,10 @@ public static void bfs(Graph G, int s) {
 ```
 
 ### DFS traversal
+
+:::note
+Recursion or explicit stack; used for components, cycles, topological sort, SCC. **Time:** `O(V+E)`.
+:::
 
 ```java
 public static void dfsUtil(List<Integer>[] g,int start) {
@@ -150,6 +162,10 @@ while (!queue.isEmpty()) {
 
 ### 0-1 BFS (Shortest Path in a Binary Weight Graph)
 
+:::tip
+For edge weights `0`/`1`, use a deque: push `0`-weight neighbours to the front and `1`-weight to the back. `O(V+E)`, faster than Dijkstra.
+:::
+
 In normal BFS of a graph all edges have equal weight, but in 0-1 BFS some edges may have 0 weight and some may have 1 weight.
 
 Algorithm: while performing BFS, if an edge having weight = 0 is found, the node is pushed at the front of the double-ended queue; if an edge having weight = 1 is found, it is pushed at the back of the double-ended queue.
@@ -160,7 +176,7 @@ Explanation: It is very similar to Dijkstra, i.e. we add a node's children only 
 2. If the child's edge weight is 1, then this child is the most distant to the node (and distant to all the nodes present in the queue, as all the other nodes are either at the same distance as the popped node or are most distant children of previously popped nodes), so we add this child to the end of the queue.
 3. At each iteration we have the closest node at the beginning of the queue.
 
-T.C.: O(V+E)
+T.C.: `O(V+E)`
 
 E.g. Given a graph where every edge has weight either 0 or 1, find the shortest path from the source vertex to every other vertex.
 
@@ -201,14 +217,18 @@ public int[] zeroOneBFS(int src) {
 
 ## Sparse Table & RMQ (Range Minimum Query)
 
+:::note
+Preprocess `O(N log N)`; answer idempotent range queries (min/max/gcd) in `O(1)` by overlapping two power-of-two blocks. No updates.
+:::
+
 Given an array and a set of queries. Queries contain the interval in which we need to find the minimum term in that window.
 
 ![Sparse table array 2 3 4 5 3 1 1 3](/coding-ref/i-048-043.webp)
 
 **Figure:** array `2, 3, 4, 5, 3, 1, 1, 3` at indices 0–7; a yellow bracket spans indices 1–5.
 
-If we use brute force: TC: O(Q*N)
-If we use a sparse table: TC: O(N log(N) + Q)
+If we use brute force: TC: `O(Q*N)`
+If we use a sparse table: TC: `O(N log(N) + Q)`
 
 Idea behind this is to find the answer for every range and store the results in sparse tables.
 
@@ -233,9 +253,13 @@ We find the minimum among: `m[2][2]`, `m[2][1]`, `m[2][0]`.
 
 ## Binary Lifting => used for LCA (lowest common ancestor)
 
-Application: Let G be a rooted tree with N nodes. For Q queries of the form (K,V) we want to find the K-th ancestor of V in the tree.
+:::tip
+`up[v][j]` = `2^j`-th ancestor. Preprocess `O(N log N)`, each `k`-th ancestor or LCA query `O(log N)`.
+:::
 
-One solution is to maintain a parent array, then for each query find the K-th ancestor by moving up K times; time complexity will be O(N×Q).
+Application: Let G be a rooted tree with N nodes. For Q queries of the form (K,V) we want to find the `K-th` ancestor of V in the tree.
+
+One solution is to maintain a parent array, then for each query find the `K-th` ancestor by moving up K times; time complexity will be `O(N×Q)`.
 
 To improve this, we introduce jump edges. A jump-edge is simply an edge that starts from a node and is not directed towards its parent, but towards an arbitrary ancestor. Let's start by building jump-edges from each node towards its 2nd ancestor, 4th ancestor, 8th ancestor and so on. Note that one node will have multiple jump edges.
 
@@ -247,7 +271,7 @@ Note that in the figure below only a subset of these jump-edges is visible, sinc
 
 Note that all the blue edges in the above figure have jump length = 4.
 
-We denote `far(h,i)` = the 2^h-th ancestor of `i`, i.e. if h = 4, the 16th ancestor of `i`:
+We denote `far(h,i)` = the 2^`h-th` ancestor of `i`, i.e. if h = 4, the 16th ancestor of `i`:
 
 $$far(h,i) = far(h-1,\ far(h-1,i))$$
 
@@ -260,7 +284,7 @@ For preprocessing, for every node we want to store the 1st, 2nd, 4th, 8th, 16th 
 
 `up[v][2]` is the 4th parent of `v`, calculated using the 2nd parent of the 2nd parent of `v`: `up[up[v][1]][1]`.
 
-Code: O(N x log(N))
+Code: `O(N x log(N))`
 
 Pseudo-code (first version, loops over `v` in the outer loop):
 
@@ -286,7 +310,7 @@ for v = 0 .. N-1:
     up[v][j] = up[ up[v][j-1] ][j-1]
 ```
 
-Caveat: since we loop over vertices from 0 to N-1, ancestors are populated one vertex at a time. This only works if the nodes are ordered such that `parent[i] < i`, i.e. the parent of node `i` has a lower index than `i`. So this algorithm does not work in all situations, e.g. if the tree is linear 4→2→3. Reversing the loop order solves this issue.
+Caveat: since we loop over vertices from 0 to `N-1`, ancestors are populated one vertex at a time. This only works if the nodes are ordered such that `parent[i] < i`, i.e. the parent of node `i` has a lower index than `i`. So this algorithm does not work in all situations, e.g. if the tree is linear 4→2→3. Reversing the loop order solves this issue.
 
 Corrected code (the highlighted first loop is the step that assigns the 0th-ancestor parents; the `j` loop is outer):
 
@@ -324,7 +348,7 @@ Idea is to find the depth of each node; suppose we need to find the LCA of nodes
 
 Suppose `x` is deeper, i.e. `dx > dy`.
 
-So to get to the same level as `y`, we need to move up from node `x` `(dx-dy)` times, going to the node's ancestor one by one. This approach takes O(n) without binary lifting.
+So to get to the same level as `y`, we need to move up from node `x` `(dx-dy)` times, going to the node's ancestor one by one. This approach takes `O(n)` without binary lifting.
 
 Once we are at the same level, we again go up the ancestors one by one to find the common ancestor.
 
@@ -374,6 +398,10 @@ https://cses.fi/paste/2c444ae8e8a5444237ea7a/
 
 ## Cycle Detection
 
+:::caution
+Undirected graph: ignore the parent edge. Directed graph: track nodes on the current recursion stack (colours white/grey/black).
+:::
+
 1. Union find (undirected graph): if an edge exists such that it connects two nodes belonging to the same component, then a cycle exists.
 2. DFS (any graph): if there is an edge that connects a node to one of its ancestors (not the immediate parent, for undirected graphs), then a cycle exists.
 3. BFS: same as DFS for undirected graphs. Can't use BFS for directed graphs.
@@ -404,7 +432,11 @@ public static int find(int u,int[] ufds){
 ```
 ## Topological Ordering
 
-Topological sorting is a linear ordering of vertices such that for every directed edge u -> v, vertex u comes before v in the ordering.
+:::note
+Only exists for DAGs. Gives an order where every edge `u → v` has `u` before `v`.
+:::
+
+Topological sorting is a linear ordering of vertices such that for every directed edge u -> v, vertex `u` comes before v in the ordering.
 
 Topological Sorting for a graph is not possible if the graph is not a DAG.
 
@@ -446,6 +478,10 @@ public static int dfs(int u,int[] visited, List<Integer>[] g,
 ```
 
 ## Kahn's algorithm
+
+:::tip
+BFS on in-degrees: push all in-degree-0 nodes, pop, reduce neighbours' in-degree. If fewer than `V` nodes are processed, there is a cycle. `O(V+E)`.
+:::
 
 In the below approach if our graph contained cyclic dependency then those edges won't be a part of our solution. So we can easily detect cyclic dependency.
 
@@ -499,9 +535,17 @@ public List<Integer> topo_sort(HashMap<Integer, List<Integer>> graph,
 
 ## Bipartite Graph
 
-A Bipartite Graph is a graph whose vertices can be divided into two independent sets, U and V such that every edge (u, v) either connects a vertex from U to V or a vertex from V to U. This is solved using graph coloring with 2 colours.
+:::tip
+2-colour with BFS/DFS; a conflict (same colour on an edge) means an odd cycle, so not bipartite.
+:::
+
+A Bipartite Graph is a graph whose vertices can be divided into two independent sets, U and V such that every edge `(u, v)` either connects a vertex from U to V or a vertex from V to U. This is solved using graph coloring with 2 colours.
 
 ## Strongly Connectedness of Graphs
+
+:::note
+A digraph is strongly connected if every vertex can reach every other. Kosaraju/Tarjan find SCCs in `O(V+E)`.
+:::
 
 Is the graph containing only one strongly connected component?
 
@@ -536,9 +580,17 @@ public static boolean isSCC(List<Integer>[] g) {
 
 ### Eulerian Circuit
 
+:::note
+Exists iff all vertices with edges are connected and every vertex has even degree (directed: in-degree = out-degree).
+:::
+
 Eulerian Circuit is a path which visits all edges exactly once and starts and ends on the same vertex.
 
 ### Eulerian Path
+
+:::note
+Exists iff connected and exactly `0` or `2` vertices have odd degree (directed: one start with out−in = 1, one end with in−out = 1).
+:::
 
 Eulerian Path is a path in graph that visits every edge exactly once.
 
@@ -557,7 +609,7 @@ The graph has Eulerian Cycles, for example "2 1 0 3 4 0 2". Note that all vertic
 Two conditions for eulerian graph:
 
 1. it must be single scc
-2. indegree == outdegree for every edge
+2. `indegree == outdegree` for every edge
 
 Two conditions for eulerian path:
 
@@ -581,6 +633,10 @@ public static void isEulerian(EulerianGraph G) {
 
 ## Fleury's Algorithm for printing Eulerian Path or Circuit
 
+:::caution
+Don't cross a bridge unless there is no other choice. Hierholzer's algorithm is simpler and `O(E)`.
+:::
+
 1. Make sure the graph has either 0 or 2 odd vertices
 2. If there are 0 odd vertices, start anywhere. If there are 2 odd vertices, start at one of them.
 3. Follow edges one at a time. If you have a choice between a bridge and a non-bridge, always choose the non-bridge.
@@ -601,16 +657,20 @@ Graph for the example (edges 0-1, 0-2, 1-2, 2-3):
 
 ## Articulation Points
 
+:::note
+Use `disc[]` and `low[]` from one DFS. Non-root `u` is an articulation point if some child `v` has `low[v] >= disc[u]`; the root is one if it has ≥ 2 DFS children.
+:::
+
 A vertex in an undirected connected graph is an articulation point (or cut vertex) iff removing it (and edges through it) disconnects the graph.
 
 Conditions necessary for articulation point:
 
-1. if the node[i] is root of DFS tree, then it must have >= two child
-2. if the node[i] is not the root, and there is no back edge by vertices in subtrees at childs of node[i] to ancestors (in DFS tree) of node[i]
+1. if the `node[i]` is root of DFS tree, then it must `have >= two` child
+2. if the `node[i]` is not the root, and there is no back edge by vertices in subtrees at childs of `node[i]` to ancestors (in DFS tree) of `node[i]`
 
-Basically, node[i] must be a point having atleast 2 edges towards two subtrees which are not connected by any path not containing node[i].
+Basically, `node[i]` must be a point having atleast 2 edges towards two subtrees which are not connected by any path not containing `node[i]`.
 
-To implement step 2 we use disc[i] and low[i] to track discovery time and lowest discovery time in all child nodes in subtree with root 'i'.
+To implement step 2 we use `disc[i]` and `low[i]` to track discovery time and lowest discovery time in all child nodes in subtree with root 'i'.
 
 ![Hand-drawn DFS tree with nodes 0 to 5](/coding-ref/i-059-064.webp)
 
@@ -670,18 +730,30 @@ private static void dfs(int u, List<Integer>[] g, boolean[] ap, boolean[] visite
 
 ## Bridges in the Graph
 
+:::note
+Edge `(u, v)` is a bridge when `low[v] > disc[u]`.
+:::
+
 An edge in an undirected connected graph is a bridge iff removing it disconnects the graph.
 
-We do DFS traversal of the given graph. In DFS tree an edge (u, v) (u is parent of v in DFS tree) is a bridge if there does not exist any other alternative to reach u or an ancestor of u from subtree rooted with v.
+We do DFS traversal of the given graph. In DFS tree an edge `(u, v)` (u is parent of v in DFS tree) is a bridge if there does not exist any other alternative to reach u or an ancestor of u from subtree rooted with v.
 
-The condition for an edge (u, v) to be a bridge is "low[v] > disc[u]".
+The condition for an edge `(u, v)` to be a bridge is "`low[v]` > `disc[u]`".
 
 
 ## Graph Problems
 
 ### Dijkstra algo using Priority Queue
 
-Image (Dijkstra with PriorityQueue, page 73):
+:::note
+Single-source shortest path with **non-negative** weights. **Time:** `O((V+E) log V)`.
+:::
+
+:::caution
+Negative edges break Dijkstra; use Bellman-Ford.
+:::
+
+Image (Dijkstra with `PriorityQueue`, page 73):
 
 ```java
 static final int INF = (int)(1e9+7);
@@ -787,6 +859,10 @@ public static void dijkstra(List<Pair>[] g) {
 
 ### Boruvka's algorithm
 
+:::note
+MST: each component repeatedly picks its cheapest outgoing edge; at most `O(log V)` rounds.
+:::
+
 ```java
 // this algorithm finds the MST by reducing the no. of components to one
    public static void boruvkaAlgo(List<Pair>[] g) {
@@ -842,6 +918,10 @@ closest[find(i,ufds)].w > p.w)
 
 ### Bellman ford algorithm
 
+:::note
+Relax all edges `V-1` times; one more pass that still relaxes means a negative cycle. **Time:** `O(V·E)`.
+:::
+
 ```java
 // used to find the shortest path in O(VE) and detect -ve weight cycle
    public static void bellmanford(List<Edge> g, int V) {
@@ -878,6 +958,10 @@ closest[find(i,ufds)].w > p.w)
 
 ### Floyd Warshall
 
+:::note
+All-pairs shortest paths with `dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])`. **Time:** `O(V^3)`, **Space:** `O(V^2)`.
+:::
+
 ```java
 // All pairs shortest path O(V^3)
    public static void floydWarshall(int[][] g) {
@@ -899,21 +983,25 @@ closest[find(i,ufds)].w > p.w)
 
 ### Johnson's Algorithm
 
-If we apply Dijkstra's Single Source shortest path algorithm for every vertex, considering every vertex as source, we can find all pair shortest paths in O(V*VLogV) time. So using Dijkstra's single source shortest path seems to be a better option than Floyd Warshell, but the problem with Dijkstra's algorithm is, it doesn't work for negative weight edge.
+:::note
+All-pairs shortest paths on sparse graphs with negative edges: Bellman-Ford for potentials `h[]`, reweight, then Dijkstra from every vertex. `O(V^2 log V + VE)`.
+:::
+
+If we apply Dijkstra's Single Source shortest path algorithm for every vertex, considering every vertex as source, we can find all pair shortest paths in `O(V*VLogV)` time. So using Dijkstra's single source shortest path seems to be a better option than Floyd Warshell, but the problem with Dijkstra's algorithm is, it doesn't work for negative weight edge.
 
 The idea of Johnson's algorithm is to re-weight all edges and make them all positive, then apply Dijkstra's algorithm for every vertex.
 
 **How to transform a given graph to a graph with all non-negative weight edges?**
-One may think of a simple approach of finding the minimum weight edge and adding this weight to all edges. Unfortunately, this doesn't work as there may be different number of edges in different paths (See this for an example). If there are multiple paths from a vertex u to v, then all paths must be increased by same amount, so that the shortest path remains the shortest in the transformed graph.
+One may think of a simple approach of finding the minimum weight edge and adding this weight to all edges. Unfortunately, this doesn't work as there may be different number of edges in different paths (See this for an example). If there are multiple paths from a vertex `u` to v, then all paths must be increased by same amount, so that the shortest path remains the shortest in the transformed graph.
 
-The idea of Johnson's algorithm is to assign a weight to every vertex. Let the weight assigned to vertex u be h[u]. We reweight edges using vertex weights. For example, for an edge (u, v) of weight w(u, v), the new weight becomes:
+The idea of Johnson's algorithm is to assign a weight to every vertex. Let the weight assigned to vertex `u` be `h[u]`. We reweight edges using vertex weights. For example, for an edge `(u, v)` of weight w`(u, v)`, the new weight becomes:
 
 $$w(u, v) + h[u] - h[v]$$
 
-The great thing about this reweighting is, all set of paths between any two vertices are increased by same amount and all negative weights become non-negative. Consider any path between two vertices s and t, weight of every path is increased by h[s] - h[t], all h[] values of vertices on path from s to t cancel each other.
+The great thing about this reweighting is, all set of paths between any two vertices are increased by same amount and all negative weights become non-negative. Consider any path between two vertices s and t, weight of every path is increased by `h[s]` - `h[t]`, all `h[]` values of vertices on path from s to t cancel each other.
 
-**How do we calculate h[] values?** Bellman-Ford algorithm is used for this purpose.
-A new vertex is added to the graph and connected to all existing vertices. The shortest distance values from new vertex to all existing vertices are h[] values. It's basically shortest distance of each node from newly added node.
+**How do we calculate `h[]` values?** Bellman-Ford algorithm is used for this purpose.
+A new vertex is added to the graph and connected to all existing vertices. The shortest distance values from new vertex to all existing vertices are `h[]` values. It's basically shortest distance of each node from newly added node.
 
 Eg. We add a new source s and add edges (with weight = 0) from s to all vertices of the original graph. We calculate the shortest distances from 4 (newly added node) to all other vertices using Bellman-Ford algorithm.
 The shortest distances from 4 to 0, 1, 2 and 3 are 0, -5, -1 and 0 respectively, i.e., `h[] = {0, -5, -1, 0}`. Once we get these distances, we remove the source vertex 4 and reweight the edges using following formula:
@@ -921,7 +1009,7 @@ The shortest distances from 4 to 0, 1, 2 and 3 are 0, -5, -1 and 0 respectively,
 $$w(u, v) = w(u, v) + h[u] - h[v]$$
 
 **How does the transformation ensure nonnegative weight edges?**
-The following property is always true about h[] values as they are shortest distances:
+The following property is always `true` about `h[]` values as they are shortest distances:
 
 $$h[v] \le h[u] + w(u, v)$$
 
@@ -1018,6 +1106,10 @@ public void updateWeight(int[] h){
 ```
 
 ### Shortest Path in DAG
+
+:::tip
+Process vertices in topological order and relax outgoing edges: `O(V+E)`, negative weights allowed.
+:::
 
 ```java
 public static void shortestPath(List<Pair>[] g, int s) {
@@ -1135,6 +1227,10 @@ public static String multiple(int A) {
 
 
 ### Kruskals algorithm for MST
+
+:::note
+Sort edges by weight, add an edge if it joins two different components (union-find). **Time:** `O(E log E)`.
+:::
 
 Use when we get graph in form of edge list.
 

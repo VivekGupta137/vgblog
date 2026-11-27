@@ -11,6 +11,12 @@ Source: https://leetcode.com/discuss/career/217868/My-notes-for-the-night-before
 
 ### MODULO
 
+:::caution[Pitfalls]
+- Use `long` for products: `(int)((a*(long)b)%MOD)`.
+- Subtraction can go negative: always `((a-b)%MOD + MOD)%MOD`.
+- Division needs the modular inverse (Fermat): `a/b ≡ a·b^(p-2) (mod p)` for prime `p`.
+:::
+
 In Java we can write `10^9+7` as:
 
 ```java
@@ -27,7 +33,7 @@ public int add(int a,int b){
 }
 ```
 
-When dealing with modulo questions involving multiplication, it's better to use the long datatype, as long datatype can store `(1e9+7)^2`.
+When dealing with modulo questions involving multiplication, it's better to use the `long` datatype, as `long` datatype can store `(1e9+7)^2`.
 
 ```java
 public int multiply(int a, int b) {
@@ -46,7 +52,7 @@ public int subtract(int a,int b){
 // both 3 and -7 are mathematically equal as, -7 + MOD == 3
 ```
 
-Modular division of a/b with MOD = p (p is a prime number):
+Modular division of `a/b` with `MOD` = p (p is a prime number):
 
 `(a/b)%p != (a%p / b%p)%p`
 
@@ -65,6 +71,10 @@ To find the correct value of `(a/b)%p` from `(a%p / b%p)%p`, we use Fermat's the
 So now `(a%p / b%p)%p = (a%p * modinv(b)%p )%p = (a%p * b^(p-2)%p )%p`
 
 ### Modular exponentiation / power with mod
+
+:::note
+Binary exponentiation computes `a^b % m` in `O(log b)` multiplications.
+:::
 
 ```c
 static int power(int x, int y, int p)
@@ -118,65 +128,73 @@ Arrays.sort(times, (a,b) -> a-b);
 
 ### Deque
 
+:::tip[Which one to use?]
+Prefer `ArrayDeque` for both stack and queue; it is faster than `LinkedList` and has `O(1)` add/remove at both ends. It does not allow `null`.
+:::
+
 It allows insert and delete at both ends.
 
 ```java
 Deque<TreeNode> q = new ArrayDeque<>();
 ```
 
-Implementing classes: ArrayDeque, ConcurrentLinkedDeque, LinkedBlockingDeque, LinkedList.
+Implementing classes: `ArrayDeque`, ConcurrentLinkedDeque, LinkedBlockingDeque, `LinkedList`.
 
-Implementation to use: ArrayDeque, as if we need to add/remove at both ends, ArrayDeque is significantly better than a linked list. Also, random access to each element is O(1) for a cyclic queue.
+Implementation to use: `ArrayDeque`, as if we need to add/remove at both ends, `ArrayDeque` is significantly better than a linked list. Also, random access to each element is `O(1)` for a cyclic queue.
 
-The only better operation of a linked list is removing the current element during iteration. Also, LinkedList supports null elements, whereas ArrayDeque does not. LinkedList has methods like `indexOf` or `remove(int)` while ArrayDeque hasn't.
+The only better operation of a linked list is removing the current element during iteration. Also, `LinkedList` supports `null` elements, whereas `ArrayDeque` does not. `LinkedList` has methods like `indexOf` or `remove(int)` while `ArrayDeque` hasn't.
 
 It is a doubly ended linked list, and can be used as both a Stack and a Queue.
 
-Stack method to equivalent Deque method:
+Stack method to equivalent `Deque` method:
 
-| Stack Method | Equivalent Deque Method |
+| Stack Method | Equivalent `Deque` Method |
 |---|---|
-| push(e) | addFirst(e) |
-| pop() | removeFirst() |
-| peek() | peekFirst() |
+| `push(e)` | `addFirst(e)` |
+| `pop()` | `removeFirst()` |
+| `peek()` | `peekFirst()` |
 
-Queue method to equivalent Deque method:
+Queue method to equivalent `Deque` method:
 
-| Queue Method | Equivalent Deque Method |
+| Queue Method | Equivalent `Deque` Method |
 |---|---|
-| add(e) | addLast(e) |
-| offer(e) | offerLast(e) |
-| remove() | removeFirst() |
-| poll() | pollFirst() |
-| element() | getFirst() |
-| peek() | peekFirst() |
+| `add(e)` | `addLast(e)` |
+| `offer(e)` | `offerLast(e)` |
+| `remove()` | `removeFirst()` |
+| `poll()` | `pollFirst()` |
+| `element()` | `getFirst()` |
+| `peek()` | `peekFirst()` |
 
-Deque methods summary:
+`Deque` methods summary:
 
 | | First Element (Head): Throws exception | First Element (Head): Special value | Last Element (Tail): Throws exception | Last Element (Tail): Special value |
 |---|---|---|---|---|
-| Insert | addFirst(e) | offerFirst(e) | addLast(e) | offerLast(e) |
-| Remove | removeFirst() | pollFirst() | removeLast() | pollLast() |
-| Examine | getFirst() | peekFirst() | getLast() | peekLast() |
+| Insert | `addFirst(e)` | `offerFirst(e)` | `addLast(e)` | `offerLast(e)` |
+| Remove | `removeFirst()` | `pollFirst()` | `removeLast()` | `pollLast()` |
+| Examine | `getFirst()` | `peekFirst()` | `getLast()` | `peekLast()` |
 
 ### TreeMap and TreeSet
 
+:::note
+Both are red-black trees: `O(log n)` for insert, search and delete. `floor`/`ceiling`/`lower`/`higher` give nearest-key lookups, so you rarely need a segment tree for range questions.
+:::
+
 No need to implement segment trees, as we can use these for range queries.
 
-TreeMap stores the Map entries sorted by keys.
+`TreeMap` stores the Map entries sorted by keys.
 
-We can insert / search for an element in O(log n). We can get all keys belonging to a range using `subMap`.
+We can insert / search for an element in `O(log n)`. We can get all keys belonging to a range using `subMap`.
 
-- `SortedMap<K,V>  subMap(K fromKey, K toKey)`: Returns a view of the portion of this map whose keys range from fromKey, inclusive, to toKey, exclusive.
+- `SortedMap<K,V>  subMap(K fromKey, K toKey)`: Returns a view of the portion of this map whose keys range from `fromKey`, inclusive, to `toKey`, exclusive.
 - `Set<K>  keySet()`: Returns a Set view of the keys contained in this map.
 - `K  firstKey()`: Returns the first (lowest) key currently in this map.
 - `K  lastKey()`: Returns the last (highest) key currently in this map.
-- `K  floorKey(K key)`: Returns the greatest key less than or equal to the given key, or null if there is no such key.
-- `K  lowerKey(K key)`: Returns the greatest key strictly less than the given key, or null if there is no such key.
-- `K  ceilingKey(K key)`: Returns the least key greater than or equal to the given key, or null if there is no such key.
-- `K  higherKey(K key)`: Returns the least key strictly greater than the given key, or null if there is no such key.
-- `Map.Entry<K,V>  pollFirstEntry()`: Removes and returns a key-value mapping associated with the least key in this map, or null if the map is empty.
-- `Map.Entry<K,V>  pollLastEntry()`: Removes and returns a key-value mapping associated with the greatest key in this map, or null if the map is empty.
+- `K  floorKey(K key)`: Returns the greatest key less than or equal to the given key, or `null` if there is no such key.
+- `K  lowerKey(K key)`: Returns the greatest key strictly less than the given key, or `null` if there is no such key.
+- `K  ceilingKey(K key)`: Returns the least key greater than or equal to the given key, or `null` if there is no such key.
+- `K  higherKey(K key)`: Returns the least key strictly greater than the given key, or `null` if there is no such key.
+- `Map.Entry<K,V>  pollFirstEntry()`: Removes and returns a key-value mapping associated with the least key in this map, or `null` if the map is empty.
+- `Map.Entry<K,V>  pollLastEntry()`: Removes and returns a key-value mapping associated with the greatest key in this map, or `null` if the map is empty.
 
 ```java
 TreeSet<Long> bt = new TreeSet<>();
@@ -186,18 +204,22 @@ new TreeSet<>( (a,b)->a-b );
 
 - `first()`: Returns the first (lowest) element currently in this set.
 - `last()`: Returns the last (highest) element currently in this set.
-- `pollFirst()`: Retrieves and removes the first (lowest) element, or returns null if this set is empty.
-- `pollLast()`: Retrieves and removes the last (highest) element, or returns null if this set is empty.
+- `pollFirst()`: Retrieves and removes the first (lowest) element, or returns `null` if this set is empty.
+- `pollLast()`: Retrieves and removes the last (highest) element, or returns `null` if this set is empty.
 - `bt.floor()`: Returns the greatest element in this set less than or equal to the given element.
 - `bt.ceiling()`: Returns the least element in this set greater than or equal to the given element.
 
 ### Sliding window maximum
 
+:::tip[Pick the structure by cost]
+Max-heap `O(N log N)` → `TreeMap` `O(N log K)` → monotonic deque `O(N)` (best).
+:::
+
 We need to know the maximum in the window of size k.
 
-- Use max heap: O(N log N)
-- Use TreeMap: O(N log K)
-- Use deque: O(N)
+- Use max heap: `O(N log N)`
+- Use `TreeMap`: `O(N log K)`
+- Use deque: `O(N)`
 
 Using max heap:
 
@@ -249,9 +271,17 @@ public int[] maxSlidingWindow(int[] nums, int k) {
 
 ### Input Size and Time Complexity
 
+:::note[Rule of thumb]
+About `10^8` simple operations per second. `N ≤ 10^5` → `O(N log N)`; `N ≤ 10^3` → `O(N^2)`; `N ≤ 20` → exponential/bitmask.
+:::
+
 We can perform at most 10^8 to 10^9 operations. Most online judges use a 733 MHz CPU which can perform 7.33e8 operations in a second. The time limit is generally 1 to 2 seconds.
 
 ### LAZY Increment
+
+:::tip[Difference array]
+For many range increments, add `+v` at `l` and `-v` at `r+1`, then take a prefix sum once at the end: `O(N+Q)`.
+:::
 
 Print modified array after multiple array range increment operations.
 
@@ -284,7 +314,7 @@ public static String lazyIncrement(int[] A,int[][] queries,int increment) {
 
 ### 2D ARRAY sorting
 
-Sorting array of int:
+Sorting array of `int`:
 
 ```java
 // Sort arr in increasing order by their values.
@@ -306,9 +336,13 @@ Arrays.sort(arr, Comparator.comparingInt(o -> o[0]));
 
 ### HCF / GCD
 
+:::note
+`gcd(a, b) = gcd(b, a % b)`; the loop version avoids recursion and runs in `O(log min(a, b))`.
+:::
+
 We want to find the HCF of two numbers A and B.
 
-Property: since the HCF divides A and B, it also divides (A-B).
+Property: since the HCF divides A and B, it also divides (`A-B`).
 
 ```java
 public static long gcd(long a,long b){
@@ -345,9 +379,13 @@ private int gcd(int a, int b) {
 
 ### Handling updates in the priority queue
 
+:::tip[Lazy deletion]
+PQ has no decrease-key. Push the new `(key, value)` and keep a `HashMap` of the latest value; when polling, skip entries that do not match the map.
+:::
+
 The problem happens when we need to handle updating the key of a previously inserted value in a priority queue. One approach is to remove the element from the PQ and add it again.
 
-An efficient approach is to keep a HashMap that tracks the most updated value associated with some key. The idea is to add all the `<K,V>` pairs to the priority queue, and whenever we want to make an update, also update the HashMap for that `<K,V>`. When it comes to reading values from the PQ (i.e. we want to poll the max or min), run a while loop to remove the outdated values (those keys whose values do not match the HashMap) from the PQ.
+An efficient approach is to keep a `HashMap` that tracks the most updated value associated with some key. The idea is to add all the `<K,V>` pairs to the priority queue, and whenever we want to make an update, also update the `HashMap` for that `<K,V>`. When it comes to reading values from the PQ (i.e. we want to poll the max or min), run a while loop to remove the outdated values (those keys whose values do not match the `HashMap`) from the PQ.
 
 For eg. if we want to store `Node<K,V>` in the priority queue:
 
@@ -383,6 +421,10 @@ Node mx = pq.peek();
 
 ### Inclusion - exclusion principle
 
+:::note
+Sum single sets, subtract pairwise intersections, add triple intersections, and so on, alternating signs.
+:::
+
 $$|A \cup B| = |A| + |B| - |A \cap B|$$
 
 General inc - exc = sum of individual terms - (sum of even intersection) + (sum of odd intersection).
@@ -391,15 +433,15 @@ General inc - exc = sum of individual terms - (sum of even intersection) + (sum 
 
 $$|A \cup B \cup C| = |A| + |B| + |C| - |A \cap B| - |A \cap C| - |B \cap C| + |A \cap B \cap C|$$
 
-Inversions in an array: basically, inversions are the pairs that are in the wrong order relative to sorted order. For eg. in case of an ascending array A, if there is a pair (A_i, A_j) such that A[i] = A_i and A[j] = A_j, then if A_i > A_j and i < j, it forms an inversion pair. It is easily solved using a BIT.
+Inversions in an array: basically, inversions are the pairs that are in the wrong order relative to sorted order. For eg. in case of an ascending array A, if there is a pair (A_i, A_j) such that `A[i]` = A_i and `A[j]` = A_j, then if A_i > A_j and `i < j`, it forms an inversion pair. It is easily solved using a BIT.
 
-Mod power exponentiation - compute `a^b % m`. Time complexity: O(log b).
+Mod power exponentiation - compute `a^b % m`. Time complexity: `O(log b)`.
 
 Mod division - compute `(a / b) % m`. 
 
 $$\left|\bigcup_{i=1}^{n} A_i\right| = \sum_{i=1}^{n}|A_i| - \sum_{1\le i<j\le n}|A_i\cap A_j| + \sum_{1\le i<j<k\le n}|A_i\cap A_j\cap A_k| - \cdots + (-1)^{n+1}|A_1\cap\cdots\cap A_n|$$
 
- To calculate this we find the modular multiplicative inverse `(1 / b) % m => b^(-1) % m = y`. The y is the multiplicative inverse of x such that `x*y = 1`. The multiplicative inverse may not exist; it only exists if gcd(x, m) = 1, as otherwise any x*y will be divisible by m because x gcd(x, m) != 1.
+ To calculate this we find the modular multiplicative inverse `(1 / b) % m => b^(-1) % m = y`. The y is the multiplicative inverse of x such that `x*y = 1`. The multiplicative inverse may not exist; it only exists if `gcd(x, m)` = 1, as otherwise any `x*y` will be divisible by m because x `gcd(x, m)` != 1.
 
 ### Segment tree
 
@@ -411,6 +453,10 @@ $$\left|\bigcup_{i=1}^{n} A_i\right| = \sum_{i=1}^{n}|A_i| - \sum_{1\le i<j\le n
 - Graph representations, algorithms and graph problems: see [Graph Algorithms Reference](/coding/competitive/graphs/).
 
 ### union-find algorithm
+
+:::tip
+Use path compression (+ union by rank/size) for near-`O(1)` amortized `find`/`union`. Typical uses: connected components, cycle detection in undirected graphs, Kruskal's MST.
+:::
 
 It performs two useful operations:
 - FIND: determine which subset a particular element is in.
@@ -426,7 +472,7 @@ public static int find(int u,int[] ufds){
 }
 ```
 
-T.C. = O(n) each operation (here), O(lg n) optimal.
+T.C. = `O(n)` each operation (here), `O(lg n)` optimal.
 
 Datastructure: a disjoint-set data structure that keeps track of a set of elements partitioned into a number of disjoint subsets.
 
@@ -438,9 +484,15 @@ Arrays.fill(ufds, -1);
 
 ### Bitmasking
 
+:::tip[Common tricks]
+- Even/odd character counts: keep a mask and XOR; a substring has all-even counts when two prefix masks are equal.
+- Enumerate submasks: `for (s = mask; s > 0; s = (s-1) & mask)`.
+- Gray code: `G(n) = n ^ (n >> 1)`.
+:::
+
 Even odd pattern: if we have a string, we can find whether each character occurs an even or odd number of times.
 
-String == abca. First we find the masks for every substring from 0 to i:
+`String == abca`. First we find the masks for every substring from 0 to i:
 - For [0..0] == 0001 (right most bit denotes 'a')
 - For [0..1] == 0011
 - For [0..2] == 0111
@@ -474,13 +526,17 @@ If n is the number of terms in the Gray code:
 
 To generate the Nth gray code number: `G(N) = N^(N>>1)`
 
-Working: N == _____?011111, then N+1 == _____?100000.
+Working: `N == _____`?011111, then `N+1` == _____?100000.
 - `_____?011111`
 - `_____?01111`
 
 So, `N^(N>>1) == xxxxxx(?^0)10000` and `(N+1)^((N+1)>>1) == xxxxxx(?^1)10000`. Here, xxxxxx is the result of the XOR before the digit `?`.
 
 ### Sieve to generate all primes
+
+:::note
+Sieve of Eratosthenes runs in `O(N log log N)`. There are 168 primes up to `1000` and 9592 up to `100000`.
+:::
 
 Number of primes from 1 to 100,000 = 9592
 Number of primes from 1 to 1000 = 168
@@ -504,14 +560,18 @@ public void generatePrimes(){
 
 ## PriorityQueue data structure
 
+:::note
+Java `PriorityQueue` is a binary min-heap: `offer`/`poll` are `O(log n)`, `peek` is `O(1)`, `remove(Object)` is `O(n)`. For a max-heap pass `Collections.reverseOrder()` or a comparator.
+:::
+
 It has 3 useful operations:
 
 - POLL: removes the element with lowest priority
-- REMOVE(Obj o): removes the entity "o" if present in the heap
+- REMOVE(Obj o): removes the entity "`o`" if present in the heap
 - ADD(Obj o): adds a new object to heap.
 
-- there is no support for decrease-key in O(lgn)
-- decrease-key is done by doing remove(o) and then add(o) which takes O(n)
+- there is no support for decrease-key in `O(lgn)`
+- decrease-key is done by doing `remove(o)` and then `add(o)` which takes `O(n)`
 
 The comparator class is assigned in constructor:
 
@@ -547,7 +607,7 @@ Better one liner:
 Queue<int[]> minH = new PriorityQueue<>((a,b) -> a[0]-b[0]);
 ```
 
-If we wish to have unique elements in the PriorityQueue, it can be done without removing the elements in the queue, by just overriding the offer method. BTW: add() calls offer() internally, so maybe it's even enough to just override the offer() method and do the check there.
+If we wish to have unique elements in the `PriorityQueue`, it can be done without removing the elements in the queue, by just overriding the offer method. BTW: `add()` calls `offer()` internally, so maybe it's even enough to just override the `offer()` method and do the check there.
 
 ```java
 class Solution extends PriorityQueue<Long> {
@@ -570,6 +630,10 @@ class Solution extends PriorityQueue<Long> {
 
 ## BIT MANIPULATION
 
+:::tip
+`x & (x-1)` clears the lowest set bit; `x & -x` isolates it; `1 << k` sets bit `k`.
+:::
+
 We can convert given number in any base to any other base by:
 
 ```java
@@ -582,9 +646,13 @@ Here we converted the integer n to base 3, and returned the result as a string. 
 - 3^2 = 10
 - 3^3 = 100
 
-Convert string to Integer: `Integer.parseInt(String s, int radix)`
+Convert string to `Integer`: `Integer.parseInt(String s, int radix)`
 
 ## Kth Largest Element in an Array
+
+:::tip[Approaches]
+Sort `O(N log N)` · min-heap of size `k` `O(N log k)` · Quickselect average `O(N)` (shuffle to avoid the worst case).
+:::
 
 Find the kth largest element in an unsorted array.
 
@@ -628,7 +696,7 @@ private static void swap( int[] nums,int i, int j) {
 }
 ```
 
-Shuffle to make it O(N) guaranteed:
+Shuffle to make it `O(N)` guaranteed:
 
 ```java
 private void shuffle(int a[]) {
@@ -671,6 +739,10 @@ int quickSelect(int[] nums, int low, int high, int k) {
 
 ## SUFFIX ARRAY
 
+:::note
+A suffix array stores the sorted order of all suffixes; it supports pattern search, longest common prefix of suffixes and `k`-th suffix queries.
+:::
+
 Reference: https://web.stanford.edu/class/cs97si/suffix-array.pdf
 
 Key words: suffix sorting, suffix arrays, suffix trees
@@ -679,9 +751,9 @@ Suffix Array is a special case of a trie. A suffix array is a sorted array of al
 
 Operations done:
 
-1. (Pattern Searching) checking whether a string W is a substring of A. T.C.: O(|W|).
-2. searching the longest common prefix for two suffixes of A. O(n) using least common ancestor.
-3. finding the k-th suffix in lexicographic order. O(n)
+1. (Pattern Searching) checking whether a string W is a substring of A. T.C.: `O(|W|)`.
+2. searching the longest common prefix for two suffixes of A. `O(n)` using least common ancestor.
+3. finding the `k-th` suffix in lexicographic order. `O(n)`
 
 A suffix array can be created by doing the DFS traversal on the trie. Noting that during the depth first search we have to consider the nodes in the ascending lexicographic order of the edges linking them to their father.
 
@@ -710,10 +782,14 @@ Trie of the suffixes of "abac" (node 1 is the root):
 
 Building Suffix Array:
 
-- Approach 1: O(n^2 logn). Make an array of all suffixes and then sort the array. If we use an O(n logn) comparison based sorting algorithm, then the total time to make the suffix array would be O(n^2 logn), because string comparison takes O(N) time.
-- Approach 2: O(n logn*logn). https://www.hackerearth.com/practice/data-structures/advanced-data-structures/suffix-arrays/tutorial/
+- Approach 1: `O(n^2 logn)`. Make an array of all suffixes and then sort the array. If we use an `O(n logn)` comparison based sorting algorithm, then the total time to make the suffix array would be `O(n^2 logn)`, because string comparison takes `O(N)` time.
+- Approach 2: `O(n logn*logn)`. https://www.hackerearth.com/practice/data-structures/advanced-data-structures/suffix-arrays/tutorial/
 
 ## TRIE
+
+:::note
+A trie stores strings by shared prefixes; insert/search/startsWith are `O(L)` for word length `L`.
+:::
 
 ```java
 class TrieNode {
@@ -858,11 +934,15 @@ public int[] sumPrefixScores(String[] words) {
 
 ## Modulo arithmetic 1000000007
 
+:::caution
+With `MOD = 1e9+7`, products overflow `int`; cast to `long` before multiplying and reduce after every operation.
+:::
+
 ```java
 static final int INF = 1000000007;
 ```
 
-We have stored INF into int dType which can store only upto: INF*2. While solving problems we can encounter situations like INF*5 this won't fit in an int dType.
+We have stored `INF` into `int` `dType` which can store only upto: `INF`*2. While solving problems we can encounter situations like `INF`*5 this won't fit in an `int` `dType`.
 
 ```java
 System.out.println(INF*3);
@@ -870,7 +950,7 @@ System.out.println(INF*3);
 
 Output: `-1294967275`
 
-For such situations we use the long dType which is 64 bits. It can even store INF*INF without overflow.
+For such situations we use the long `dType` which is 64 bits. It can even store `INF`*`INF` without overflow.
 
 ```java
 long n = INF*((long)INF);
@@ -907,7 +987,11 @@ if (x < 0) x += m;
 
 ## Counting Sort
 
-Here, we create a vector list with max value in the array. Each element in the vector list is the index of that element in the original array: arr. If multiple occurrences of the same element is there we append them to the end of the list. For eg. adj[5] will represent the element with value 5. And it will store the index of occurrences of 5 in arr. Here the value of arr[i] lies in `1 <= arr[i] <= 15`.
+:::tip
+Use when values lie in a small range `k`: `O(N + k)` time, `O(k)` extra space.
+:::
+
+Here, we create a vector list with max value in the array. Each element in the vector list is the index of that element in the original array: arr. If multiple occurrences of the same element is there we append them to the end of the list. For eg. `adj[5]` will represent the element with value 5. And it will store the index of occurrences of 5 in arr. Here the value of `arr[i]` lies in `1 <= arr[i] <= 15`.
 
 ```cpp
 vector<int> adj[16];
@@ -917,7 +1001,7 @@ for(int i=0;i<n;i++)
     adj[arr[i]].push_back(i);
 ```
 
-If we need to treat this as a LinkedList, i.e. we could delete the element from the vector list. We create two arrays left and right. The left[i] denotes the index of element left to arr[i] or index of arr[i-1]. Similarly right[i] denotes the index of element to the right of arr[i] i.e. arr[i+1].
+If we need to treat this as a `LinkedList`, i.e. we could delete the element from the vector list. We create two arrays left and right. The `left[i]` denotes the index of element left to `arr[i]` or index of `arr[i-1]`. Similarly `right[i]` denotes the index of element to the right of `arr[i]` i.e. `arr[i+1]`.
 
 ```cpp
 int left[n];
@@ -926,7 +1010,7 @@ right[n];
 for(int i=0;i<n;i++) right[i]=i+1;
 ```
 
-Maintaining these arrays will help us to delete an element from the adj[ ]. To delete the element arr[i] from adj list:
+Maintaining these arrays will help us to delete an element from the `adj[ ]`. To delete the element `arr[i]` from adj list:
 
 ```cpp
 if( left[i] != -1 ) left[ right[i] ] = left[ i ]
@@ -935,12 +1019,16 @@ if( right[i] != n ) right[ left[i] ] = right[ i ]
 
 ## BINARY INDEXED TREE / Fenwick Tree
 
-We are given an array a[], and we want to be able to perform two types of operations on it.
+:::note[Fenwick Tree]
+Prefix sums with point updates, both in `O(log N)`; `1`-indexed. Move up with `i += i & -i`, down with `i -= i & -i`.
+:::
 
-- Given an index x, find the sum of elements in the array from index 1 to index x (inclusive).
-- Given an index x and a value val, add the value to arr[x].
+We are given an array `a[]`, and we want to be able to perform two types of operations on it.
 
-We maintain an array BIT[] such that, at any index we can store the sum of some numbers of the given array. This can also be called a partial sum tree.
+- Given an index `x`, find the sum of elements in the array from index 1 to index `x` (inclusive).
+- Given an index `x` and a value val, add the value to `arr[x]`.
+
+We maintain an array `BIT[]` such that, at any index we can store the sum of some numbers of the given array. This can also be called a partial sum tree.
 
 Consider the array (note that the array is considered to be 1 based):
 
@@ -948,17 +1036,17 @@ Consider the array (note that the array is considered to be 1 based):
 
 | index | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| arr[] | 3 | 0 | 5 | 6 | 1 | 2 | 1 | 3 | 4 | 6 |
-| sum[] | 3 | 3 | 8 | 14 | 15 | 17 | 18 | 21 | 25 | 31 |
+| `arr[]` | 3 | 0 | 5 | 6 | 1 | 2 | 1 | 3 | 4 | 6 |
+| `sum[]` | 3 | 3 | 8 | 14 | 15 | 17 | 18 | 21 | 25 | 31 |
 
-Every index i in the BIT[] array stores the cumulative sum from the index i to `i - (1<<r) + 1` (both inclusive), where r represents the last set bit in the index i.
+Every index `i` in the `BIT[]` array stores the cumulative sum from the index `i` to `i - (1<<r) + 1` (both inclusive), where r represents the last set bit in the index `i`.
 
 ![Table of BIT index ranges and BIT values for indices 1 to 10](/coding-ref/i-071-074.webp)
 
 | index | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
 | range (stored) | 1 | 1..2 | 3 | 1..4 | 5 | 5..6 | 7 | 1..8 | 9 | 9..10 |
-| BIT[] | 3 | 3 | 5 | 14 | 1 | 3 | 1 | 21 | 4 | 10 |
+| `BIT[]` | 3 | 3 | 5 | 14 | 1 | 3 | 1 | 21 | 4 | 10 |
 
 ![Update-chain diagram linking BIT indices with upward arrows from baseline 0](/coding-ref/i-071-075.webp)
 
@@ -985,7 +1073,7 @@ Image (last set bit isolated), page 72:
 
 ### Range Sum
 
-If the given input is 5, then BIT[5] (iteration 1) + BIT[4] (iteration 2) will be returned as the sum.
+If the given input is 5, then `BIT[5]` (iteration 1) + `BIT[4]` (iteration 2) will be returned as the sum.
 Or prefix sum till index `idx`. The loop will remove the rightmost set bit until the `idx` doesn't have any more set bits.
 
 ```java
@@ -1249,22 +1337,26 @@ Another solution is to run DFS for both p and q values and create paths from roo
 
 Running time:
 
-1. DFS will lead to O(N) since this is a binary tree and not a binary search tree.
-2. Two DFS operations will lead to O(N)
+1. DFS will lead to `O(N)` since this is a binary tree and not a binary search tree.
+2. Two DFS operations will lead to `O(N)`
 
-Comparison work of the lists - using a while loop - to find common element will take O(N)
+Comparison work of the lists - using a while loop - to find common element will take `O(N)`
 
-3. So total running time - O(N)
+3. So total running time - `O(N)`
 
 Space
 
-1. Lists to store paths can lead to O(N)
+1. Lists to store paths can lead to `O(N)`
 
 ## Binary Search
 
+:::tip[Template]
+Keep the invariant `lo <= answer <= hi` and use `mid = lo + (hi - lo) / 2` to avoid overflow. Decide first whether you need the first/last occurrence, floor or ceiling.
+:::
+
 ### JAVA Binary Search function
 
-If A[] is a sorted array, then `Arrays.binarySearch(A, key)` and `Arrays.binarySearch(A,fromIndex,toIndex(exlude),key)` will search the first occurrence of key in the array A, if it is not present then it will return `(-(insertion point) - 1)`.
+If `A[]` is a sorted array, then `Arrays.binarySearch(A, key)` and `Arrays.binarySearch(A,fromIndex,toIndex(exlude),key)` will search the first occurrence of key in the array A, if it is not present then it will return `(-(insertion point) - 1)`.
 
 Insertion point is the index of the first element greater than the key, or `A.length`.
 
@@ -1304,30 +1396,30 @@ int binarySearch(int Arr[], int n, int target) {
 
 Things to Note here:
 
-1. The start pointer will always point to num >= target
-2. The end pointer will always point to num <= target
-3. When start == end then at this point the target should have been present (if it was absent).
+1. The start pointer will always point to `num >= target`
+2. The end pointer will always point to `num <= target`
+3. When `start == end` then at this point the target should have been present (if it was absent).
 4. Binary search takes ~30 steps to search any number between [1, INTEGER_MAX]
 
 ![Binary search steps for key 5 over [1..7]](/coding-ref/i-095-090.webp)
 
 Image (binary search on `key = 5` over `[1, 2, 3, 4, 5, 6, 7]`, page 95): three steps:
 
-- Step 1: start (value 1), middle (value 4), end (value 7). Search 'key' = '5'. As key > arr[middle], therefore start = middle + 1.
-- Step 2: remaining window is 5, 6, 7 with start, middle (6), end (7). As key < arr[middle], therefore end = middle - 1.
-- Step 3: start, middle, end all point to 5. As key == arr[middle], return middle as the required index.
+- Step 1: start (value 1), middle (value 4), end (value 7). Search 'key' = '5'. As key > `arr[middle]`, therefore start = middle + 1.
+- Step 2: remaining window is 5, 6, 7 with start, middle (6), end (7). As key < `arr[middle]`, therefore end = middle - 1.
+- Step 3: start, middle, end all point to 5. As key == `arr[middle]`, return middle as the required index.
 
 ### Beyond Sorted Array Binary Search
 
 Similar thing can be done with monotonic functions (monotonically increasing or decreasing) as well.
 
-Let's say we have f(x) which increases when x increases.
+Let's say we have `f(x)` which increases when x increases.
 
-So, given a problem of finding x so that f(x) = p, I can do a binary search for x. At any instance,
+So, given a problem of finding x so that `f(x)` = p, I can do a binary search for x. At any instance,
 
-1. if f(current_position) > p, then I will search for values lower than current_position.
-2. if f(current_position) < p, then I will search for values higher than current_position.
-3. if f(current_position) = p, then I have found my answer.
+1. if `f(current_position)` > p, then I will search for values lower than current_position.
+2. if `f(current_position)` < p, then I will search for values higher than current_position.
+3. if `f(current_position)` = p, then I have found my answer.
 
 ### Matrix Median (IB)
 
@@ -1337,9 +1429,9 @@ Solution:
 
 We cannot use extra memory, so we can't actually store all elements in an array and sort the array. But since rows are sorted it must be of some use, right?
 
-Note that in a row you can binary search to find how many elements are smaller than a value X in $O(\log M)$. // M == no. of columns. This is the base of our solution.
+Note that in a row you can binary search to find how many elements are smaller than a value X in $O(\log M)$. // `M == no`. of columns. This is the base of our solution.
 
-Say k = N*M/2. We need to find (k + 1)th smallest element. We can use binary search on answer. In $O(N \log M)$, we can count how many elements are smaller than X in the matrix.
+Say k = `N*M`/2. We need to find (`k + 1`)th smallest element. We can use binary search on answer. In $O(N \log M)$, we can count how many elements are smaller than X in the matrix.
 
 So, we use binary search on interval [1, INT_MAX]. So, total complexity is $O(30 \cdot N \log M)$.
 
@@ -1380,7 +1472,7 @@ Output: 'h'
 Explanation: The smallest letter greater than 'f' is 'h' in the given array.
 
 1. The array is considered circular, which means if the 'key' is bigger than the last letter of the array or if it is smaller than the first letter of the array, the key's next letter will be the first letter of the array.
-2. The other difference is that we have to find the next biggest letter which can't be equal to the 'key'. This means that we will ignore the case where key == arr[middle]. To handle this case, we can update our start range to start = middle +1.
+2. The other difference is that we have to find the next biggest letter which can't be equal to the 'key'. This means that we will ignore the case where key == `arr[middle]`. To handle this case, we can update our start range to start = middle +1.
 
 ```java
 public int nextGreater(int[] arr, int x){
@@ -1412,10 +1504,10 @@ Explanation: The maximum number in the input bitonic array is '12'.
 
 Solution: whenever we calculate the middle, we can compare the numbers pointed out by the index middle and middle+1 to find if we are in the ascending or the descending part.
 
-1. If arr[middle] > arr[middle + 1], we are in the second (descending) part of the bitonic array. Therefore, our required number could either be pointed out by middle or will be before middle. This means we will be doing: end = middle.
-2. If arr[middle] <= arr[middle + 1], we are in the first (ascending) part of the bitonic array. Therefore, the required number will be after middle. This means we will be doing: start = middle + 1.
+1. If `arr[middle]` > `arr[middle + 1]`, we are in the second (descending) part of the bitonic array. Therefore, our required number could either be pointed out by middle or will be before middle. This means we will be doing: end = middle.
+2. If `arr[middle]` <= `arr[middle + 1]`, we are in the first (ascending) part of the bitonic array. Therefore, the required number will be after middle. This means we will be doing: start = middle + 1.
 
-We can break when start == end.
+We can break when `start == end`.
 
 Image (page 98):
 
@@ -1435,6 +1527,10 @@ public int find_max_bitonic(int[] arr){
 
 ### Search in Rotated Array
 
+:::note
+In each step one half is always sorted; check whether the key lies in the sorted half, otherwise search the other half. `O(log N)`.
+:::
+
 Given an array of numbers which is sorted in ascending order and also rotated by some arbitrary number, find if a given 'key' is present in it.
 
 Write a function to return the index of the 'key' in the rotated array. If the 'key' is not present, return -1. You can assume that the given array does not have any duplicates.
@@ -1443,7 +1539,7 @@ Solution:
 
 After calculating the middle, we can compare the numbers at indices start and middle. This will give us two options:
 
-1. If arr[start] <= arr[middle], the numbers from start to middle are sorted in ascending order.
+1. If `arr[start]` <= `arr[middle]`, the numbers from start to middle are sorted in ascending order.
 2. Else, the numbers from middle+1 to end are sorted in ascending order.
 
 ![Rotated array example input and output](/coding-ref/i-099-093.webp)
@@ -1464,8 +1560,8 @@ Image (page 99): original array `[-1, 2, 4, 5, 7, 9, 10]` and the array after 5 
 
 Image (search walkthrough for key = 10, page 100):
 
-- Step 1: start, middle (9), end. Since arr[start] <= arr[middle], we can conclude that all numbers from start --> middle are sorted in ascending order. By looking at the sorted part, from its start and end, we can conclude that the key can't be in the sorted part, hence start = middle +1.
-- Step 2: start, middle (-1), end (2) over `[10, -1, 2]`. Since arr[start] > arr[middle], we can conclude that all numbers from middle --> end are sorted in ascending order. By looking at the sorted part, from its start and end, we can conclude that the key can't be in the sorted part, hence end = middle - 1.
+- Step 1: start, middle (9), end. Since `arr[start]` <= `arr[middle]`, we can conclude that all numbers from start --> middle are sorted in ascending order. By looking at the sorted part, from its start and end, we can conclude that the key can't be in the sorted part, hence start = middle +1.
+- Step 2: start, middle (-1), end (2) over `[10, -1, 2]`. Since `arr[start]` > `arr[middle]`, we can conclude that all numbers from middle --> end are sorted in ascending order. By looking at the sorted part, from its start and end, we can conclude that the key can't be in the sorted part, hence end = middle - 1.
 - Step 3: start, middle, end all point to 10. We have found the key!
 
 Image (page 101):
@@ -1503,12 +1599,12 @@ An interesting fact about the minimum element is that it is the only element in 
 
 After calculating the middle, we can compare the number at index middle with its previous and next number. This will give us two options:
 
-1. If arr[middle] > arr[middle + 1], then the element at middle + 1 is the smallest.
-2. If arr[middle - 1] > arr[middle], then the element at middle is the smallest.
+1. If `arr[middle]` > `arr[middle + 1]`, then the element at middle + 1 is the smallest.
+2. If `arr[middle - 1]` > `arr[middle]`, then the element at middle is the smallest.
 
 To adjust the ranges:
 
-1. If arr[start] < arr[middle], the numbers from start to middle are sorted.
+1. If `arr[start]` < `arr[middle]`, the numbers from start to middle are sorted.
 2. Else, the numbers from middle to end are sorted.
 
 Image (page 102):
@@ -1533,6 +1629,10 @@ public int findMin(int[] nums) {
 ```
 
 ## Two Pointers
+
+:::tip
+Two indices moving through a sorted array or a window, giving `O(N)` instead of `O(N^2)`. Sliding window: expand right, shrink left while the window is invalid.
+:::
 
 We deal with sorted arrays (or LinkedLists) and need to find a set of elements that fulfill certain constraints.
 
@@ -1581,7 +1681,7 @@ Output: 4
 Explanation: Replace the 'c' with 'b' to have a longest repeating substring "bbbb".
 ```
 
-Solution: We can use a HashMap to count the frequency of each letter. We'll iterate through the string to add one letter at a time in the window. We'll also keep track of the count of the maximum repeating letter in any window (let's call it maxRepeatLetterCount). So at any time, we know that we can have a window which has one letter repeating maxRepeatLetterCount times, this means we should try to replace the remaining letters. If we have more than 'k' remaining letters, we should shrink the window as we are not allowed to replace more than 'k' letters.
+Solution: We can use a `HashMap` to count the frequency of each letter. We'll iterate through the string to add one letter at a time in the window. We'll also keep track of the count of the maximum repeating letter in any window (let's call it `maxRepeatLetterCount`). So at any time, we know that we can have a window which has one letter repeating `maxRepeatLetterCount` times, this means we should try to replace the remaining letters. If we have more than 'k' remaining letters, we should shrink the window as we are not allowed to replace more than 'k' letters.
 
 Image (page 104):
 
@@ -1606,9 +1706,13 @@ public static int findLength(String s, int k){
 
 ### KMP algorithm
 
+:::note
+Build the `lps` (longest proper prefix that is also a suffix) array in `O(M)`, then search the text in `O(N)` without re-reading characters.
+:::
+
 https://www.youtube.com/watch?v=BXCEFAzhxGY B2B swe
 
-We make a prefix suffix array (or longest proper prefix which is also suffix, lps array). Of which each "i"th element tells the end position of longest prefix that matches the suffix (which is the "i"th element) in the substring starting with 0th index and ending at index i.
+We make a prefix suffix array (or longest proper prefix which is also suffix, lps array). Of which each "`i`"th element tells the end position of longest prefix that matches the suffix (which is the "`i`"th element) in the substring starting with 0th index and ending at index `i`.
 
 Eg.: d s g w a d s g z (in this example the ith element tells the end position of longest prefix + 1)
 
@@ -1680,7 +1784,15 @@ public static int[] getlps(String str){
 
 ## Tricky / Important problems
 
+:::info
+These are frequently asked LeetCode patterns: multi-source BFS, union-find on coordinates, sliding window, intervals, cyclic sort, tree DFS with prefix sums, backtracking and DP.
+:::
+
 ### 542. 01 Matrix
+
+:::tip[Multi-source BFS]
+Start the BFS from all `0` cells at once; the first time a `1` cell is reached gives its shortest distance. `O(R·C)`.
+:::
 
 Given a matrix consists of 0 and 1, find the distance of the nearest 0 for each cell. The distance between two adjacent cells is 1.
 
@@ -1849,6 +1961,10 @@ public void ff(int i,int j,int color,int[][] visited,int[][] matrix){
 
 ## 947. Most Stones Removed with Same Row or Column
 
+:::tip[Pattern]
+Treat each row and column as a node and each stone as an edge. Answer = stones − number of connected components (union-find).
+:::
+
 On a 2D plane, we place stones at some integer coordinate points. Each coordinate point may have at most one stone.
 
 Now, a move consists of removing a stone that shares a column or row with another stone on the grid.
@@ -1908,6 +2024,10 @@ public void union(int u,int v,int[] ufds){
 ```
 
 ## 1423. Maximum Points You Can Obtain from Cards
+
+:::tip[Pattern]
+Taking `k` cards from the ends means leaving a contiguous window of `n-k` cards. Minimise the window sum with a sliding window: `O(N)`.
+:::
 
 There are several cards arranged in a row, and each card has an associated number of points. The points are given in the integer array `cardPoints`.
 
@@ -2061,13 +2181,17 @@ In the end, we just need to return the index of the three roots of the graph.
 
 ## 115. Start of LinkedList Cycle (medium)
 
-Given the head of a Singly LinkedList that contains a cycle, write a function to find the starting node of the cycle.
+:::tip
+Floyd's tortoise and hare: when slow and fast meet, restart one pointer from the head; they meet again at the cycle start. `O(N)` time, `O(1)` space.
+:::
+
+Given the head of a Singly `LinkedList` that contains a cycle, write a function to find the starting node of the cycle.
 
 ### Solution
 
 1. Find the cycle length (by using slow/fast pointer) == c
-2. Find the first meeting point of the slow/fast pointers, then distance travelled by fast, df = 2 * ds (distance travelled by slow). So we can find the no. of nodes before the start of cycle => df = a + c => a = c - 2*ds.
-3. Move a pointer from start to cover a+1 distance.
+2. Find the first meeting point of the slow/fast pointers, then distance travelled by fast, df = 2 * ds (distance travelled by slow). So we can find the no. of nodes before the start of cycle => df = `a + c` => a = `c - 2`*ds.
+3. Move a pointer from start to cover `a+1` distance.
 
 ### Diagram
 
@@ -2076,6 +2200,10 @@ Given the head of a Singly LinkedList that contains a cycle, write a function to
 Linked list 1 -> 2 -> 3 -> 4 -> 5 -> 6, where node 6 links back to node 3 (cycle). Pointer1 and pointer2 start at node 1; the slow pointer (pointer1) and fast pointer (pointer2) meet at node 4 with `dF = 2ds` annotated. Bracket `a` spans nodes 1-2 (before the cycle); bracket `c` spans nodes 3-6 (the cycle). Footer: `df = 2ds && df = a + c`, `c -> cycle length`.
 
 ## 116. Happy Number (medium)
+
+:::tip
+The digit-square-sum sequence either reaches `1` or enters a cycle; detect it with fast/slow pointers.
+:::
 
 Any number will be called a happy number if, after repeatedly replacing it with a number equal to the sum of the square of all of its digits, leads us to number `1`. All other (not-happy) numbers will never reach `1`. Instead, they will be stuck in a cycle of numbers which does not include `1`.
 
@@ -2105,20 +2233,24 @@ public boolean isHappyNumber(int num){
 }
 ```
 
-TC: O(logN)
+TC: `O(logN)`
 
 ## Palindrome LinkedList
 
-Given the head of a Singly LinkedList, write a method to check if the LinkedList is a palindrome or not.
+Given the head of a Singly `LinkedList`, write a method to check if the `LinkedList` is a palindrome or not.
 
-As we know, a palindrome LinkedList will have nodes values that read the same backward or forward. This means that if we divide the LinkedList into two halves, the node values of the first half in the forward direction should be similar to the node values of the second half in the backward direction. As we have been given a Singly LinkedList, we can't move in the backward direction.
+As we know, a palindrome `LinkedList` will have nodes values that read the same backward or forward. This means that if we divide the `LinkedList` into two halves, the node values of the first half in the forward direction should be similar to the node values of the second half in the backward direction. As we have been given a Singly `LinkedList`, we can't move in the backward direction.
 
-1. We can use the Fast & Slow pointers method similar to Middle of the LinkedList to find the middle node of the LinkedList.
-2. Once we have the middle of the LinkedList, we will reverse the second half.
-3. Then, we will compare the first half with the reversed second half to see if the LinkedList represents a palindrome.
-4. Finally, we will reverse the second half of the LinkedList again to revert and bring the LinkedList back to its original form.
+1. We can use the Fast & Slow pointers method similar to Middle of the `LinkedList` to find the middle node of the `LinkedList`.
+2. Once we have the middle of the `LinkedList`, we will reverse the second half.
+3. Then, we will compare the first half with the reversed second half to see if the `LinkedList` represents a palindrome.
+4. Finally, we will reverse the second half of the `LinkedList` again to revert and bring the `LinkedList` back to its original form.
 
 ## 56. Merge Intervals
+
+:::tip[Pattern]
+Sort by start, then merge while `next.start <= current.end`. `O(N log N)`.
+:::
 
 Given a list of intervals, merge all the overlapping intervals to produce a list that has only mutually exclusive intervals.
 
@@ -2185,6 +2317,10 @@ public int[][] merge(int[][] intervals) {
 
 ## Minimum Meeting Rooms
 
+:::tip[Pattern]
+Sort by start and keep a min-heap of end times; the heap size at the end (peak) is the number of rooms. `O(N log N)`.
+:::
+
 Given a list of intervals representing the start and end time of `N` meetings, find the minimum number of rooms required to hold all the meetings.
 
 ### Examples
@@ -2247,9 +2383,13 @@ public static int findMinimumMeetingRooms(List<Meeting> meetings) {
 
 ## Cyclic Sort
 
+:::tip
+For values in `1..n`, put each number at index `value-1` by swapping. `O(N)` time, `O(1)` space.
+:::
+
 We are given an array containing `n` objects. Each object, when created, was assigned a unique number from 1 to `n` based on their creation sequence.
 
-Write a function to sort the objects in-place on their creation sequence number in O(n) and without any extra space.
+Write a function to sort the objects in-place on their creation sequence number in `O(n)` and without any extra space.
 
 ### Examples
 
@@ -2284,6 +2424,10 @@ public void cyclic_sort(int[] arr){
 ```
 
 ## Find the Smallest Missing Positive Number
+
+:::tip
+Cyclic sort first, then the first index `i` with `nums[i] != i+1` gives the answer `i+1`.
+:::
 
 Given an unsorted array containing numbers, find the smallest missing positive number in it. In this problem, the numbers are not bound by any range so we can have any number in the input array.
 
@@ -2321,6 +2465,10 @@ public void min_positive(int[] arr){ // 0 or 1 indexed
 ```
 
 ## 437. Path Sum III
+
+:::tip[Pattern]
+Prefix sums on a root-to-node path with a `HashMap`: count how many earlier prefix sums equal `current - target`; undo the count when backtracking.
+:::
 
 You are given a binary tree in which each node contains an integer value.
 
@@ -2374,11 +2522,11 @@ private static int countPathsRecursive(TreeNode currentNode, int S, List<Integer
 }
 ```
 
-T.C: O(N^2), S.C.: O(N)
+T.C: `O(N^2)`, S.C.: `O(N)`
 
 ### Solution 2 (hashMap)
 
-We can use the hashMap for remembering the sum values along a path.
+We can use the `hashMap` for remembering the sum values along a path.
 
 ```java
 static int count,target;
@@ -2427,9 +2575,13 @@ public void prefixTree(TreeNode root,TreeNode parent){
 }
 ```
 
-T.C. : O(N)
+T.C. : `O(N)`
 
 ## Tree Diameter
+
+:::note
+Diameter = max over nodes of (left height + right height). Compute heights in one DFS and track the best sum. `O(N)`.
+:::
 
 Given a binary tree, find the length of its diameter. The diameter of a tree is the number of nodes on the longest path between any two leaf nodes. The diameter of a tree may or may not pass through the root.
 
@@ -2462,7 +2614,7 @@ We can follow the same DFS approach. There will be a few differences:
 
 1. At every step, we need to find the height of both children of the current node. For this, we will make two recursive calls similar to DFS.
 2. The height of the current node will be equal to the maximum of the heights of its left or right children, plus '1' for the current node.
-3. The tree diameter at the current node will be equal to the height of the left child plus the height of the right child plus '1' for the current node: diameter = leftTreeHeight + rightTreeHeight + 1. To find the overall tree diameter, we will use a class level variable. This variable will store the maximum diameter of all the nodes visited so far, hence, eventually, it will have the final tree diameter.
+3. The tree diameter at the current node will be equal to the height of the left child plus the height of the right child plus '1' for the current node: diameter = `leftTreeHeight` + `rightTreeHeight` + 1. To find the overall tree diameter, we will use a class level variable. This variable will store the maximum diameter of all the nodes visited so far, hence, eventually, it will have the final tree diameter.
 
 ```java
 public int diameterOfBinaryTree(TreeNode root) {
@@ -2506,10 +2658,14 @@ public int getDepth(TreeNode root){
 
 ## 295. Find Median from Data Stream
 
+:::tip[Two heaps]
+Max-heap for the lower half, min-heap for the upper half; keep sizes within 1. Median is the top(s). `O(log N)` add, `O(1)` median.
+:::
+
 Design a class to calculate the median of a number stream. The class should have the following two methods:
 
-1. insertNum(int num): stores the number in the class
-2. findMedian(): returns the median of all numbers inserted in the class
+1. `insertNum(int num)`: stores the number in the class
+2. `findMedian()`: returns the median of all numbers inserted in the class
 
 If the count of numbers inserted in the class is even, the median will be the average of the middle two numbers.
 
@@ -2529,12 +2685,12 @@ Example:
 
 ### Solution
 
-We can use two heaps maxHeap (stores smaller nos.) and minHeap (stores larger nos.). We will make sure that always size(maxHeap) >= size(minHeap). So if size(maxHeap) == size(minHeap) then median is avg(maxHeap.top, minHeap.top) otherwise, median is maxHeap.top.
+We can use two heaps `maxHeap` (stores smaller nos.) and `minHeap` (stores larger nos.). We will make sure that always size(`maxHeap`) >= size(`minHeap`). So if size(`maxHeap`) == size(`minHeap`) then median is avg(`maxHeap`.top, `minHeap`.top) otherwise, median is `maxHeap`.top.
 
 For insertion there are two cases:
 
-1. If size(maxHeap) == size(minHeap): insert the num in maxHeap if it's less than maxHeap.top, otherwise insert the num in minHeap.
-2. If `size(maxHeap) < size(minHeap)`: rebalance (push the minHeap.top to maxHeap), then this case is reduced to case 1.
+1. If size(`maxHeap`) == size(`minHeap`): insert the num in `maxHeap` if it's less than `maxHeap`.top, otherwise insert the num in `minHeap`.
+2. If `size(maxHeap) < size(minHeap)`: rebalance (push the `minHeap`.top to `maxHeap`), then this case is reduced to case 1.
 
 ```java
 PriorityQueue<Integer> maxH , minH;
@@ -2561,9 +2717,13 @@ public double findMedian() {
 }
 ```
 
-insertNum() will be O(logN), findMedian() will be O(1)
+`insertNum()` will be `O(logN)`, `findMedian()` will be `O(1)`
 
 ## Subsets
+
+:::note
+`n` elements give `2^n` subsets. BFS-style: for each number, append it to a copy of every existing subset.
+:::
 
 Given a set with distinct elements, find all of its distinct subsets.
 
@@ -2583,7 +2743,7 @@ Output: [], [1], [5], [3], [1,5], [1,3], [5,3], [1,5,3]
 
 We could use bitmasks to generate solution, but it could get complicated. To generate all subsets of the given set, we can use the Breadth First Search (BFS) approach. We can start with an empty set, iterate through all numbers one-by-one, and add them to existing sets to create new subsets.
 
-At each step our subset size doubles. So T.C. = O(2^N)
+At each step our subset size doubles. So T.C. = `O(2^N)`
 
 Lets go through each step of our algorithm:
 
@@ -2625,6 +2785,10 @@ public List<List<Integer>> generateSubsets(int[] arr){
 ```
 
 ## Subsets with duplicates
+
+:::caution
+Sort first. When the current number equals the previous one, add it only to the subsets created in the previous step to avoid duplicates.
+:::
 
 Given a set of numbers that might contain duplicates, find all of its distinct subsets
 
@@ -2720,6 +2884,10 @@ public List<List<Integer>> generateSubsets(int[] arr){
 
 ## Permutations
 
+:::note
+`n!` permutations. Build level by level by inserting the new element at every position of each existing permutation.
+:::
+
 Given a set of distinct numbers, find all of its permutations.
 
 Examples:
@@ -2784,6 +2952,10 @@ public static List<List<Integer>> findPermutations(int[] nums) {
 
 ## Balanced Parentheses
 
+:::note
+For `n` pairs, there are Catalan(n) valid strings. Add `(` while open < `n`, add `)` while close < open.
+:::
+
 Given a set of distinct numbers, find all of its permutations.
 
 Note: the problem statement above is reproduced as it appears in the source PDF text (it describes the permutations problem, not balanced parentheses).
@@ -2842,6 +3014,10 @@ public static List<String> generateValidParentheses(int num) {
 
 ## Two Single Numbers
 
+:::tip
+XOR of all numbers = `a ^ b`. Use any set bit of that XOR to split numbers into two groups and XOR each group.
+:::
+
 In a non-empty array of numbers, every number appears exactly twice except two numbers that appear only once. Find the two numbers that appear only once.
 
 ### Solution
@@ -2869,7 +3045,11 @@ public int[] two_single(int[] A){
 
 ## Tasks Scheduling
 
-There are 'N' tasks, labeled from '0' to 'N-1'. Each task can have some prerequisite tasks which need to be completed before it can be scheduled. Given the number of tasks and a list of prerequisite pairs, find out if it is possible to schedule all the tasks.
+:::tip
+Count frequencies; the answer is determined by the most frequent task and how many tasks share that max frequency.
+:::
+
+There are 'N' tasks, labeled from '0' to '`N-1`'. Each task can have some prerequisite tasks which need to be completed before it can be scheduled. Given the number of tasks and a list of prerequisite pairs, find out if it is possible to schedule all the tasks.
 
 Examples:
 
@@ -2913,6 +3093,10 @@ public List<Integer> topo_sort(HashMap<Integer, List<Integer>> graph,
 
 ## Rearrange String
 
+:::tip
+Greedy with a max-heap of character frequencies; always place the most frequent char that is not the previously placed one.
+:::
+
 Given a string, find if its letters can be rearranged in such a way that no two same characters come next to each other.
 
 Examples:
@@ -2927,7 +3111,7 @@ Explanation: In "papap", none of the repeating characters come next to each othe
 
 ### Solution
 
-The first thing is we need to place the characters as far as possible, this is possible when we place the most frequently occurring characters first. So in each step we place the most frequent character in the current place. To track the frequency we use a hashmap, then to track the most freq. char. we use the Max Heap.
+The first thing is we need to place the characters as far as possible, this is possible when we place the most frequently occurring characters first. So in each step we place the most frequent character in the current place. To track the frequency we use a hashmap, then to track the most freq. `char`. we use the Max Heap.
 
 We pop an element from this Max Heap, then append to answer string then decrement it's frequency. Since two characters cannot be adjacently placed, We will not put this character back in the heap to ensure that no two same characters are adjacent to each other.
 
@@ -2964,6 +3148,10 @@ public static String rearrangeString(String str) {
 ```
 
 ## Number of Sub-arrays With Odd Sum
+
+:::tip
+Track the count of even and odd prefix sums; a subarray has odd sum when its two prefix sums have different parity.
+:::
 
 Given an array of integers arr. Return the number of sub-arrays with odd sum.
 
@@ -3008,6 +3196,10 @@ public int numOfSubarrays(int[] arr) {
 
 ## 1526. Minimum Number of Increments on Subarrays to Form a Target Array
 
+:::tip
+Answer = `target[0]` + sum of `max(0, target[i] - target[i-1])`.
+:::
+
 Given an array of positive integers target and an array initial of same size with all zeros.
 
 Return the minimum number of operations to form a target array from initial if you are allowed to do the following operation:
@@ -3030,6 +3222,10 @@ Explanation: We need at least 3 operations to form the target array from the ini
 [1,2,3,2,1] target array is formed.
 ```
 ## Ugly numbers
+
+:::tip
+Use three pointers (for ×2, ×3, ×5) and always take the smallest next candidate; skip duplicates. `O(N)`.
+:::
 
 Given three prime numbers A, B and C and an integer D.
 
@@ -3075,12 +3271,16 @@ public int[] solve(int A, int B, int C, int D) {
 
 ## Longest Arithmetic Subsequence
 
+:::note
+DP keyed by `(index, difference)`: `dp[i][d] = dp[j][d] + 1` for `j < i`, `d = nums[i] - nums[j]`. `O(N^2)`.
+:::
+
 Given an Array of numbers find the longest Arithmetic sequence.
 
 Usually the constraints are weak for this problem.
 
 Eg. A = [ 9, 4, 2, 7, 10 ]
-Output: 3 as [ 4, 7, 10 ] is aritmetic sequence with difference == 3
+Output: 3 as [ 4, 7, 10 ] is aritmetic sequence with `difference == 3`
 
 ### Solution
 
@@ -3146,23 +3346,27 @@ output: 6
 
 ## Best Time to Buy and Sell Stocks III
 
+:::note
+At most 2 transactions: track `buy1, sell1, buy2, sell2` states in one pass, or compute best profit from the left and right of each index.
+:::
+
 Given an array A, for which the ith element is the price of a given stock on day i.
 
 Design an algorithm to find the maximum profit. You may complete at most 2 transactions.
 
 ### Explanation
 
-In order to sell the stock, you must've bought it on a day t=[0..j-1].
-Maximum profit that can be attained is t:0->j-1
-max(prices[j]-prices[t]+dp[i-1][t-1]) where prices[j]-prices[t] is the profit from buying on day t and selling on day j. dp[i-1][t-1] is the maximum profit that can be made with at most i-1 transactions with prices prices[0..t-1].
+In order to sell the stock, you must've bought it on a day t=[0..`j-1`].
+Maximum profit that can be attained is t:0->`j-1`
+`max(prices[j]-prices[t]+dp[i-1][t-1])` where `prices[j]`-`prices[t]` is the profit from buying on day t and selling on day j. `dp[i-1][t-1]` is the maximum profit that can be made with at most `i-1` transactions with prices `prices[0..t-1]`.
 
-In order to reduce it to O(nk), we must find t:0->j-1 max(prices[j]-prices[t]+dp[i-1][t-1]) this expression in constant time. If you see carefully,
+In order to reduce it to `O(nk)`, we must find t:0->`j-1` `max(prices[j]-prices[t]+dp[i-1][t-1])` this expression in constant time. If you see carefully,
 
-t:0->j-1 max(prices[j]-prices[t]+dp[i-1][t-1]) is same as
+t:0->`j-1` `max(prices[j]-prices[t]+dp[i-1][t-1])` is same as
 
-prices[j] + t:0->j-1 max(dp[i-1][t-1]-prices[t])
+`prices[j]` + t:0->`j-1` `max(dp[i-1][t-1]-prices[t])`
 
-Second part of the above expression maxTemp = t:0->j-1 max(dp[i-1][t-1]-prices[t]) can be included in the dp loop by keeping track of the maximum value till j-1.
+Second part of the above expression `maxTemp` = t:0->`j-1` `max(dp[i-1][t-1]-prices[t])` can be included in the dp loop by keeping track of the maximum value till `j-1`.
 
 ```java
 public int maxProfit(final int[] A) {
@@ -3195,6 +3399,10 @@ public int maxProfit(final int[] A) {
 
 ## Longest valid Parentheses
 
+:::tip
+Use a stack of indices (seeded with `-1`) or a DP array; a valid length is `i - stack.peek()` after a match.
+:::
+
 Given a string A containing just the characters '(' and ')'.
 
 Find the length of the longest valid (well-formed) substring of parentheses.
@@ -3226,6 +3434,10 @@ public int longestValidParentheses(String s) {
 
 ## Sub Matrices with sum Zero
 
+:::tip
+Fix two rows, collapse columns into a 1-D array of column sums, then count zero-sum subarrays with a prefix-sum `HashMap`. `O(R^2·C)`.
+:::
+
 Given a 2D matrix, find the number non-empty sub matrices, such that the sum of the elements inside the sub matrix is equal to 0. (note: elements might be negative).
 
 Eg.
@@ -3240,7 +3452,7 @@ Output : 2
 
 ### Explanation
 
-The approach is like, we create a new matrix dp[][], where dp[i][j] == sum of all elements of the matrix whose bottom-right corner is (i,j). Then for each element in the matrix we find all the submatrices, but instead of this we find all the submatrices where any element (i,j) is the bottom-right (or any other) corner element.
+The approach is like, we create a new matrix `dp[][]`, where `dp[i][j]` == sum of all elements of the matrix whose bottom-right corner is `(i,j)`. Then for each element in the matrix we find all the submatrices, but instead of this we find all the submatrices where any element `(i,j)` is the bottom-right (or any other) corner element.
 
 ```java
 public int solve(ArrayList<ArrayList<Integer>> A) {
@@ -3277,6 +3489,10 @@ public int area(int x,int y, int m, int n, int[][] dp){
 ```
 
 ## 741. Cherry Pickup
+
+:::tip
+Think of two people walking from `(0,0)` to `(n-1,n-1)` at the same time; DP over the step count and both rows.
+:::
 
 In a N x N grid representing a field of cherries, each cell is one of three possible integers.
 
@@ -3344,14 +3560,18 @@ public int max4(int a,int b,int c,int d){
 
 ## 1368. Minimum Cost to Make at Least One Valid Path in a Grid
 
-Given a m x n grid. Each cell of the grid has a sign pointing to the next cell you should visit if you are currently in this cell. The sign of grid[i][j] can be:
+:::tip
+Zero-cost move if the cell arrow points that way, cost `1` otherwise: use 0-1 BFS (deque) or Dijkstra.
+:::
 
-- 1 which means go to the cell to the right. (i.e go from grid[i][j] to grid[i][j + 1])
-- 2 which means go to the cell to the left. (i.e go from grid[i][j] to grid[i][j - 1])
-- 3 which means go to the lower cell. (i.e go from grid[i][j] to grid[i + 1][j])
-- 4 which means go to the upper cell. (i.e go from grid[i][j] to grid[i - 1][j])
+Given a m x n grid. Each cell of the grid has a sign pointing to the next cell you should visit if you are currently in this cell. The sign of `grid[i][j]` can be:
 
-A valid path in the grid is a path which starts from the upper left cell (0,0) and ends at the bottom-right cell (m - 1, n - 1) following the signs on the grid. The valid path doesn't have to be the shortest.
+- 1 which means go to the cell to the right. (i.e go from `grid[i][j]` to `grid[i][j + 1]`)
+- 2 which means go to the cell to the left. (i.e go from `grid[i][j]` to `grid[i][j - 1]`)
+- 3 which means go to the lower cell. (i.e go from `grid[i][j]` to `grid[i + 1][j]`)
+- 4 which means go to the upper cell. (i.e go from `grid[i][j]` to `grid[i - 1][j]`)
+
+A valid path in the grid is a path which starts from the upper left cell (0,0) and ends at the bottom-right cell (`m - 1`, `n - 1`) following the signs on the grid. The valid path doesn't have to be the shortest.
 
 You can modify the sign on a cell with cost = 1. You can modify the sign on a cell one time only.
 
@@ -3380,9 +3600,9 @@ Example grid 2 (3 x 3, image; arrows as drawn, colors as in the figure, no capti
 
 ### Solution
 
-This problem is very tricky!. It can be solved using DFS, but it would result in TLE. Then, next thing to use is Dijkstra. The approach is VlogE, this can be optimised using 0-1 BFS to V (or O(MN)).
+This problem is very tricky!. It can be solved using DFS, but it would result in TLE. Then, next thing to use is Dijkstra. The approach is VlogE, this can be optimised using 0-1 BFS to V (or `O(MN)`).
 
-NOTE: The Dijkstra algorithm in previous post was not working, I've to remove the line if(visited[x][y]) continue; Don't know why it wasn't working.
+NOTE: The Dijkstra algorithm in previous post was not working, I've to remove the line if(`visited[x][y]`) continue; Don't know why it wasn't working.
 
 ```java
 static int INF = (int)1e9;
@@ -3425,6 +3645,10 @@ public int minCost(int[][] grid) {
 
 ## 1124. Longest Well-Performing Interval
 
+:::tip
+Map tired days to `+1` and others to `-1`; find the longest subarray with positive sum using prefix sums and a first-occurrence map (or a monotonic stack).
+:::
+
 Given an array find the longest subarray positive (>0) sum subarray containing 1 and -1 only.
 
 Eg. -1 -1 -1 1 1 -1 -1 -1 1 1 1
@@ -3434,7 +3658,7 @@ Output : 9
 
 Sketch (hand-drawn, image): a price-like line plotted over indices 0 to 10 on the x-axis (numbers 0-10 written above the axis, three horizontal guide lines), with red dots on points, yellow highlighted segments on the rising/falling runs (roughly indices 3-4 and 4-6 and 8-10), a green double-headed arrow spanning index 1 to index 10 along the top, a grey oval/loop around index 2, a grey curved arrow labelled `t2` from index 0 to index 2, and two grey rectangles around the segments between 4-7 and 7-9. Text is hand-drawn and not otherwise labelled.
 
-Yellow portions are useless, as once we reached a sum state for the first time, we will store it in Map. Then if incase the sum till now is positive, then I update the answer to i+1. Otherwise, if we reached this sum for the first time we store it in map, then check if we have reached the sum of (sum-1) earlier coz, the sum from prev (sum-1) till i will be 1 (excluding the sum-1) as sum - (sum-1) == 1.
+Yellow portions are useless, as once we reached a sum state for the first time, we will store it in Map. Then if incase the sum till now is positive, then I update the answer to `i+1`. Otherwise, if we reached this sum for the first time we store it in map, then check if we have reached the sum of (sum-1) earlier coz, the sum from prev (sum-1) till i will be 1 (excluding the sum-1) as sum - (sum-1) == 1.
 
 ```java
 for(int i = 0; i < n; i++){
@@ -3451,19 +3675,25 @@ for(int i = 0; i < n; i++){
 ## Generalized Problem: Find Longest Subarray With Sum >= K
 
 Input: array arr in which elements are arbitrary integers.
-Output: length of a longest subarray arr[i, j) with sum(arr[i], ... , arr[j-1]) >= K.
+Output: length of a longest subarray arr[i, j) with sum(`arr[i]`, ... , `arr[j-1]`) >= K.
 
-1. Compute prefix sum of arr as prefixSum where prefixSum[i] = sum(arr[0], ... arr[i-1]) for i > 0 and prefixSum[0] = 0.
-2. Iterate through prefixSum from begin to end and build a strictly monotone decreasing stack smdStack. (smdStack.top() is the smallest)
-3. Iterate through prefixSum from end to begin. For each prefixSum[i], while smdStack.top() is less than prefixSum[i] by at least K, pop smdStack and try to update result by subarray [index of top,i). Until top element is not less than it by K.
+1. Compute prefix sum of arr as `prefixSum` where `prefixSum[i]` = sum(`arr[0]`, ... `arr[i-1]`) for i > 0 and `prefixSum[0]` = 0.
+2. Iterate through `prefixSum` from begin to end and build a strictly monotone decreasing stack `smdStack`. (`smdStack.top()` is the smallest)
+3. Iterate through `prefixSum` from end to begin. For each `prefixSum[i]`, while `smdStack.top()` is less than `prefixSum[i]` by at least K, pop `smdStack` and try to update result by subarray [index of top,i). Until top element is not less than it by K.
 4. Return result.
 
-For simplicity, call (i, j) a valid pair if the inequation prefixSum[j] - prefixSum[i] >= K holds. Our goal is to optimize j-i over all valid pair (i, j).
+For simplicity, call `(i, j)` a valid pair if the inequation `prefixSum[j]` - `prefixSum[i]` >= K holds. Our goal is to optimize `j-i` over all valid pair `(i, j)`.
 
-1. Firstly, fix j and minimize i. Consider any i1 and i2 that i1 < i2 < j and prefixSum[i1] <= prefixSum[i2]. It is obvious that (i2, j) can't be a candidate of optimal subarray because (i1, j) is more promising to be valid and longer than (i2, j). Therefor candidates are monotone decreasing, and we can use a strictly monotonic descresing stack to find all candidates. (Monotone stack are just normal stack with a constraint that the elements in them are monotonically increasing or decreasing. When processing a new element, we either pop top elements then push new elem or discard this new element to guarantee the property of monotonicity. If you are not familiar with this data structure, you'd better solve some similar leetcode problems before this one).
-2. Secondly, fix i and maximize j. Consider any j1 and j2 that i < j1 < j2 and prefixSum[j2] - prefix[i] >= K. We can find that (i, j1) can't be a candidate of optimal subarrary because (i, j2) is better. This discovery tells us that we should iterate j from end to begin and if we find a valid (i, j), we don't need to keep i in smdStack any longer.
+1. Firstly, fix j and minimize i. Consider any i1 and i2 that `i1 < i2` < j and `prefixSum[i1]` <= `prefixSum[i2]`. It is obvious that `(i2, j)` can't be a candidate of optimal subarray because `(i1, j)` is more promising to be valid and longer than `(i2, j)`. Therefor candidates are monotone decreasing, and we can use a strictly monotonic descresing stack to find all candidates. (Monotone stack are just normal stack with a constraint that the elements in them are monotonically increasing or decreasing. When processing a new element, we either pop top elements then push new elem or discard this new element to guarantee the property of monotonicity. If you are not familiar with this data structure, you'd better solve some similar leetcode problems before this one).
+2. Secondly, fix i and maximize j. Consider any j1 and j2 that `i < j1` < j2 and `prefixSum[j2]` - `prefix[i]` >= K. We can find that `(i, j1)` can't be a candidate of optimal subarrary because `(i, j2)` is better. This discovery tells us that we should iterate j from end to begin and if we find a valid `(i, j)`, we don't need to keep i in `smdStack` any longer.
 
 ## 31. Next Permutation
+
+:::tip[Steps]
+1. Find the first index `i` from the right with `a[i] < a[i+1]`.
+2. Swap `a[i]` with the smallest larger element to its right.
+3. Reverse the suffix after `i`.
+:::
 
 Implement next permutation, which rearranges numbers into the lexicographically next greater permutation of numbers.
 

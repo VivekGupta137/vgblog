@@ -59,8 +59,7 @@ For local builds, use the included Docker Compose stack instead of the rate-limi
 
 ```bash
 docker compose -f kroki-local/docker-compose.yaml up -d
-cp .env.example .env  # if you don't already have a local .env
-# Set PUBLIC_KROKI_SERVER_URL=http://localhost:8000 in .env
+echo 'PUBLIC_KROKI_SERVER_URL=http://localhost:8000' >> .env  # local only (.env is gitignored)
 bun run build
 ```
 

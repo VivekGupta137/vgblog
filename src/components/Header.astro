@@ -5,3 +5,45 @@ import ScrollIndicator from "./ProgressIndicator.astro";
 
 <Default><slot /></Default>
 <ScrollIndicator />
+
+<div class="font-size-ctl print:hidden" id="font-size-ctl" role="group" aria-label="Font size">
+  <button type="button" data-fs="-1" aria-label="Decrease font size" title="Decrease font size">A<small>−</small></button>
+  <button type="button" data-fs="0" aria-label="Reset font size" title="Reset font size"><span id="fs-val">100%</span></button>
+  <button type="button" data-fs="1" aria-label="Increase font size" title="Increase font size">A<small>+</small></button>
+</div>
+
+<script>
+  const ctl = document.getElementById('font-size-ctl');
+  const val = document.getElementById('fs-val');
+  const STEP = 0.1, MIN = 0.8, MAX = 1.6;
+  let scale = parseFloat(localStorage.getItem('fontScale') || '1');
+  if (!(scale >= MIN && scale <= MAX)) scale = 1;
+
+  const apply = () => {
+    document.documentElement.style.setProperty('--content-scale', String(scale));
+    localStorage.setItem('fontScale', String(scale));
+    if (val) val.textContent = Math.round(scale * 100) + '%';
+  };
+  apply();
+
+  // place it next to the search box in the header
+  const target = document.querySelector('.right-group') ?? document.querySelector('header .sl-flex:last-child');
+  if (ctl && target) target.prepend(ctl);
+
+  ctl?.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('button');
+    if (!b) return;
+    const d = Number(b.dataset.fs);
+    scale = d === 0 ? 1 : Math.min(MAX, Math.max(MIN, Math.round((scale + d * STEP) * 10) / 10));
+    apply();
+  });
+</script>
+
+<style is:global>
+  .font-size-ctl { display: inline-flex; align-items: center; gap: 2px; margin-inline-end: 0.5rem; border: 1px solid var(--sl-color-gray-5); border-radius: 0.5rem; overflow: hidden; }
+  .font-size-ctl button { all: unset; cursor: pointer; padding: 0.25rem 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--sl-color-gray-2); line-height: 1.2; }
+  .font-size-ctl button:hover, .font-size-ctl button:focus-visible { background: var(--sl-color-gray-6); color: var(--sl-color-white); }
+  .font-size-ctl small { font-size: 0.65em; vertical-align: super; }
+  #fs-val { font-size: 0.72rem; font-weight: 500; min-width: 2.6em; display: inline-block; text-align: center; }
+  @media (max-width: 49.99rem) { .font-size-ctl { position: fixed; right: 0.75rem; bottom: 0.75rem; z-index: 20; background: var(--sl-color-bg-nav); box-shadow: 0 2px 8px rgb(0 0 0 / 0.3); margin: 0; } }
+</style>

@@ -5,3 +5,12 @@ import Default from "@astrojs/starlight/components/Head.astro";
 <Default><slot /></Default>
 <script src="/code-group.js" defer></script>
 <script src="../scripts/data-table.ts"></script>
+<script src="../scripts/diagram-popovers.ts"></script>
+<script src="../scripts/collapsible-headings.ts"></script>
+
+<script is:inline>
+  (function () {
+    var v = parseFloat(localStorage.getItem('fontScale') || '1');
+    if (v >= 0.8 && v <= 1.6) document.documentElement.style.setProperty('--content-scale', v);
+  })();
+</script>

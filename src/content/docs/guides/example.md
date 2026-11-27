@@ -168,6 +168,20 @@ Use a `renderhtml` fence when the diagram is authored as HTML/CSS/SVG and must b
 
 Starlight content styles are skipped inside the block (`not-content`), so inner layout, lists, and headings keep the diagram’s own CSS.
 
+#### Popovers and Prev/Next tour
+
+Add `data-pop-title` and `data-pop` to any element to make it clickable. A **Prev / Next** bar is added on top automatically; `←` `→` `Esc` also work. Use `data-pop-tour="0"` for items that should be clickable but skipped by the tour. Use the `var(--d-fg)`, `var(--d-border)`, `var(--d-surface)` … tokens for neutrals and the block follows light/dark mode (see the write-docs-page skill for the full token table).
+
+```renderhtml
+<div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;font-size:0.9rem;color:var(--d-fg);">
+  <div data-pop-title="Client" data-pop="The browser sends the request. Backticks like `GET /users` become code." style="padding:0.7rem 1rem;border:2px solid #1e88e5;border-radius:8px;background:color-mix(in srgb,#1e88e5 14%,transparent);">Client</div>
+  <span aria-hidden="true">→</span>
+  <div data-pop-title="API" data-pop="Validates the token, then queries the database." style="padding:0.7rem 1rem;border:2px solid #43a047;border-radius:8px;background:color-mix(in srgb,#43a047 14%,transparent);">API</div>
+  <span aria-hidden="true">→</span>
+  <div data-pop-title="Database" data-pop="Stores the data." style="padding:0.7rem 1rem;border:2px solid #fb8c00;border-radius:8px;background:color-mix(in srgb,#fb8c00 14%,transparent);">Database</div>
+</div>
+```
+
 ## Tabbed content (`group-container`)
 
 Use this for **any** markdown — tables, lists, prose — not just code. Outer fences need **more colons** than inner ones so nesting parses correctly.

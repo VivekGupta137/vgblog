@@ -27,7 +27,9 @@ export function remarkRenderHtml() {
         data: {
           hName: "div",
           hProperties: {
-            className: ["render-html", "not-content"],
+            className: node.value.includes("var(--d-")
+              ? ["render-html", "not-content", "rh-themed"]
+              : ["render-html", "not-content"],
           },
           hChildren: fragment.children.filter(isElementContent),
         },

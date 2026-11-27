@@ -160,6 +160,58 @@ Supported fence aliases on this site: `actdiag`, `blockdiag`, `bpmn`, `bytefield
 
 Draw.io: paste uncompressed XML in a `diagramsnet` fence (see `/guides/example/`).
 
+## HTML diagrams (`renderhtml`) with popovers
+
+Use for UI mockups, waterfalls, timelines, flows, and anything where ASCII art would be hard to read. Prefer this over ASCII/plain-text boxes in docs.
+
+Rules for the fence content:
+- Raw HTML/SVG, **no blank lines inside** the fence (a blank line can break parsing). Inline `style=""` only; no `<script>`.
+- **Dark mode:** use the theme tokens below for every neutral colour (text, borders, panels, chips). When a fence contains `var(--d-`, the plate automatically follows the site theme (white in light, `#18181b` in dark); fences without tokens keep the old always-light plate (then use fixed light colours and set text colour explicitly).
+- Brand/status colours (blue, green, red, ...) stay as fixed hex; they read fine on both plates. Tints: `color-mix(in srgb,#43a047 12%,transparent)`.
+
+| Token | Light | Dark | Use for |
+|-------|-------|------|---------|
+| `var(--d-fg)` | `#18181b` | `#e4e4e7` | text |
+| `var(--d-muted)` | `#6b6b76` | `#a1a1aa` | secondary text |
+| `var(--d-border)` | `#d4d4d8` | `#3f3f46` | hairlines, grid lines |
+| `var(--d-border-strong)` | `#a1a1aa` | `#52525b` | box outlines |
+| `var(--d-surface)` | `#ececf0` | `#27272a` | panel/header fills |
+| `var(--d-chip)` | `#d4d4d8` | `#3f3f46` | buttons/chips |
+| `var(--d-bg)` | `#fff` | `#18181b` | plate background |
+
+- Set `color:var(--d-fg)` on the root element and never hard-code `#fff`/`#000` text or backgrounds (pastel fills like `#dae8fc` need explicit dark text, so avoid them in themed diagrams).
+- Use `min-width` + the wrapper's own overflow so wide diagrams scroll sideways on mobile; use `%` / `position:absolute` for time axes, `display:flex/grid` for layouts.
+- Palette used so far: blue `#1e88e5`, green `#43a047`, red `#e53935`, orange `#fb8c00`, purple `#8e24aa`, teal `#26a69a`, greys `#bdbdbd` `#757575`; tint fills with `color-mix(in srgb,#43a047 12%,transparent)`.
+- Add a `title="..."` on bars for native hover tooltips.
+
+### Popovers (click + Prev/Next tour)
+
+Any element inside a `renderhtml` block can explain itself. The site script (`src/scripts/diagram-popovers.ts`, styles at the end of `src/styles/custom.css`) adds an automatic **Prev / Next** bar on top of the diagram, a popover on click, arrow-key navigation, hover outline, and keyboard focus.
+
+```renderhtml
+<div style="display:flex;gap:.75rem;align-items:center;font-size:.85rem;color:var(--d-fg);">
+  <div data-pop-title="Client" data-pop="The browser sends the request. Use `code` in backticks." style="padding:.6rem 1rem;border:2px solid #1e88e5;border-radius:8px;background:color-mix(in srgb,#1e88e5 14%,transparent);">Client</div>
+  <span>→</span>
+  <div data-pop-title="API" data-pop="Validates the token, then queries the database." style="padding:.6rem 1rem;border:2px solid #43a047;border-radius:8px;background:color-mix(in srgb,#43a047 14%,transparent);">API</div>
+  <span>→</span>
+  <div data-pop-title="Cache bar" data-pop-tour="0" data-pop="Clickable, but skipped by Prev/Next." style="padding:.6rem 1rem;border:2px solid #fb8c00;border-radius:8px;background:color-mix(in srgb,#fb8c00 14%,transparent);">Cache</div>
+</div>
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `data-pop-title` | Popover heading |
+| `data-pop` | Popover body; plain text, backticks become inline `code`; keep to 1-3 sentences |
+| `data-pop-tour="0"` | Still clickable but excluded from Prev/Next (use for many small repeated pieces such as waterfall bar segments) |
+
+Guidelines:
+- **Take the explanation text from the surrounding doc** (tables, "what it means" sections) so the popover and prose agree; do not invent facts.
+- Put pops on containers (toolbar, table, pane) **and** their children; DOM order is the tour order, so parent comes before children. Click targets resolve to the innermost `data-pop`.
+- Tour length: aim for 5-15 items per diagram; mark the rest `data-pop-tour="0"`.
+- Escape quotes inside attribute values (`&quot;`) or use single quotes in the text. Do not put `"` unescaped in `data-pop`.
+- Many repetitive elements (rows/bars/steps): generate the HTML with a small script (Python or JS) and paste the result, rather than hand-writing it. Python 3.12+ is required if you use nested quotes in f-strings.
+- After editing run `bun run build` and open the page: confirm the bar shows, items outline on hover, popover opens beside the item, `←`/`→`/`Esc` work, and both light and dark themes are readable (toggle the theme).
+
 ## Tabbed markdown (`group-container`)
 
 For **any** markdown (tables, lists, prose), not just code. **Outer fences use more colons than inner ones.**
@@ -221,7 +273,7 @@ Tabbed **code** (not markdown tabs): wrap fences in `:::group` or `:::code-group
 | `collapse={1-4,11-13}` | Collapsible ranges |
 | `wrap` | Soft-wrap long lines |
 | language `diff` | `+` / `-` prefixes |
-| language `renderhtml` | **Render** HTML/SVG |
+| language `renderhtml` | **Render** HTML/SVG (add `data-pop-title`/`data-pop` for popovers) |
 | language `html` | Highlighted HTML **source** |
 
 ## Build and verify
